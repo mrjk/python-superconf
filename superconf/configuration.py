@@ -4,7 +4,7 @@ from typing import Callable
 
 from pprint import pprint
 
-from .loaders import UNSET, UnSet, Environment
+from .common import NOT_SET, UNSET
 from .store import StoreValue, StoreConf, StoreDict, StoreList
 from .store import Value, ValueConf, ValueDict, ValueList
 

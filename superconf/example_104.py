@@ -1,4 +1,5 @@
 
+import json
 import logging
 from pprint import pprint
 import argparse
@@ -278,11 +279,9 @@ def test1():
     assert isinstance(t4, StoreValue)
 
 
-
-
-
     # Test default value access
     # ===========================
+    print("\n---TEST: WIP")
 
     t1 = config1["nested2"]
     t2 = config1["nested2"]["prj_dir"]
@@ -302,6 +301,13 @@ def test1():
     assert t3.get_value() == UNSET
     # assert False, "SUCCESS"
 
+
+    # Test to_json method
+    # ===========================
+    print("\n---TEST: Ensure to_json() methods")
+    t = config1.to_json()
+    assert isinstance(t, str)
+    json.loads(t)
 
 
 
@@ -413,8 +419,6 @@ def test2():
     assert len(t1.get_key(mode="children")) == 2
     assert len(t2.get_key(mode="children")) == 0
     assert len(t3.get_key(mode="children")) == 0
-
-
 
 
 

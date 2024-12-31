@@ -4,79 +4,80 @@ import yaml
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
+from .common import NOT_SET, UNSET
 from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 from .parsers import EnvFileParser
 
 
-class NotSet(str):
-    """
-    A special type that behaves as a replacement for None.
-    We have to put a new default value to know if a variable has been set by
-    the user explicitly. This is useful for the ``CommandLine`` loader, when
-    CLI parsers force you to set a default value, and thus, break the discovery
-    chain.
-    """
+# class NotSet(str):
+#     """
+#     A special type that behaves as a replacement for None.
+#     We have to put a new default value to know if a variable has been set by
+#     the user explicitly. This is useful for the ``CommandLine`` loader, when
+#     CLI parsers force you to set a default value, and thus, break the discovery
+#     chain.
+#     """
 
-    pass
+#     pass
 
-    def __str__(self):
-        return "<NOT_SET>"
+#     def __str__(self):
+#         return "<NOT_SET>"
 
-    def __repr__(self):
-        addr = hex(id(self))
-        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        out = f"<{name} object at {addr}>"
-        return out
+#     def __repr__(self):
+#         addr = hex(id(self))
+#         name = f"{self.__class__.__module__}.{self.__class__.__name__}"
+#         out = f"<{name} object at {addr}>"
+#         return out
 
-class UnSet(object):
-    """
-    A special type that behaves as a replacement for None.
-    """
+# class UnSet(object):
+#     """
+#     A special type that behaves as a replacement for None.
+#     """
 
-    def __str__(self):
-        return "<UNSET>"
+#     def __str__(self):
+#         return "<UNSET>"
 
-    def __repr__(self):
-        addr = hex(id(self))
-        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        out = f"<{name} object at {addr}>"
-        return out
+#     def __repr__(self):
+#         addr = hex(id(self))
+#         name = f"{self.__class__.__module__}.{self.__class__.__name__}"
+#         out = f"<{name} object at {addr}>"
+#         return out
 
-    def __getitem__(self, key):
-        return self
+#     def __getitem__(self, key):
+#         return self
 
-    def __get__(self, *args):
-        return self
+#     def __get__(self, *args):
+#         return self
 
-    def __getattr__(self, key):
-        return self
+#     def __getattr__(self, key):
+#         return self
 
-    def __call__(self, *args, **kwargs):
-        return self
+#     def __call__(self, *args, **kwargs):
+#         return self
 
-    def __len__(self):
-        return self
+#     def __len__(self):
+#         return self
 
-    def __dict__(self):
-        return {}
+#     def __dict__(self):
+#         return {}
 
-    def __index__(self):
-        return 0
+#     def __index__(self):
+#         return 0
 
-    def __bool__(self):
-        return False
+#     def __bool__(self):
+#         return False
 
-    def __iter__(self):
-        yield from dict().items()
+#     def __iter__(self):
+#         yield from dict().items()
 
-    def __contains__(self, value):
-        return False
+#     def __contains__(self, value):
+#         return False
 
-    def __int__(self):
-        return 0
+#     def __int__(self):
+#         return 0
 
-NOT_SET = NotSet()
-UNSET = UnSet()
+# NOT_SET = NotSet()
+# UNSET = UnSet()
 
 class EnvPrefix:
     """

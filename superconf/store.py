@@ -8,15 +8,37 @@ from typing import Callable
 
 from pprint import pprint
 
-from .loaders import UNSET, UnSet, Environment
+from .common import NOT_SET, UNSET, UnSet
+from .common import list_to_dict, dict_to_list, dict_to_json
+from .loaders import Environment
 from .node import NodeContainer
+from .mixin import StoreValueEnvVars, StoreExtra
 
 log = logging.getLogger(__name__)
 
 
+
+
+def store_to_json(obj):
+    "Return a node object to serializable thing"
+
+
+    def t_funct(item):
+        # return str(item)
+
+        if item is UNSET:
+            return None
+        if hasattr(item, "get_value"):
+            return item.get_value()
+        raise Exception(f"Unparseable item: {item}")
+
+    return dict_to_json(obj, fn=t_funct)
+
+
+
 ################## Config Models
 
-class StoreValue(NodeContainer):
+class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     "Represent a node value, dead leaf"
 
     _default = UNSET
@@ -40,25 +62,15 @@ class StoreValue(NodeContainer):
         self._default = default if default != UNSET else self._default
 
 
+    def to_json(self):
+        "Return json value of ..."
+        return store_to_json(self)
 
-
-    def get_info(self):
-        "Return short help"
-        val = self.get_value()
-        default = self.get_default()
-
-        out =  f"value={self.get_value()} [default={self.get_default()}]"
-        if val == default:
-            out = f"value={self.get_value()} [is default]"
-
-        if self._help:
-            out = f"{out} - {self._help}"
-
-        return out
 
     # Value methods
+    # -----------------
     def get_value(self, type=None):
-        "Top level function to get current value of config, exclude NOT_SET values"
+        "Get current value of config, exclude NOT_SET values"
         value = getattr(self, "_value", UNSET)
         if value != UNSET:
             if type is not None:
@@ -70,7 +82,7 @@ class StoreValue(NodeContainer):
         return self.get_default()
 
     def get_default(self):
-        "Top level function to get default values"
+        "Get default values"
 
         # Check local value
         out = self._default
@@ -86,12 +98,43 @@ class StoreValue(NodeContainer):
 
         return UNSET
 
-    def get_item_cls(self, default=None):
-        "Top level function to get items class"
+
+    # Children methods
+    # -----------------
+    def get_children_stores(self, mode="all", lvl=-1):
+        """Return a flat list of all children stores
+        Allow to filter per type 
+        """
+
+        out1 = [self]
+
+        if mode == "keys": 
+            if isinstance(self, StoreDict):
+                # Remove container keys
+                out1 = []
+        elif mode == "containers": 
+            if not isinstance(self, StoreDict):
+                # Remove all keysValues
+                out1 = []
+        elif mode != "all":
+            raise Exception(f"UNknonw mode: {mode}")
+
+        children = self.get_children()
+        for key, child in children.items():
+            ret = child.get_children_stores(mode=mode, lvl=lvl)
+            out1.extend(ret)
+
+        out1 = list(set(out1))
+
+        return out1
+
+
+    def get_children_class(self, default=None):
+        "Return default class to use for new children"
 
         out = self._children_class
         if out != UNSET:
-            # print("RUN get_item_cls: StoreValue - _children_class", self, out)
+            # print("RUN get_children_class: StoreValue - _children_class", self, out)
             return out
 
         # Check Metadata
@@ -101,81 +144,22 @@ class StoreValue(NodeContainer):
 
         return default
 
-    # Helper method
-    def explain(self, lvl=-1):
-
-        print(f"===> Tree of {self.closest_type}: {self} <===")
-        print(f"  inst      => {hex(id((self)))}")
-        print(f"  mro       => {self.__class__.__mro__}")
-        print(f"  key       => {self.key}")
-        print(f"  name      => {self.name}")
-        print(f"  fname     => {self.fname}")
-        print(f"  default   => {str(self.get_default())}")
-        print(f"  value     => {str(self.get_value())}")
-        print(f"  parents   => {[str(x) for x in self.get_hier(mode='full')]}")
-        print(f"  children cls  => {str(self.get_item_cls())}")
-        print(f"  children  => {len(self._children)}")
-
-        children = self._children
-        for key, child in children.items():
-            print(f"    {key:<20} => {str(child)}")
-
-        print()
 
 
-    def explain_tree(self, lvl=-1, mode="default"):
+    # Dunder methods
+    # -----------------
 
-        out = {}
+    # def __DEFAULT_repr(self):
+    #     addr = hex(id(self))
+    #     name = f"{self.__class__.__module__}.{self.__class__.__name__}"
+    #     out = f"<{name} object at {addr}>"
+    #     return out
 
-        if lvl != 0:
-            lvl = lvl - 1
-            children = self.get_children()
-            if children == UNSET:
-                if mode == "default":
-                    # out[key] = child.get_children()# or child.get_value()
-                    # out[key] = child.explain_tree(lvl=lvl, mode=mode) #or 
-                    out = self.get_value()
-                elif mode == "struct":
-                    out = self.get_info()
-                    # out = {}
-
-                # out = self.get_info()
-                # out = self.get_value()
-                # out = "TRUNCATED"
-            else:
-                for key, child in children.items():
-
-                    if mode == "default":
-                        # out[key] = child.get_children()# or child.get_value()
-                        out[key] = child.explain_tree(lvl=lvl, mode=mode) #or child.get_value()
-                    elif mode == "struct":
-                        out[str(child)] = child.explain_tree(lvl=lvl, mode=mode) or str(child.get_info())
-        else:
-            if mode == "default":
-                out = str(self.get_value())
-            elif mode == "struct":
-                child_count = len(self.get_children())
-                # out = str(self.get_info()) # self.get_value()
-                out = f"{self.get_info()} (has {child_count} childrens)" 
-
-        return out
-
-        # while children:
-
-
-
-    def __DEFAULT_repr(self):
-        addr = hex(id(self))
-        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        out = f"<{name} object at {addr}>"
-        return out
-
-    def __SHORT_repr(self):
-        addr = hex(id(self))
-        name = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        out = f"<{name}({addr})>"
-        return out
-
+    # def __SHORT_repr(self):
+    #     addr = hex(id(self))
+    #     name = f"{self.__class__.__module__}.{self.__class__.__name__}"
+    #     out = f"<{name}({addr})>"
+    #     return out
     # def __repr__(self):
     #     addr = hex(id(self))
     #     name = f"{self.__class__.__module__}.{self.__class__.__name__}"
@@ -203,73 +187,8 @@ class StoreValue(NodeContainer):
             out = f"{name}|{middle}[{value}]"
         return out
 
-    # __repr__ = __str__
-
     # Goodies
     # ----
-
-    def flatify_children(self, mode="all", lvl=-1):
-        "REturn a flat list of all children"
-
-        out1 = [self]
-
-        if mode == "keys": 
-            if isinstance(self, StoreDict):
-                # Remove container keys
-                out1 = []
-        elif mode == "containers": 
-            if not isinstance(self, StoreDict):
-                # Remove all keysValues
-                out1 = []
-        elif mode != "all":
-            raise Exception(f"UNknonw mode: {mode}")
-
-        children = self.get_children()
-        for key, child in children.items():
-            ret = child.flatify_children(mode=mode, lvl=lvl)
-            out1.extend(ret)
-
-        out1 = list(set(out1))
-
-        return out1
-
-
-
-    def dump_keys(self, lvl=-1, mode="keys"):
-        "Return a list of keys"
-
-        out2 = {
-            self.fname: self
-        }
-
-        for child in self.flatify_children(mode=mode, lvl=lvl):
-            out2[child.get_key("parents")] = child
-
-        return out2
-
-    # Environment var management
-    def get_envvar(self, **kwargs):
-        """
-        Get current env.var
-
-        Prefix from top level name key
-        """
-
-        out = self.fname
-        out = out.replace(".", "__")
-        out = out.upper()
-        return out
-
-
-    def get_envvars(self, mode="keys", lvl=-1):
-        "Return a list of all children envvars"
-        out = {}
-
-        for child in self.flatify_children(mode=mode, lvl=lvl):
-            key_name = child.get_envvar()
-            out[key_name] = child
-
-        return out
 
 
 ## ---
@@ -278,17 +197,11 @@ class StoreValue(NodeContainer):
 class StoreDict(StoreValue):
     "Represent a unknown keys config"
 
-    # _default = dict()
 
     _children_class = StoreValue
 
-
-    def _children_iterable(self):
-        yield from self.get_children().items()
-
-    def _children_def_iterable(self):
-        # Iterate over children payloads
-        yield from self.get_value().items()
+    # Container methods
+    # -----------------
 
     def __init__(self, *args, **kwargs):
         super(StoreDict, self).__init__(*args, **kwargs)
@@ -301,11 +214,19 @@ class StoreDict(StoreValue):
 
         self._init_children()
 
+
+    # def _children_iterable(self):
+    #     yield from self.get_children().items()
+
+    def _children_def_iterable(self):
+        # Iterate over children payloads
+        yield from self.get_value().items()
+
     def _init_children(self):
 
         # Fetch current value - dict
-        # local_value = self.get_value()
-        local_value = self._value
+        local_value = self.get_value()
+        # local_value = self._value
         local_default = self.get_default()
 
         # Create children instances FROM HARDCODED VALUES
@@ -316,21 +237,21 @@ class StoreDict(StoreValue):
 
             if isinstance(val, Value):
                 source = f"Value: {val}"
-                _value_cls = val.get_item_cls(default=StoreValue)
+                _value_cls = val.get_children_class(default=StoreValue)
                 _value_default = val.get_default()
                 _value_value = local_value.get(key, UNSET)
                 # print ("NEW CHILD FROM Value", key, "from data", type(val), "default=", _value_default)
 
             elif isinstance(val, StoreValue):
                 source = f"Store: {val}"
-                _value_cls = self.get_item_cls(default=type(val))
+                _value_cls = self.get_children_class(default=type(val))
                 _value_default = val.get_default()
                 _value_value = local_value.get(key, UNSET)
                 # print ("NEW CHILD FROM StoreValue", key, "from", type(val))
 
             else:
                 source = f"dict: {val}"
-                _value_cls = self.get_item_cls(default=StoreValue)
+                _value_cls = self.get_children_class(default=StoreValue)
                 _value_value = val
                 _value_default = self.get_default().get(key, UNSET)
                 # print ("NEW CHILD FROM Dict", key, "from", type(val))
@@ -362,6 +283,7 @@ class StoreDict(StoreValue):
                 self.add_child(inst)
 
     # Value methods
+    # -----------------
     def get_value(self):
         "Always return a dict"
 
@@ -389,7 +311,10 @@ class StoreDict(StoreValue):
         # print ("RUN get_default: StoreDict - Hard coded", self, dict())
         return {}
 
-    # Dunders
+
+
+    # Dunder methods
+    # -----------------
     def __getitem__(self, value):
         children = getattr(self, "_children", {})
         child = children.get(value)
@@ -407,11 +332,8 @@ class StoreDict(StoreValue):
 class StoreConf(StoreDict):
     "Represent a known keys config"
 
-    # def __init__(self, *args, **kwargs):
-    #     super(StoreConf, self).__init__(*args, **kwargs)
-
     def _children_def_iterable(self):
-        # Iterate over children payloads
+        # Iterate over children payloads instead of values
         yield from getattr(self, "_declared_values", {}).items()
 
     def get_default(self):
@@ -429,13 +351,6 @@ class StoreConf(StoreDict):
         # print("RUN get_default: StoreConf - generated", self, out)
         return out
 
-
-def list_to_dict(array):
-    return {str(k): v for k, v in enumerate(array)}
-
-
-def dict_to_list(map):
-    return list(map.values())
 
 
 class StoreList(StoreDict):

@@ -4,7 +4,8 @@ from typing import Callable
 
 from pprint import pprint
 
-from .loaders import NOT_SET, UNSET, UnSet, Environment
+from .common import NOT_SET, UNSET
+
 
 
 log = logging.getLogger(__name__)
@@ -34,6 +35,10 @@ log = logging.getLogger(__name__)
 class Node:
     "Represent a node"
 
+    name = None
+    key = ""
+    parent = None
+
     def __init__(
         self,
         name: str = None,
@@ -46,30 +51,17 @@ class Node:
                         variable. Set automatically by the metaclass.
         :param help:    Plain-text description of the value.
         """
-        self.key = key or ""
+        self.key = key or self.key
         self.parent = parent or None
+        self.name = name or self.name or self.key or "" or self.__class__.__name__
 
-        name = name or self.key or "" or self.__class__.__name__
-        # if not name:
-        #     name = f"{self.__class__.__name__}[]"
-        # else:
-        #     name = f"{self.__class__.__name__}[{name}]"
-        self.name = name
-        # self.fname = None
-
-        # self.name = name
-        # parts = [name or self.__class__.__name__, self.key]
-        # # parts.extend(self.)
-        # parts = [x for x in parts if x is not None]
-        # self.name = ".".join((parts))
-
-        self._fqn = ".".join([self.__module__, self.__class__.__qualname__])
-        self._inst_repr = ".".join([self._fqn, str(hex(id(self)))])
 
         self._help = help
 
         # Enable instance logging
-        self.log = logging.getLogger(self._inst_repr)
+        _fqn = ".".join([self.__module__, self.__class__.__qualname__])
+        self._logger_name = ".".join([_fqn, str(hex(id(self)))])
+        self.log = logging.getLogger(self._logger_name)
         self.log.debug(f"Create new node: {self}")
 
 
@@ -91,10 +83,39 @@ class NodeContainer(Node):
     def fname(self):
         """I'm the 'x' property."""
         _t = self.get_hier(mode="full")
-        _t = [x.key or x.name or "__root__" for x in _t]
+        _t = [x.key for x in _t]
+        # _t = [x.key or x.name or "__root__" for x in _t]
+        # _t = [x.name or x.key or "__root__" for x in _t]
         _t = list(reversed(_t))
         return ".".join(_t) or self.name
 
+    # Key management (based on parents and children)
+    def get_key(self, mode="self"):
+        "Return object key, eventually with parent"
+
+        def get_all_parent_keys():
+            out = self.get_hier(mode="full")
+            out = [x.key for x in out]
+            return out
+
+        if mode in ["self"]:
+            return self.key
+        if mode in ["full"]:
+            out = get_all_parent_keys()
+            return out
+        if mode in ["parents"]:
+            out = get_all_parent_keys()
+            out = list(reversed(out))
+            out = ".".join(out)
+            return out
+        if mode in ["children"]:
+            if isinstance(self._children, dict):
+                out = list(self._children.keys())
+            else:
+                out = []
+            return out
+        else:
+            raise Exception(f"Unknown mode: {mode}")
 
     # Hiererachy methods
     def get_hier(self, mode="parents"):
@@ -142,14 +163,6 @@ class NodeContainer(Node):
         else:
             return children.get(args[0], None)
 
-    # def has_child(self, child=None):
-    # if key is None:
-    #     matches = [inst for key, inst in self._children.items() if inst == child]
-    #     if len(matches) > 0:
-    #         key = matches[0]
-    # if key is None:
-    #     key = child.key
-
     def add_child(self, child, key=None):
         "Add a child"
 
@@ -182,32 +195,4 @@ class NodeContainer(Node):
 
         # Attach child
         child.parent = self
-
-    # Key management (based on parents and children)
-    def get_key(self, mode="self"):
-        "Return object key, eventually with parent"
-
-        def get_all_parent_keys():
-            out = self.get_hier(mode="full")
-            out = [x.key for x in out]
-            return out
-
-        if mode in ["self"]:
-            return self.key
-        if mode in ["full"]:
-            out = get_all_parent_keys()
-            return out
-        if mode in ["parents"]:
-            out = get_all_parent_keys()
-            out = list(reversed(out))
-            out = ".".join(out)
-            return out
-        if mode in ["children"]:
-            if isinstance(self._children, dict):
-                out = list(self._children.keys())
-            else:
-                out = []
-            return out
-        else:
-            raise Exception(f"Unknown mode: {mode}")
 

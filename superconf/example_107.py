@@ -3,17 +3,29 @@ import logging
 from pprint import pprint
 import argparse
 
+
+from superconf.common import dict_to_json
 from superconf.loaders import YamlFile, UNSET, NOT_SET
+
+from superconf.configuration import StoreValue, StoreDict, StoreList
+# from superconf.mixin import StoreValueEnvVars
+# StoreValue = type('StoreValue',(StoreValue, StoreValueEnvVars),{})
 
 from superconf.configuration import Configuration, ConfigurationDict, ConfigurationList
 from superconf.configuration import ValueConf, ValueDict, ValueList, Value
-from superconf.configuration import StoreValue, StoreDict, StoreList
+
 
 parser = argparse.ArgumentParser(description='Does something useful.')
 parser.add_argument('--debug', '-d', dest='debug', default=NOT_SET, help='set debug mode')
 args = parser.parse_args()
 
 
+# Add Mixins to Configuration
+
+# class StoreValue(StoreValue, StoreValueEnvVars):
+#     pass
+
+# p.__class__ = type('GentlePerson',(Person,Gentleman),{})
 
 
 class Var(Value):
@@ -57,6 +69,7 @@ class StacksList(ConfigurationList):
 
     class Meta:
         item_class = Stack
+        env_prefix = "MYAPP_STACKS"
 
 
 class PrjConfig(Configuration):
@@ -66,6 +79,10 @@ class PrjConfig(Configuration):
 
 class PrjRuntime(Configuration):
     "Stack runtime"
+
+    class Meta:
+        env_prefix = "MYAPP_RUNTIME"
+
 
     always_build = Value(default=True)
 
@@ -114,24 +131,24 @@ exemple_conf1 = {
 logging.basicConfig(level="DEBUG")
 
 
-import json
+# import json
 
-def dump_json(obj):
-    "Return a node object to serializable thing"
+# def dict_to_json(obj):
+#     "Return a node object to serializable thing"
 
-    def t_funct(item):
+#     def t_funct(item):
 
-        if item is UNSET:
-            return None
-        if hasattr(item, "get_value"):
-            return item.get_value()
-        raise Exception(f"Unparseable item: {item}")
+#         if item is UNSET:
+#             return None
+#         if hasattr(item, "get_value"):
+#             return item.get_value()
+#         raise Exception(f"Unparseable item: {item}")
 
 
-    return json.dumps(obj, 
-        indent=2,
-        default=t_funct,
-        )
+#     return json.dumps(obj, 
+#         indent=2,
+#         default=t_funct,
+#         )
 
 
 def test1():
@@ -164,17 +181,18 @@ def test1():
 
 
     p1.explain()
+    print(dict_to_json(p1.explain_tree()))
+    # print(p1.to_json())
+    # assert False
 
+    print ("\n\n===> Test get all children keys in list <====\n\n")
 
-    print ("\n\n===> Test get all children keys <====\n\n")
-
-    o1 = p1.flatify_children(mode="all")
-    o2 = p1.flatify_children(mode="containers")
-    o3 = p1.flatify_children(mode="keys")
+    o1 = p1.get_children_stores(mode="all")
+    o2 = p1.get_children_stores(mode="containers")
+    o3 = p1.get_children_stores(mode="keys")
     # pprint (o1)
     # pprint (o2)
     # pprint (o3)
-
     assert len(o2) != 0
     for i in o1:
         assert (i in o2) or (i in o3), f"Missing: {i}"
@@ -187,9 +205,8 @@ def test1():
     o2 = p1.dump_keys(mode="containers")
     o3 = p1.dump_keys(mode="keys")
     pprint (o1)
-    pprint (o2)
-    pprint (o3)
-
+    # pprint (o2)
+    # pprint (o3)
     assert len(o2) != 0
     for i, val in o1.items():
         assert (i in o2) or (i in o3), f"Missing: {i}"
@@ -210,149 +227,11 @@ def test1():
 
 
 
-
-    # o1 = p1.get_envvar_name(mode="all")
-    # pprint(o1)
-
-    return
-
-    assert False, "WIPP ENV VARS"
-
-    # t = p1.explain_tree(mode="struct")
-    # print (dump_json(t))
-
-
-
-    t = p1.explain_tree(mode="struct", lvl=2)
-    print (dump_json(t))
-    t = p1.explain_tree(mode="struct", lvl=1)
-    print (dump_json(t))
-    t = p1.explain_tree(mode="struct", lvl=0)
-    print (dump_json(t))
-    t = p1.explain_tree(mode="struct", lvl=-1)
-    print (dump_json(t))
-
-
-    t = p1.explain_tree()
-    print (dump_json(t))
-    t = p1.explain_tree(lvl=1)
-    print (dump_json(t))
-
-
     print ("____________________")
-    # t = p1.dump_keys()
-    # pprint (t)
+
+
 
     return
-
-    return
-
-
-    print ("get default:")
-    pprint (p1.get_default())
-    print ("get value:")
-    pprint (p1.get_value())
-    return
-
-
-    # Test Explicit - with data and children
-    # ===========================
-
-    print("\n---TEST: Explicit Dict - Create new config with Feed value")
-    c1 = {
-        "stacks_dict1": {
-            "stack1": {},
-            "stack2": {},
-        }
-    }
-    p1 = Project(
-        loaders=[],
-        value = dict(c1)
-        )
-    p1.explain()
-    p1["stacks_dict1"].explain()
-    pprint (p1._value)
-    assert p1._value == c1
-    # assert False
-    # assert False
-
-    print("\n---TEST: Explicit Dict - Create new config with Feed default")
-    p1 = Project(
-        loaders=[],
-        default = dict(c1)
-        )
-    p1.explain()
-    p1["stacks_dict1"].explain()
-
-
-
-    print("\n---TEST: Explicit Dict - Create new orphan stack child with values")
-    child1 = Stack(
-        key="stack3",
-        value={
-            "path": "New_path3",
-            "name": "New_name3",
-        },
-    )
-    child1.explain()
-
-
-    # assert False, "CHECK defaults and values"
-
-    print("\n---TEST: Explicit Dict - Add stack child in live")
-    curr_child = 2  # Added from previously added child
-    assert len(p1["stacks_dict1"]._children) == (0 + curr_child)
-    p1["stacks_dict1"].add_child(child1)
-    assert len(p1["stacks_dict1"]._children) == (1 + curr_child)
-
-    # Ensure child is the same
-    assert "stack3" in p1["stacks_dict1"]
-    assert child1 == p1["stacks_dict1"]["stack3"]
-    assert child1 is p1["stacks_dict1"]["stack3"]
-
-    # print ("====")
-    # p1["stacks_dict1"]["stack3"].explain()
-    p1["stacks_dict1"].explain()
-    child1.explain()
-    # print ("====")
-
-
-
-    # Test Implicit Dict - with data and children
-    # ===========================
-
-    print("\n---TEST: Implicit Dict - Create new config with Feed value")
-    c1 = {
-        "stacks_dict1": {
-            "stack1": {
-                "prj_dir": "tutu1"
-            },
-            "stack2": {},
-        },
-        "stacks_dict2": {
-            "stack1": {
-                "prj_dir": "tutu2"
-            },
-            "stack2": {},
-        }
-
-    }
-    p1 = Project(
-        loaders=[],
-        value = dict(c1)
-        )
-    p1.explain()
-    print ("===== COMPARE")
-    p1["stacks_dict1"].explain()
-    p1["stacks_dict2"].explain()
-
-
-    pprint (p1._value)
-    assert p1._value == c1
-    # assert False
-    # assert False
-
-
 
 test1()
 # test2()
