@@ -37,6 +37,12 @@ class Var(Value):
     # VALUE = Value(default="NO_VALUE")
 
 
+    class Meta:
+        default="UNSET Value"
+
+
+
+
 class VarCtl(ConfigurationDict):
     "Var controller withtout default value"
 
@@ -48,17 +54,20 @@ class VarCtlWithDefault(ConfigurationDict):
 
     class Meta:
         item_class = Var
+        default={
+            "default_harcoded_META": "val1_META",
+            "val2": None,
+            "val3": {},
+            "val4": UNSET,
+            
+            }
 
-        default={"default_harcoded_META": "val1_META"}
 
 
+class StackTag(Configuration):
 
-
-
-# class StackTag(Configuration):
-
-#     tag_name = Value(default="NO_KEY")
-#     tag_config = Value(default="NO_VALUE")
+    tag_name = Value(default="NO_KEY")
+    tag_config = Value(default="NO_VALUE")
 
 
 class Stack(Configuration):
@@ -73,12 +82,12 @@ class Stack(Configuration):
     path = Value(default="NO_PATH")
     name = Value(default="NO_NAME")
 
-    # vars = ValueConf(
-    #     item_class=VarCtl,
-    # )
+    vars = ValueConf(
+        item_class=VarCtlWithDefault,
+    )
     # tags = ValueList(
     #     item_class=StackTag,
-    #     # default={"always1": "value1", "always2": "value2" }
+    #     default=[{"always1": "value1", "always2": "value2", "always3": None, "always3": UNSET }]
     # )
 
 
@@ -146,8 +155,8 @@ exemple_conf1 = {
             "name": "stack1",
             "dir": "stack1",
         },
-        {},
-        None,
+        # {},
+        # None,
     ],
 
 }
@@ -171,9 +180,14 @@ def test1():
 
     p1.explain()
     print(dict_to_json(p1.explain_tree()))
+    print(dict_to_json(p1.explain_tree(mode="struct")))
 
-    p1["stacks"].explain()
-    p1["stacks"]["0"].explain()
+    # p1["stacks"].explain()
+    # p1["stacks"]["0"].explain()
+
+
+    p1["stacks"]["0"]["vars"].explain()
+    p1["stacks"]["0"]["vars"]["val4"].explain()
 
     # print(p1.to_json())
     # assert False
