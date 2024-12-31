@@ -464,7 +464,7 @@ class StoreList(StoreContainer):
                     value = local_default_subkey
                 if value == DEFAULT_VALUE or value == UNSET:  # or not value:
                     # Fetch value from Item Class
-                    value = local_cls.get_default(local_cls)
+                    value = local_cls().get_default()
 
                 assert issubclass(
                     _child_cls, StoreValue
