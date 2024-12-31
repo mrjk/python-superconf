@@ -22,12 +22,13 @@ class InvalidConfiguration(ConfigurationException):
     pass
 
 
-
 # Developper errors
 # ----------------
 
+
 class InvalidValueType(ConfigurationException):
     pass
+
 
 class InvalidContainerType(ConfigurationException):
     pass
@@ -35,4 +36,3 @@ class InvalidContainerType(ConfigurationException):
 
 class InvalidContainerDefault(ConfigurationException):
     pass
-

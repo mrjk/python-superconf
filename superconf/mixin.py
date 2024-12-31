@@ -53,7 +53,7 @@ class StoreExtra(StoreMixin):
 
         mro = self.__class__.__mro__
         mro_short = [x.__name__ for x in mro]
-        mro_short = ', '.join(mro_short)
+        mro_short = ", ".join(mro_short)
 
         print(f"===> Tree of {self.closest_type}: {self} <===")
         print(f"  inst      => {hex(id((self)))}")

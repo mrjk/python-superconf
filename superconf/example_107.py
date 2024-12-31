@@ -36,11 +36,8 @@ class Var(Value):
     # KEY = Value(default="NO_KEY")
     # VALUE = Value(default="NO_VALUE")
 
-
     class Meta:
-        default="UNSET Value"
-
-
+        default = "UNSET Value"
 
 
 class VarCtl(ConfigurationDict):
@@ -49,19 +46,18 @@ class VarCtl(ConfigurationDict):
     class Meta:
         item_class = Var
 
+
 class VarCtlWithDefault(ConfigurationDict):
     "Var controller with a default value"
 
     class Meta:
         item_class = Var
-        default={
+        default = {
             "default_harcoded_META": "val1_META",
             "val2": None,
             "val3": {},
             "val4": UNSET,
-            
-            }
-
+        }
 
 
 class StackTag(Configuration):
@@ -77,7 +73,6 @@ class Stack(Configuration):
             "name": "ExampleStack",
             "path": "MyExamplePath",
         }
-
 
     path = Value(default="NO_PATH")
     name = Value(default="NO_NAME")
@@ -142,8 +137,6 @@ class Project(Configuration):
     )
 
 
-
-
 exemple_conf0 = {}
 
 exemple_conf1 = {
@@ -158,9 +151,7 @@ exemple_conf1 = {
         # {},
         # None,
     ],
-
 }
-
 
 
 def test1():
@@ -184,7 +175,6 @@ def test1():
 
     # p1["stacks"].explain()
     # p1["stacks"]["0"].explain()
-
 
     p1["stacks"]["0"]["vars"].explain()
     p1["stacks"]["0"]["vars"]["val4"].explain()
