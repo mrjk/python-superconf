@@ -6,7 +6,7 @@ import argparse
 from superconf.common import dict_to_json
 from superconf.loaders import YamlFile, UNSET, NOT_SET
 
-from superconf.configuration import StoreValue, StoreDict, StoreList
+from superconf.configuration import StoreValue, StoreDict, StoreList, DEFAULT_VALUE, UNSET_VALUE
 
 # from superconf.mixin import StoreValueEnvVars
 # StoreValue = type('StoreValue',(StoreValue, StoreValueEnvVars),{})
@@ -30,11 +30,13 @@ args = parser.parse_args()
 # p.__class__ = type('GentlePerson',(Person,Gentleman),{})
 
 
+
+
+######### Stack Level
+
+
 class Var(Value):
     "Simple var"
-
-    # KEY = Value(default="NO_KEY")
-    # VALUE = Value(default="NO_VALUE")
 
     class Meta:
         default = "UNSET Value"
@@ -80,10 +82,13 @@ class Stack(Configuration):
     vars = ValueConf(
         item_class=VarCtlWithDefault,
     )
-    # tags = ValueList(
-    #     item_class=StackTag,
-    #     default=[{"always1": "value1", "always2": "value2", "always3": None, "always3": UNSET }]
-    # )
+    tags = ValueList(
+        item_class=StackTag,
+        default=[{"always1": "value1", "always2": "value2", "always3": None, "always3": UNSET }]
+    )
+
+
+######### Top Level
 
 
 class StacksList(ConfigurationList):
@@ -93,7 +98,10 @@ class StacksList(ConfigurationList):
         item_class = Stack
         env_prefix = "MYAPP_STACKS"
 
+        # default = [DEFAULT_VALUE]
         # default = [{}]
+        default = [None]
+        # default = [{"name": "overrided", "vars": DEFAULT_VALUE }]
 
 
 class PrjConfig(Configuration):
@@ -137,6 +145,8 @@ class Project(Configuration):
     )
 
 
+### Configurations
+
 exemple_conf0 = {}
 
 exemple_conf1 = {
@@ -160,7 +170,7 @@ def test1():
     # Init objects
     # ===========================
     p1 = Project(
-        value=dict(exemple_conf1),
+        value=dict(),
         name="MYAPP",
         loaders=[
             YamlFile("paasify.yml"),
@@ -170,18 +180,11 @@ def test1():
     print("\n\n===> Test suite: TEst1 App <====\n\n")
 
     p1.explain()
-    print(dict_to_json(p1.explain_tree()))
-    print(dict_to_json(p1.explain_tree(mode="struct")))
+    print(p1.to_json())
+    # print(dict_to_json(p1.explain_tree(mode="struct")))
 
-    # p1["stacks"].explain()
-    # p1["stacks"]["0"].explain()
 
-    p1["stacks"]["0"]["vars"].explain()
-    p1["stacks"]["0"]["vars"]["val4"].explain()
-
-    # print(p1.to_json())
-    # assert False
-    return
+    pprint (p1.get_envvars())
 
 
 test1()
