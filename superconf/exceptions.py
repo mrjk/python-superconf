@@ -20,3 +20,19 @@ class UnknownConfiguration(ConfigurationException):
 
 class InvalidConfiguration(ConfigurationException):
     pass
+
+
+
+# Developper errors
+# ----------------
+
+class InvalidValueType(ConfigurationException):
+    pass
+
+class InvalidContainerType(ConfigurationException):
+    pass
+
+
+class InvalidContainerDefault(ConfigurationException):
+    pass
+

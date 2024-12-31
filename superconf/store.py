@@ -2,6 +2,8 @@
 Represent Stores
 """
 
+import inspect
+
 import logging
 from collections import OrderedDict
 from typing import Callable
@@ -13,8 +15,24 @@ from .common import list_to_dict, dict_to_list, dict_to_json
 from .loaders import Environment
 from .node import NodeContainer
 from .mixin import StoreValueEnvVars, StoreExtra
+from . import exceptions 
 
 log = logging.getLogger(__name__)
+
+class DefaultValue():
+
+    def __str__(self):
+        return "<DEFAULT_VALUE>"
+
+class UnsetValue():
+
+    def __str__(self):
+        return "<UNSET_VALUE>"
+
+
+DEFAULT_VALUE = DefaultValue()
+UNSET_VALUE = UnsetValue()
+
 
 
 def store_to_json(obj):
@@ -67,33 +85,36 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
     # Value methods
     # -----------------
-    def get_value(self, type=None):
+    def get_value(self, kind=None):
         "Get current value of config, exclude NOT_SET values"
+
+        # Check from direct override
         value = getattr(self, "_value", UNSET)
-        if value != UNSET:
-            if type is not None:
-                if not isinstance(value, type):
+        if value != DEFAULT_VALUE and value != UNSET:
+            if kind is not None:
+                if not isinstance(value, kind):
                     return None
             return value
 
-        # If value is not present, return default
+        # If value is not present, return default instead
         return self.get_default()
 
     def get_default(self):
         "Get default values"
 
-        # Check local value
+        # Check default override value
         out = getattr(self, "_default", UNSET)
-        if out != UNSET:
+        if out != DEFAULT_VALUE and out != UNSET:
             # print ("RUN get_default: StoreValue - Attribute", self, out)
             return out
 
-        # Check Metadata
+        # Check default from Metadata
         out = getattr(self.Meta, "default", UNSET)
-        if out != UNSET:
+        if out != DEFAULT_VALUE and out != UNSET:
             # print ("RUN get_default: StoreValue - Meta", self, out)
             return out
 
+        # print ("RUN get_default: StoreValue - FAllBack", self, UNSET)
         return UNSET
 
     # Children methods
@@ -128,25 +149,28 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     def get_children_class(self, default=None):
         "Return default class to use for new children, must return a StoreNode class or UNSET"
 
-
+        # Check from direct override
         out = self._item_class
         if out != UNSET:
-            # assert isinstance(out, (NodeContainer, type(None)))
+            assert isinstance(out, (NodeContainer, type(None)))
             # print("RUN get_children_class: get_children_class - _item_class", self, out)
             return out
 
-        # Check Metadata
+        # Check from Metadata
         out = getattr(self.Meta, "item_class", UNSET)
         if out != UNSET:
-            # assert issubclass(out, (NodeContainer, UnSet, type(None)))
+            assert issubclass(out, (NodeContainer, UnSet, type(None)))
             # print("RUN get_children_class: get_children_class - Meta", self, out)
             return out
 
-
+        # Check from children class
         out = self._children_class
         if out != UNSET:
-            # assert isinstance(out, (NodeContainer, type(None)))
-            # print("RUN get_children_class: get_children_class - _children_class", self, out)
+
+            if inspect.isclass(out):
+                assert issubclass(out, StoreValue)
+            else: 
+                assert isinstance(out, type(None)), f"Got: {out}"
             return out
 
 
@@ -207,20 +231,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## ---
 
 
@@ -249,6 +259,8 @@ class StoreContainer(StoreValue):
 
         self._init_children()
 
+        assert isinstance(self._children, (dict, UnSet))
+
 
     # Value methods
     # -----------------
@@ -260,7 +272,10 @@ class StoreContainer(StoreValue):
             out = super(StoreContainer, self).get_value()
             out = native_type() if not out else out
             # out = native_type() if out is None else out
-            assert isinstance(out, (native_type, UNSET.__class__)), f"Expected {native_type}, Got: {type(out)} for {self} => {out}"
+
+            if not isinstance(out, (native_type, UNSET.__class__)):
+                msg = f"Expected {native_type} for value in {self}, got {type(out)}: {out}"
+                raise exceptions.InvalidValueType(msg)
             return out
 
         out = native_type()
@@ -271,9 +286,11 @@ class StoreContainer(StoreValue):
                 elif native_type == list:
                     out.append(child.get_value())
                 else:
-                    raise Exception("Unsupported type")
+                    raise exceptions.InvalidContainerType("Unsupported type")
+
 
         assert isinstance(out, (native_type, UNSET.__class__)), f"Expected {native_type}, Got: {type(out)}"
+        
         return out
 
 
@@ -284,7 +301,9 @@ class StoreContainer(StoreValue):
         out = super(StoreContainer, self).get_default()
         if out != UNSET:
             # print ("RUN get_default: StoreContainer - up_in_hier", self, out)
-            assert isinstance(out, native_type)
+            if not isinstance(out, (native_type)):
+                msg =  f"Expected {native_type} for default in {self}, got {type(out)}: {out}"
+                raise exceptions.InvalidContainerDefault(msg)
             return out
 
         # print ("RUN get_default: StoreContainer - Hard coded", self, dict())
@@ -309,6 +328,11 @@ class StoreContainer(StoreValue):
     def __contains__(self, value):
         children = getattr(self, "_children", {})
         return value in children
+
+    def __len__(self):
+        children = getattr(self, "_children", {})
+        return len(children)
+
 
 
 
@@ -357,10 +381,12 @@ class StoreDict(StoreContainer):
                 source = f"dict: {val}"
                 _child_value = val
                 # print ("NEW CHILD FROM Dict", key, "from", type(val))
-                inst = Value(value=val, default=local_default_subkey)
+                inst = local_cls(value=val, default=local_default_subkey)
 
             _child_default = inst.get_default()
-            # _child_value = inst.get_value() # Broken ?
+            # TOFIX/TODO
+            # _child_value2 = inst.get_value() # Broken ? Should work now
+            # print ("CHILD VALUE", key, _child_value, _child_value2)
 
             # Check if have a child class or skip key
             _child_cls = inst.get_children_class(default=StoreValue)
@@ -376,15 +402,12 @@ class StoreDict(StoreContainer):
                 # FAllback on parent value if not provided at Value
                 _child_default = local_default_subkey
 
-            if _child_value == UNSET or not _child_value:
+            if _child_value == UNSET or _child_value == DEFAULT_VALUE: # or not _child_value:
                 # FAllback on default if no values
                 _child_value = _child_default
 
-            # ---
-
             if not key in self._children:
-                self.log.debug(f"Instanciate dict item: {key}")
-
+                self.log.debug(f"Instanciate dict item {_child_cls}({key})=(default={_child_default}, value={_child_value})")
                 # Instanciate child
                 assert issubclass(_child_cls, StoreValue), f"Must be an class of StoreValue"
                 inst = _child_cls(key=key, value=_child_value, default=_child_default)
@@ -434,17 +457,13 @@ class StoreList(StoreContainer):
         # Fetch current value - dict
         local_value = self.get_value()
         local_default = self.get_default()
-        # print ("YOOOOO")
-        # pprint (repr(self))
-        # pprint (self.__dict__)
-        # pprint (self._children_class)
-        # pprint (self.Meta.__dict__)
         local_cls = self.get_children_class(default=StoreValue)
 
         if local_cls is None:
             return
 
         _child_cls = local_cls
+
         for key, val in self._iter_value():
             assert isinstance(key, str), "Invalid key"
 
@@ -454,16 +473,21 @@ class StoreList(StoreContainer):
                 local_default_subkey = local_default[idx]
             
             if not key in self._children:
-                self.log.warn(f"Instanciate list item: {key}, {_child_cls}")
+                # self.log.debug(f"Instanciate list item: {key}, {_child_cls}")
+                value = val
+                if value == DEFAULT_VALUE or value == UNSET: # or not value:
+                    # Fetch value from parent value
+                    value = local_default_subkey
+                if value == DEFAULT_VALUE or value == UNSET: # or not value:
+                    # Fetch value from Item Class
+                    value = local_cls.get_default(local_cls)
 
-                if val == UNSET or not val:
-                    val = local_default_subkey
 
                 assert issubclass(_child_cls, StoreValue), f"Must be an class of StoreValue"
-                inst = _child_cls(key=key, value=val)
+                inst = _child_cls(key=key, value=value)
                 self.add_child(inst)
 
-        
+
 ################################### Values
 
 

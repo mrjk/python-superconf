@@ -167,6 +167,7 @@ class NodeContainer(Node):
         if not self._children:
             self._children = dict()
 
+
         assert isinstance(self._children, dict), f"Uninitiated _children !"
         assert isinstance(
             child, NodeContainer
@@ -193,3 +194,4 @@ class NodeContainer(Node):
 
         # Attach child
         child.parent = self
+
