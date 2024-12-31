@@ -132,21 +132,21 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         out = self._item_class
         if out != UNSET:
             # assert isinstance(out, (NodeContainer, type(None)))
-            print("RUN get_children_class: get_children_class - _item_class", self, out)
+            # print("RUN get_children_class: get_children_class - _item_class", self, out)
             return out
 
         # Check Metadata
         out = getattr(self.Meta, "item_class", UNSET)
         if out != UNSET:
             # assert issubclass(out, (NodeContainer, UnSet, type(None)))
-            print("RUN get_children_class: get_children_class - Meta", self, out)
+            # print("RUN get_children_class: get_children_class - Meta", self, out)
             return out
 
 
         out = self._children_class
         if out != UNSET:
             # assert isinstance(out, (NodeContainer, type(None)))
-            print("RUN get_children_class: get_children_class - _children_class", self, out)
+            # print("RUN get_children_class: get_children_class - _children_class", self, out)
             return out
 
 
@@ -157,7 +157,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         #     # print("RUN get_children_class: get_children_class - Native", self, out)
         #     return out
 
-        print("RUN get_children_class: get_children_class - NotFound", self, default)
+        # print("RUN get_children_class: get_children_class - NotFound", self, default)
         return default
 
     # Dunder methods
@@ -434,11 +434,11 @@ class StoreList(StoreContainer):
         # Fetch current value - dict
         local_value = self.get_value()
         local_default = self.get_default()
-        print ("YOOOOO")
-        pprint (repr(self))
-        pprint (self.__dict__)
-        pprint (self._children_class)
-        pprint (self.Meta.__dict__)
+        # print ("YOOOOO")
+        # pprint (repr(self))
+        # pprint (self.__dict__)
+        # pprint (self._children_class)
+        # pprint (self.Meta.__dict__)
         local_cls = self.get_children_class(default=StoreValue)
 
         if local_cls is None:
@@ -447,12 +447,17 @@ class StoreList(StoreContainer):
         _child_cls = local_cls
         for key, val in self._iter_value():
             assert isinstance(key, str), "Invalid key"
+
+            idx = int(key)
+            local_default_subkey = UNSET
+            if len(local_default) > idx:
+                local_default_subkey = local_default[idx]
             
             if not key in self._children:
                 self.log.warn(f"Instanciate list item: {key}, {_child_cls}")
 
                 if val == UNSET or not val:
-                    val = local_default
+                    val = local_default_subkey
 
                 assert issubclass(_child_cls, StoreValue), f"Must be an class of StoreValue"
                 inst = _child_cls(key=key, value=val)
