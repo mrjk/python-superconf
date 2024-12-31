@@ -1,3 +1,7 @@
+"""
+Common part of code and helpers
+"""
+
 import json
 
 # Class helpers
@@ -21,14 +25,15 @@ def obj_repr_short(self):
 # Functions helpers
 # --------------------
 
-def list_to_dict(array):
+def list_to_dict(array, key=None):
     "Transform a list to a dict in number as string for keys"
-    return {str(k): v for k, v in enumerate(array)}
+    return {str(v.__dict__.get(key, k) if key else k): v for k, v in enumerate(array)}
 
 
 def dict_to_list(map):
     "Transform a dict to a list. Original dick keys are lost"
     return list(map.values())
+
 
 
 def dict_to_json(obj, fn=None):

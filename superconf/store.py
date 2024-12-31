@@ -67,16 +67,18 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     class Meta:
         pass
 
-    def __init__(self, *args, value=UNSET, default=UNSET, loaders=None, **kwargs):
+    def __init__(self, *args, index=None, value=UNSET, default=UNSET, loaders=None, **kwargs):
         """
         :param value:   Current value
         :param default: Default value if none is provided.
         """
 
         self._item_class = UNSET
+        assert isinstance(index, (str, int, type(None)))
 
         super(StoreValue, self).__init__(*args, **kwargs)
 
+        self._index = index
         self._value = value if value is not UNSET else self._value
         self._default = default if default != UNSET else self._default
 
@@ -86,6 +88,10 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
     # Value methods
     # -----------------
+    def get_index(self):
+        "Return object parent index"
+        return self._index
+
     def get_value(self, kind=None):
         "Get current value of config, exclude NOT_SET values"
 
@@ -288,6 +294,7 @@ class StoreContainer(StoreValue):
         return native_type()
 
     def _iter_children(self):
+        "Iterator over children"
         # Iterate over children payloads
         yield from self._children.items()
 
@@ -388,7 +395,7 @@ class StoreDict(StoreContainer):
                 assert issubclass(
                     _child_cls, StoreValue
                 ), f"Must be an class of StoreValue"
-                inst = _child_cls(key=key, value=_child_value, default=_child_default)
+                inst = _child_cls(key=key, index=key, value=_child_value, default=_child_default)
                 self.add_child(inst)
 
 
@@ -462,7 +469,7 @@ class StoreList(StoreContainer):
                 assert issubclass(
                     _child_cls, StoreValue
                 ), f"Must be an class of StoreValue"
-                inst = _child_cls(key=key, value=value)
+                inst = _child_cls(key=key, index=idx, value=value)
                 self.add_child(inst)
 
 
