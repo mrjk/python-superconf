@@ -79,6 +79,7 @@ from .parsers import EnvFileParser
 # NOT_SET = NotSet()
 # UNSET = UnSet()
 
+
 class EnvPrefix:
     """
     Since the environment is a global dictionary, it is a good practice to
@@ -415,7 +416,7 @@ class YamlFile(AbstractConfigurationLoader):
     def _parse(self):
         if self.config is not None:
             return
-        with open(self.filename, 'r') as f:
+        with open(self.filename, "r") as f:
             self.config = yaml.safe_load(f)
 
     def __contains__(self, item):
@@ -441,4 +442,3 @@ class YamlFile(AbstractConfigurationLoader):
 
     def reset(self):
         self.config = None
-

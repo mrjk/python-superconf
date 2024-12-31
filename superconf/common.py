@@ -1,4 +1,3 @@
-
 import json
 
 
@@ -8,8 +7,6 @@ def list_to_dict(array):
 
 def dict_to_list(map):
     return list(map.values())
-
-
 
 
 def dict_to_json(obj, fn=None):
@@ -24,12 +21,11 @@ def dict_to_json(obj, fn=None):
         #     return item.get_value()
         # raise Exception(f"Unparseable item: {item}")
 
-    return json.dumps(obj, 
+    return json.dumps(
+        obj,
         indent=2,
         default=fn or t_funct,
-        )
-
-
+    )
 
 
 class NotSet(str):
@@ -51,7 +47,6 @@ class NotSet(str):
         name = f"{self.__class__.__module__}.{self.__class__.__name__}"
         out = f"<{name} object at {addr}>"
         return out
-
 
 
 class UnSet(object):
@@ -100,6 +95,7 @@ class UnSet(object):
 
     def __int__(self):
         return 0
+
 
 NOT_SET = NotSet()
 UNSET = UnSet()

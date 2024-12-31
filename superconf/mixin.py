@@ -1,17 +1,17 @@
-
-
 from .common import NOT_SET, UNSET
 
 
 # Store Mixins Class
 # ==================
 
-class StoreMixin():
+
+class StoreMixin:
     "StroceValue Mixinx"
 
 
 class StoreValueMixin(StoreMixin):
     "StroceValue Mixinx"
+
 
 class StoreContainerMixin(StoreMixin):
     "StroceValue Mixinx"
@@ -24,14 +24,12 @@ class StoreContainerMixin(StoreMixin):
 class StoreExtra(StoreMixin):
     "Handle extra methods"
 
-
-
     def get_info(self):
         "Return short help"
         val = self.get_value()
         default = self.get_default()
 
-        out =  f"value={self.get_value()} [default={self.get_default()}]"
+        out = f"value={self.get_value()} [default={self.get_default()}]"
         if val == default:
             out = f"value={self.get_value()} [is default]"
 
@@ -40,20 +38,15 @@ class StoreExtra(StoreMixin):
 
         return out
 
-
-
     def dump_keys(self, lvl=-1, mode="keys"):
         "Return a list of keys"
 
-        out2 = {
-            self.fname: self
-        }
+        out2 = {self.fname: self}
 
         for child in self.get_children_stores(mode=mode, lvl=lvl):
             out2[child.get_key("parents")] = child
 
         return out2
-
 
     # Helper method
     def explain(self, lvl=-1):
@@ -76,7 +69,6 @@ class StoreExtra(StoreMixin):
 
         print()
 
-
     def explain_tree(self, lvl=-1, mode="default"):
 
         out = {}
@@ -87,7 +79,7 @@ class StoreExtra(StoreMixin):
             if children == UNSET:
                 if mode == "default":
                     # out[key] = child.get_children()# or child.get_value()
-                    # out[key] = child.explain_tree(lvl=lvl, mode=mode) #or 
+                    # out[key] = child.explain_tree(lvl=lvl, mode=mode) #or
                     out = self.get_value()
                 elif mode == "struct":
                     out = self.get_info()
@@ -101,29 +93,28 @@ class StoreExtra(StoreMixin):
 
                     if mode == "default":
                         # out[key] = child.get_children()# or child.get_value()
-                        out[key] = child.explain_tree(lvl=lvl, mode=mode) #or child.get_value()
+                        out[key] = child.explain_tree(
+                            lvl=lvl, mode=mode
+                        )  # or child.get_value()
                     elif mode == "struct":
-                        out[str(child)] = child.explain_tree(lvl=lvl, mode=mode) or str(child.get_info())
+                        out[str(child)] = child.explain_tree(lvl=lvl, mode=mode) or str(
+                            child.get_info()
+                        )
         else:
             if mode == "default":
                 out = str(self.get_value())
             elif mode == "struct":
                 child_count = len(self.get_children())
                 # out = str(self.get_info()) # self.get_value()
-                out = f"{self.get_info()} (has {child_count} childrens)" 
+                out = f"{self.get_info()} (has {child_count} childrens)"
 
         return out
 
         # while children:
 
 
-
-
-
 class StoreValueEnvVars(StoreMixin):
     "Handle env vars"
-
-
 
     # Environment var management
     def get_envvar_prefix(self):
@@ -136,7 +127,7 @@ class StoreValueEnvVars(StoreMixin):
         if out != UNSET:
             return out
 
-        # out = 
+        # out =
         for node in self.get_hier(mode="full"):
             if node == self:
                 continue
@@ -149,12 +140,11 @@ class StoreValueEnvVars(StoreMixin):
             return out
 
         out = node.name
-        return out # "WIP_____"
+        return out  # "WIP_____"
         assert False, "WIPPP"
 
         pass
         # self._env_var_prefix =
-    
 
     def get_envvar(self, **kwargs):
         """
@@ -170,7 +160,6 @@ class StoreValueEnvVars(StoreMixin):
         out = f"{self.get_envvar_prefix()}{out}"
         return out
 
-
     def get_envvars(self, mode="keys", lvl=-1):
         "Return a list of all children envvars"
         out = {}
@@ -180,4 +169,3 @@ class StoreValueEnvVars(StoreMixin):
             out[key_name] = child
 
         return out
-

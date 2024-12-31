@@ -1,5 +1,3 @@
-
-
 import logging
 from pprint import pprint
 import argparse
@@ -10,14 +8,15 @@ from superconf.configuration import Configuration, ConfigurationDict, Configurat
 from superconf.configuration import ValueConf, ValueDict, ValueList, Value
 from superconf.configuration import StoreValue, StoreDict, StoreList
 
-parser = argparse.ArgumentParser(description='Does something useful.')
-parser.add_argument('--debug', '-d', dest='debug', default=NOT_SET, help='set debug mode')
+parser = argparse.ArgumentParser(description="Does something useful.")
+parser.add_argument(
+    "--debug", "-d", dest="debug", default=NOT_SET, help="set debug mode"
+)
 args = parser.parse_args()
 
 
-
-
 # Example structure 1
+
 
 class Stack(Configuration):
 
@@ -30,6 +29,7 @@ class StacksDict(ConfigurationDict):
 
     class Meta:
         item_class = Stack
+
 
 class StacksList(ConfigurationList):
     "List of stacks"
@@ -47,7 +47,7 @@ class PrjConfig(Configuration):
 class Project(Configuration):
 
     class Meta:
-        loaders=[]
+        loaders = []
         additional_values = False
 
     # EX2: Explicit subdict
@@ -58,7 +58,6 @@ class Project(Configuration):
         item_class=Stack,
     )
 
-
     # EX3: Explicit declaration
     stacks_list1 = ValueConf(
         item_class=StacksList,
@@ -66,7 +65,6 @@ class Project(Configuration):
     stacks_list2 = ValueList(
         item_class=Stack,
     )
-    
 
 
 logging.basicConfig(level="DEBUG")
@@ -86,16 +84,15 @@ exemple_conf1 = {
 def test1():
     # First level testing
 
-
     # Init objects
     # ===========================
     p2 = Project(
         loaders=[
             YamlFile("paasify.yml"),
-        ])
+        ]
+    )
 
-    print ("\n\n===> Test suite: TEst1 Dict <====\n\n")
-
+    print("\n\n===> Test suite: TEst1 Dict <====\n\n")
 
     # Test Explicit - with data and children
     # ===========================
@@ -107,26 +104,18 @@ def test1():
             "stack2": {},
         }
     }
-    p1 = Project(
-        loaders=[],
-        value = dict(c1)
-        )
+    p1 = Project(loaders=[], value=dict(c1))
     p1.explain()
     p1["stacks_dict1"].explain()
-    pprint (p1._value)
+    pprint(p1._value)
     assert p1._value == c1
     # assert False
     # assert False
 
     print("\n---TEST: Explicit Dict - Create new config with Feed default")
-    p1 = Project(
-        loaders=[],
-        default = dict(c1)
-        )
+    p1 = Project(loaders=[], default=dict(c1))
     p1.explain()
     p1["stacks_dict1"].explain()
-
-
 
     print("\n---TEST: Explicit Dict - Create new orphan stack child with values")
     child1 = Stack(
@@ -137,7 +126,6 @@ def test1():
         },
     )
     child1.explain()
-
 
     # assert False, "CHECK defaults and values"
 
@@ -158,98 +146,71 @@ def test1():
     child1.explain()
     # print ("====")
 
-
-
     # Test Implicit Dict - with data and children
     # ===========================
 
     print("\n---TEST: Implicit Dict - Create new config with Feed value")
     c1 = {
         "stacks_dict1": {
-            "stack1": {
-                "prj_dir": "tutu1"
-            },
+            "stack1": {"prj_dir": "tutu1"},
             "stack2": {},
         },
         "stacks_dict2": {
-            "stack1": {
-                "prj_dir": "tutu2"
-            },
+            "stack1": {"prj_dir": "tutu2"},
             "stack2": {},
-        }
-
+        },
     }
-    p1 = Project(
-        loaders=[],
-        value = dict(c1)
-        )
+    p1 = Project(loaders=[], value=dict(c1))
     p1.explain()
-    print ("===== COMPARE")
+    print("===== COMPARE")
     p1["stacks_dict1"].explain()
     p1["stacks_dict2"].explain()
 
-
-    pprint (p1._value)
+    pprint(p1._value)
     assert p1._value == c1
     # assert False
     # assert False
 
 
-
 def test2():
-
 
     # Init objects
     # ===========================
     p2 = Project(
         loaders=[
             YamlFile("paasify.yml"),
-        ])
+        ]
+    )
 
-    print ("\n\n===> Test suite: TEst2 - List <====\n\n")
-
+    print("\n\n===> Test suite: TEst2 - List <====\n\n")
 
     # Test Explicit - with data and children
     # ===========================
 
     c1 = {
         "stacks_list1": [
-            {
-                "name": "hardcoded",
-                "prj_dir": "tutu1"
-            },
+            {"name": "hardcoded", "prj_dir": "tutu1"},
             {},
         ],
         "stacks_list2": [
-            {
-                "prj_dir": "tutu2"
-            },
+            {"prj_dir": "tutu2"},
             {},
-        ]
+        ],
     }
 
     print("\n---TEST: Explicit List - Create new config with Feed default")
-    p1 = Project(
-        loaders=[],
-        default = dict(c1)
-        )
+    p1 = Project(loaders=[], default=dict(c1))
     p1.explain()
     p1["stacks_list1"].explain()
-
 
     print("\n---TEST: Explicit List - Create new config with Feed value")
-    p1 = Project(
-        loaders=[],
-        value = dict(c1)
-        )
+    p1 = Project(loaders=[], value=dict(c1))
     p1.explain()
     p1["stacks_list1"].explain()
-    pprint (p1._value)
+    pprint(p1._value)
     assert p1._value == c1
     # assert False
     # assert False
-
-
 
     print("\n---TEST: Explicit List - Create new orphan stack child with values")
     child1 = Stack(
@@ -260,7 +221,6 @@ def test2():
         },
     )
     child1.explain()
-
 
     print("\n---TEST: Explicit List - Add stack child in live")
     curr_child = 2  # Added from previously added child
@@ -280,30 +240,20 @@ def test2():
     child1.explain()
     # print ("====")
 
-
-
     # Test Implicit Dict - with data and children
     # ===========================
 
     print("\n---TEST: Implicit List - Create new config with Feed value")
-    p1 = Project(
-        loaders=[],
-        value = dict(c1)
-        )
+    p1 = Project(loaders=[], value=dict(c1))
     p1.explain()
-    print ("===== COMPARE")
+    print("===== COMPARE")
     p1["stacks_list1"].explain()
     p1["stacks_list2"].explain()
 
-
-    pprint (p1._value)
+    pprint(p1._value)
     assert p1._value == c1
     # assert False
     # assert False
-
-
-
-
 
 
 # def test3():
@@ -347,7 +297,6 @@ def test2():
 #     print (root1.get_default())
 
 #     assert False
-
 
 
 test1()

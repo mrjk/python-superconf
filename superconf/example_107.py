@@ -1,4 +1,3 @@
-
 import logging
 from pprint import pprint
 import argparse
@@ -8,6 +7,7 @@ from superconf.common import dict_to_json
 from superconf.loaders import YamlFile, UNSET, NOT_SET
 
 from superconf.configuration import StoreValue, StoreDict, StoreList
+
 # from superconf.mixin import StoreValueEnvVars
 # StoreValue = type('StoreValue',(StoreValue, StoreValueEnvVars),{})
 
@@ -15,8 +15,10 @@ from superconf.configuration import Configuration, ConfigurationDict, Configurat
 from superconf.configuration import ValueConf, ValueDict, ValueList, Value
 
 
-parser = argparse.ArgumentParser(description='Does something useful.')
-parser.add_argument('--debug', '-d', dest='debug', default=NOT_SET, help='set debug mode')
+parser = argparse.ArgumentParser(description="Does something useful.")
+parser.add_argument(
+    "--debug", "-d", dest="debug", default=NOT_SET, help="set debug mode"
+)
 args = parser.parse_args()
 
 
@@ -30,7 +32,7 @@ args = parser.parse_args()
 
 class Var(Value):
     "Simple var"
-    
+
     # KEY = Value(default="NO_KEY")
     # VALUE = Value(default="NO_VALUE")
 
@@ -42,13 +44,10 @@ class VarCtl(ConfigurationDict):
         item_class = Var
 
 
-
-
 class StackTag(Configuration):
 
     tag_name = Value(default="NO_KEY")
     tag_config = Value(default="NO_VALUE")
-
 
 
 class Stack(Configuration):
@@ -77,12 +76,12 @@ class PrjConfig(Configuration):
     prj_dir = Value()
     prj_namespace = Value(default="NO_NS")
 
+
 class PrjRuntime(Configuration):
     "Stack runtime"
 
     class Meta:
         env_prefix = "MYAPP_RUNTIME"
-
 
     always_build = Value(default=True)
 
@@ -90,9 +89,8 @@ class PrjRuntime(Configuration):
 class Project(Configuration):
 
     class Meta:
-        loaders=[]
+        loaders = []
         additional_values = False
-
 
     status = Value(default="Undefined")
 
@@ -102,7 +100,7 @@ class Project(Configuration):
     prj = ValueConf(
         item_class=PrjConfig,
     )
-    
+
     vars = ValueConf(
         item_class=VarCtl,
         # default={},
@@ -110,8 +108,6 @@ class Project(Configuration):
     stacks = ValueConf(
         item_class=StacksList,
     )
-    
-
 
 
 exemple_conf0 = {}
@@ -124,8 +120,6 @@ exemple_conf1 = {
 }
 
 #########
-
-
 
 
 logging.basicConfig(level="DEBUG")
@@ -145,7 +139,7 @@ logging.basicConfig(level="DEBUG")
 #         raise Exception(f"Unparseable item: {item}")
 
 
-#     return json.dumps(obj, 
+#     return json.dumps(obj,
 #         indent=2,
 #         default=t_funct,
 #         )
@@ -153,7 +147,6 @@ logging.basicConfig(level="DEBUG")
 
 def test1():
     # First level testing
-
 
     # Init objects
     # ===========================
@@ -167,25 +160,25 @@ def test1():
         ],
         "vars": {
             "var_name": "var_value",
-        }
+        },
     }
 
     p1 = Project(
-        value = dict(c1),
-        name = "MYAPP",
+        value=dict(c1),
+        name="MYAPP",
         loaders=[
             YamlFile("paasify.yml"),
-        ])
+        ],
+    )
 
-    print ("\n\n===> Test suite: TEst1 App <====\n\n")
-
+    print("\n\n===> Test suite: TEst1 App <====\n\n")
 
     p1.explain()
     print(dict_to_json(p1.explain_tree()))
     # print(p1.to_json())
     # assert False
 
-    print ("\n\n===> Test get all children keys in list <====\n\n")
+    print("\n\n===> Test get all children keys in list <====\n\n")
 
     o1 = p1.get_children_stores(mode="all")
     o2 = p1.get_children_stores(mode="containers")
@@ -196,15 +189,13 @@ def test1():
     assert len(o2) != 0
     for i in o1:
         assert (i in o2) or (i in o3), f"Missing: {i}"
-    assert len (o1) == (len(o2) + len(o3))
+    assert len(o1) == (len(o2) + len(o3))
 
-
-
-    print ("\n\n===> Test dump keys <====\n\n")
+    print("\n\n===> Test dump keys <====\n\n")
     o1 = p1.dump_keys(mode="all")
     o2 = p1.dump_keys(mode="containers")
     o3 = p1.dump_keys(mode="keys")
-    pprint (o1)
+    pprint(o1)
     # pprint (o2)
     # pprint (o3)
     assert len(o2) != 0
@@ -213,25 +204,20 @@ def test1():
     for i, val in o1.items():
         assert (i in o2) or (i in o3), f"Missing: {i}"
 
-
-
-    print ("\n\n===> Test get_env_vars <====\n\n")
+    print("\n\n===> Test get_env_vars <====\n\n")
     o1 = p1.get_envvars(mode="all")
     o2 = p1.get_envvars(mode="containers")
     o3 = p1.get_envvars(mode="keys")
     # # pprint (o1)
     # # pprint (o2)
-    pprint (o3)
+    pprint(o3)
     for key, child in o1.items():
         assert key.startswith("MYAPP")
 
-
-
-    print ("____________________")
-
-
+    print("____________________")
 
     return
+
 
 test1()
 # test2()

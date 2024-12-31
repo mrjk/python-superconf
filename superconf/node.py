@@ -7,7 +7,6 @@ from pprint import pprint
 from .common import NOT_SET, UNSET
 
 
-
 log = logging.getLogger(__name__)
 
 
@@ -54,7 +53,6 @@ class Node:
         self.key = key or self.key
         self.parent = parent or None
         self.name = name or self.name or self.key or "" or self.__class__.__name__
-
 
         self._help = help
 
@@ -195,4 +193,3 @@ class NodeContainer(Node):
 
         # Attach child
         child.parent = self
-

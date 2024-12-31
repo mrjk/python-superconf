@@ -17,11 +17,8 @@ from .mixin import StoreValueEnvVars, StoreExtra
 log = logging.getLogger(__name__)
 
 
-
-
 def store_to_json(obj):
     "Return a node object to serializable thing"
-
 
     def t_funct(item):
         # return str(item)
@@ -35,8 +32,8 @@ def store_to_json(obj):
     return dict_to_json(obj, fn=t_funct)
 
 
-
 ################## Config Models
+
 
 class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     "Represent a node value, dead leaf"
@@ -61,11 +58,9 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         self._value = value if value is not UNSET else self._value
         self._default = default if default != UNSET else self._default
 
-
     def to_json(self):
         "Return json value of ..."
         return store_to_json(self)
-
 
     # Value methods
     # -----------------
@@ -98,21 +93,20 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         return UNSET
 
-
     # Children methods
     # -----------------
     def get_children_stores(self, mode="all", lvl=-1):
         """Return a flat list of all children stores
-        Allow to filter per type 
+        Allow to filter per type
         """
 
         out1 = [self]
 
-        if mode == "keys": 
+        if mode == "keys":
             if isinstance(self, StoreDict):
                 # Remove container keys
                 out1 = []
-        elif mode == "containers": 
+        elif mode == "containers":
             if not isinstance(self, StoreDict):
                 # Remove all keysValues
                 out1 = []
@@ -128,7 +122,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         return out1
 
-
     def get_children_class(self, default=None):
         "Return default class to use for new children"
 
@@ -143,8 +136,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
             return out
 
         return default
-
-
 
     # Dunder methods
     # -----------------
@@ -197,7 +188,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 class StoreDict(StoreValue):
     "Represent a unknown keys config"
 
-
     _children_class = StoreValue
 
     # Container methods
@@ -213,7 +203,6 @@ class StoreDict(StoreValue):
         assert isinstance(default, (dict, UnSet))
 
         self._init_children()
-
 
     # def _children_iterable(self):
     #     yield from self.get_children().items()
@@ -311,8 +300,6 @@ class StoreDict(StoreValue):
         # print ("RUN get_default: StoreDict - Hard coded", self, dict())
         return {}
 
-
-
     # Dunder methods
     # -----------------
     def __getitem__(self, value):
@@ -352,7 +339,6 @@ class StoreConf(StoreDict):
         return out
 
 
-
 class StoreList(StoreDict):
     "Represent a unknown list config"
 
@@ -382,8 +368,6 @@ class StoreList(StoreDict):
     #     if out != UNSET:
     #         return out
     #     return {}
-
-
 
 
 ################################### Values
