@@ -187,23 +187,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     # Dunder methods
     # -----------------
 
-    # def __DEFAULT_repr(self):
-    #     addr = hex(id(self))
-    #     name = f"{self.__class__.__module__}.{self.__class__.__name__}"
-    #     out = f"<{name} object at {addr}>"
-    #     return out
-
-    # def __SHORT_repr(self):
-    #     addr = hex(id(self))
-    #     name = f"{self.__class__.__module__}.{self.__class__.__name__}"
-    #     out = f"<{name}({addr})>"
-    #     return out
-    # def __repr__(self):
-    #     addr = hex(id(self))
-    #     name = f"{self.__class__.__module__}.{self.__class__.__name__}"
-    #     out = f"Confissime - <{name} object at {addr}>"
-    #     return out
-
     def __str__(self):
         addr = hex(id(self))
         value = None
