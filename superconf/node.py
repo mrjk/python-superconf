@@ -95,6 +95,7 @@ class NodeContainer(Node):
         _t = list(reversed(_t))
         return ".".join(_t) or self.name
 
+
     # Hiererachy methods
     def get_hier(self, mode="parents"):
         "Return hierachy"
