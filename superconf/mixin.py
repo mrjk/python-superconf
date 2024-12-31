@@ -51,9 +51,13 @@ class StoreExtra(StoreMixin):
     # Helper method
     def explain(self, lvl=-1):
 
+        mro = self.__class__.__mro__
+        mro_short = [x.__name__ for x in mro]
+        mro_short = ', '.join(mro_short)
+
         print(f"===> Tree of {self.closest_type}: {self} <===")
         print(f"  inst      => {hex(id((self)))}")
-        print(f"  mro       => {self.__class__.__mro__}")
+        print(f"  mro       => {mro_short}")
         print(f"  key       => {self.key}")
         print(f"  name      => {self.name}")
         print(f"  fname     => {self.fname}")

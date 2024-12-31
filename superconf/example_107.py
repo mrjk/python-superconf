@@ -38,29 +38,48 @@ class Var(Value):
 
 
 class VarCtl(ConfigurationDict):
-    "Var controller"
+    "Var controller withtout default value"
 
     class Meta:
         item_class = Var
 
+class VarCtlWithDefault(ConfigurationDict):
+    "Var controller with a default value"
 
-class StackTag(Configuration):
+    class Meta:
+        item_class = Var
 
-    tag_name = Value(default="NO_KEY")
-    tag_config = Value(default="NO_VALUE")
+        default={"default_harcoded_META": "val1_META"}
+
+
+
+
+
+# class StackTag(Configuration):
+
+#     tag_name = Value(default="NO_KEY")
+#     tag_config = Value(default="NO_VALUE")
 
 
 class Stack(Configuration):
 
+    class Meta:
+        default = {
+            "name": "ExampleStack",
+            "path": "MyExamplePath",
+        }
+
+
     path = Value(default="NO_PATH")
     name = Value(default="NO_NAME")
 
-    vars = ValueConf(
-        item_class=VarCtl,
-    )
-    tags = ValueList(
-        item_class=StackTag,
-    )
+    # vars = ValueConf(
+    #     item_class=VarCtl,
+    # )
+    # tags = ValueList(
+    #     item_class=StackTag,
+    #     # default={"always1": "value1", "always2": "value2" }
+    # )
 
 
 class StacksList(ConfigurationList):
@@ -69,6 +88,8 @@ class StacksList(ConfigurationList):
     class Meta:
         item_class = Stack
         env_prefix = "MYAPP_STACKS"
+
+        # default = [{}]
 
 
 class PrjConfig(Configuration):
@@ -103,46 +124,34 @@ class Project(Configuration):
 
     vars = ValueConf(
         item_class=VarCtl,
-        # default={},
+        default={"default_harcoded1": "val1"},
     )
+
+    # Ex1: Test defaults overrides
     stacks = ValueConf(
         item_class=StacksList,
     )
 
 
+
+
 exemple_conf0 = {}
 
 exemple_conf1 = {
-    "simple1": "strgni_from dict",
-    "simple2": "string from dict",
+    # "simple1": "strgni_from dict",
+    # "simple2": "string from dict",
     # "": "",
-    # "": "",
+    "stacks": [
+        {
+            "name": "stack1",
+            "dir": "stack1",
+        },
+        {},
+        None,
+    ],
+
 }
 
-#########
-
-
-logging.basicConfig(level="DEBUG")
-
-
-# import json
-
-# def dict_to_json(obj):
-#     "Return a node object to serializable thing"
-
-#     def t_funct(item):
-
-#         if item is UNSET:
-#             return None
-#         if hasattr(item, "get_value"):
-#             return item.get_value()
-#         raise Exception(f"Unparseable item: {item}")
-
-
-#     return json.dumps(obj,
-#         indent=2,
-#         default=t_funct,
-#         )
 
 
 def test1():
@@ -150,21 +159,8 @@ def test1():
 
     # Init objects
     # ===========================
-    c1 = {
-        "stacks": [
-            {
-                "prj_dir": "tutu1",
-                # "vars":
-            },
-            {},
-        ],
-        "vars": {
-            "var_name": "var_value",
-        },
-    }
-
     p1 = Project(
-        value=dict(c1),
+        value=dict(exemple_conf1),
         name="MYAPP",
         loaders=[
             YamlFile("paasify.yml"),
@@ -175,49 +171,13 @@ def test1():
 
     p1.explain()
     print(dict_to_json(p1.explain_tree()))
+
+    p1["stacks"].explain()
+    p1["stacks"]["0"].explain()
+
     # print(p1.to_json())
     # assert False
-
-    print("\n\n===> Test get all children keys in list <====\n\n")
-
-    o1 = p1.get_children_stores(mode="all")
-    o2 = p1.get_children_stores(mode="containers")
-    o3 = p1.get_children_stores(mode="keys")
-    # pprint (o1)
-    # pprint (o2)
-    # pprint (o3)
-    assert len(o2) != 0
-    for i in o1:
-        assert (i in o2) or (i in o3), f"Missing: {i}"
-    assert len(o1) == (len(o2) + len(o3))
-
-    print("\n\n===> Test dump keys <====\n\n")
-    o1 = p1.dump_keys(mode="all")
-    o2 = p1.dump_keys(mode="containers")
-    o3 = p1.dump_keys(mode="keys")
-    pprint(o1)
-    # pprint (o2)
-    # pprint (o3)
-    assert len(o2) != 0
-    for i, val in o1.items():
-        assert (i in o2) or (i in o3), f"Missing: {i}"
-    for i, val in o1.items():
-        assert (i in o2) or (i in o3), f"Missing: {i}"
-
-    print("\n\n===> Test get_env_vars <====\n\n")
-    o1 = p1.get_envvars(mode="all")
-    o2 = p1.get_envvars(mode="containers")
-    o3 = p1.get_envvars(mode="keys")
-    # # pprint (o1)
-    # # pprint (o2)
-    pprint(o3)
-    for key, child in o1.items():
-        assert key.startswith("MYAPP")
-
-    print("____________________")
-
     return
 
 
 test1()
-# test2()

@@ -43,6 +43,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
     # Disable children when set to None
     _children_class = None
+    _native_type = str
 
     class Meta:
         pass
@@ -52,6 +53,8 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         :param value:   Current value
         :param default: Default value if none is provided.
         """
+
+        self._item_class = UNSET
 
         super(StoreValue, self).__init__(*args, **kwargs)
 
@@ -80,7 +83,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         "Get default values"
 
         # Check local value
-        out = self._default
+        out = getattr(self, "_default", UNSET)
         if out != UNSET:
             # print ("RUN get_default: StoreValue - Attribute", self, out)
             return out
@@ -123,18 +126,38 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         return out1
 
     def get_children_class(self, default=None):
-        "Return default class to use for new children"
+        "Return default class to use for new children, must return a StoreNode class or UNSET"
 
-        out = self._children_class
+
+        out = self._item_class
         if out != UNSET:
-            # print("RUN get_children_class: StoreValue - _children_class", self, out)
+            # assert isinstance(out, (NodeContainer, type(None)))
+            print("RUN get_children_class: get_children_class - _item_class", self, out)
             return out
 
         # Check Metadata
         out = getattr(self.Meta, "item_class", UNSET)
         if out != UNSET:
+            # assert issubclass(out, (NodeContainer, UnSet, type(None)))
+            print("RUN get_children_class: get_children_class - Meta", self, out)
             return out
 
+
+        out = self._children_class
+        if out != UNSET:
+            # assert isinstance(out, (NodeContainer, type(None)))
+            print("RUN get_children_class: get_children_class - _children_class", self, out)
+            return out
+
+
+        # Return Native type
+        # # out = getattr(self, "_native_type", UNSET) 
+        # out = self._native_type
+        # if out != UNSET:
+        #     # print("RUN get_children_class: get_children_class - Native", self, out)
+        #     return out
+
+        print("RUN get_children_class: get_children_class - NotFound", self, default)
         return default
 
     # Dunder methods
@@ -182,123 +205,95 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     # ----
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## ---
 
 
-class StoreDict(StoreValue):
+class StoreContainer(StoreValue):
     "Represent a unknown keys config"
 
+    _native_type = dict
     _children_class = StoreValue
+
+
 
     # Container methods
     # -----------------
 
     def __init__(self, *args, **kwargs):
-        super(StoreDict, self).__init__(*args, **kwargs)
+        
+        super(StoreContainer, self).__init__(*args, **kwargs)
+        native_type = self._native_type
 
         # Sanity checks
         value = self.get_value()
-        assert isinstance(value, (dict, UnSet)), f"Got: {value}"
+        assert isinstance(value, (native_type, UnSet)), f"Got: {value}"
+
         default = self.get_default()
-        assert isinstance(default, (dict, UnSet))
+        assert isinstance(default, (native_type, UnSet))
 
         self._init_children()
 
-    # def _children_iterable(self):
-    #     yield from self.get_children().items()
-
-    def _children_def_iterable(self):
-        # Iterate over children payloads
-        yield from self.get_value().items()
-
-    def _init_children(self):
-
-        # Fetch current value - dict
-        local_value = self.get_value()
-        # local_value = self._value
-        local_default = self.get_default()
-
-        # Create children instances FROM HARDCODED VALUES
-        for key, val in self._children_def_iterable():
-            source = None
-
-            override_default = self.get_default().get(key)
-
-            if isinstance(val, Value):
-                source = f"Value: {val}"
-                _value_cls = val.get_children_class(default=StoreValue)
-                _value_default = val.get_default()
-                _value_value = local_value.get(key, UNSET)
-                # print ("NEW CHILD FROM Value", key, "from data", type(val), "default=", _value_default)
-
-            elif isinstance(val, StoreValue):
-                source = f"Store: {val}"
-                _value_cls = self.get_children_class(default=type(val))
-                _value_default = val.get_default()
-                _value_value = local_value.get(key, UNSET)
-                # print ("NEW CHILD FROM StoreValue", key, "from", type(val))
-
-            else:
-                source = f"dict: {val}"
-                _value_cls = self.get_children_class(default=StoreValue)
-                _value_value = val
-                _value_default = self.get_default().get(key, UNSET)
-                # print ("NEW CHILD FROM Dict", key, "from", type(val))
-
-            if override_default != UNSET:
-                child_default = override_default
-            else:
-                child_default = _value_default
-
-            if _value_cls is None:
-                continue
-
-            # self.log.debug(f"New child '{key}' ({_value_cls}): {_value_value}")
-            assert issubclass(
-                _value_cls, StoreValue
-            ), f"Got: ({self}) {type(_value_inst)}"
-
-            if not key in self._children:
-                self.log.debug(f"Instanciate key: {key}")
-
-                # Instanciate child
-                cls = _value_cls
-                assert issubclass(cls, StoreValue), f"Must be an class of StoreValue"
-                child_default = local_default.get(key, None) or _value_default
-
-                child_values = _value_value
-                inst = cls(key=key, value=child_values, default=child_default)
-
-                self.add_child(inst)
 
     # Value methods
     # -----------------
     def get_value(self):
         "Always return a dict"
+        native_type = self._native_type
 
         if self._children == UNSET:
-            out = super(StoreDict, self).get_value()
+            out = super(StoreContainer, self).get_value()
+            out = native_type() if not out else out
+            # out = native_type() if out is None else out
+            assert isinstance(out, (native_type, UNSET.__class__)), f"Expected {native_type}, Got: {type(out)} for {self} => {out}"
             return out
 
-        out = dict()
+        out = native_type()
         if len(self._children) > 0:
-            for key, child in self._children.items():
-                out[key] = child.get_value()
+            for key, child in self._iter_children():
+                if native_type == dict:
+                    out[key] = child.get_value()
+                elif native_type == list:
+                    out.append(child.get_value())
+                else:
+                    raise Exception("Unsupported type")
 
-        assert isinstance(out, (dict, UNSET.__class__)), f"Got: {type(out)}"
+        assert isinstance(out, (native_type, UNSET.__class__)), f"Expected {native_type}, Got: {type(out)}"
         return out
+
 
     def get_default(self):
         "Top level function to get current value of config, exclude NOT_SET values"
+        native_type = self._native_type
 
-        out = super(StoreDict, self).get_default()
+        out = super(StoreContainer, self).get_default()
         if out != UNSET:
-            # print ("RUN get_default: StoreDict - up_in_hier", self, out)
-            assert isinstance(out, dict)
+            # print ("RUN get_default: StoreContainer - up_in_hier", self, out)
+            assert isinstance(out, native_type)
             return out
 
-        # print ("RUN get_default: StoreDict - Hard coded", self, dict())
-        return {}
+        # print ("RUN get_default: StoreContainer - Hard coded", self, dict())
+        return native_type()
+
+    def _iter_children(self):
+        # Iterate over children payloads
+        yield from self._children.items()
+
 
     # Dunder methods
     # -----------------
@@ -316,10 +311,90 @@ class StoreDict(StoreValue):
         return value in children
 
 
+
+class StoreDict(StoreContainer):
+    "Represent a unknown keys config"
+
+
+    # Container methods
+    # -----------------
+
+
+    def _iter_value(self):
+        yield from self.get_value().items()
+
+
+    def _init_children(self):
+
+        # Fetch current value - dict
+        local_default = self.get_default()
+        local_value = self.get_value()
+        local_cls = self.get_children_class(default=UNSET)
+
+        for key, val in self._iter_value():
+            assert isinstance(key, str), "Invalid key"
+
+            source = None
+            local_default_subkey = local_default.get(key, UNSET)
+            local_value_subkey = local_value.get(key, UNSET)
+
+            # As Value
+            if isinstance(val, Value):
+                source = f"Value: {val}"
+                _child_value = local_value_subkey
+                # print ("NEW CHILD FROM Value", key, "from data", type(val), "default=", _child_default)
+                inst = val
+
+            # As Store
+            elif isinstance(val, StoreValue):
+                source = f"Store: {val}"
+                _child_value = local_value_subkey
+                # print ("NEW CHILD FROM StoreValue", key, "from", type(val))
+                inst = val
+
+            # As random Dict
+            else:
+                source = f"dict: {val}"
+                _child_value = val
+                # print ("NEW CHILD FROM Dict", key, "from", type(val))
+                inst = Value(value=val, default=local_default_subkey)
+
+            _child_default = inst.get_default()
+            # _child_value = inst.get_value() # Broken ?
+
+            # Check if have a child class or skip key
+            _child_cls = inst.get_children_class(default=StoreValue)
+            if _child_cls is None:
+                continue
+            assert issubclass(
+                _child_cls, StoreValue
+            ), f"Got: ({self}) {_child_cls} {type(_child_cls)}"
+
+            # Determine child config
+            # ------------------------------
+            if _child_default == UNSET:
+                # FAllback on parent value if not provided at Value
+                _child_default = local_default_subkey
+
+            if _child_value == UNSET or not _child_value:
+                # FAllback on default if no values
+                _child_value = _child_default
+
+            # ---
+
+            if not key in self._children:
+                self.log.debug(f"Instanciate dict item: {key}")
+
+                # Instanciate child
+                assert issubclass(_child_cls, StoreValue), f"Must be an class of StoreValue"
+                inst = _child_cls(key=key, value=_child_value, default=_child_default)
+                self.add_child(inst)
+
+
 class StoreConf(StoreDict):
     "Represent a known keys config"
 
-    def _children_def_iterable(self):
+    def _iter_value(self):
         # Iterate over children payloads instead of values
         yield from getattr(self, "_declared_values", {}).items()
 
@@ -339,37 +414,51 @@ class StoreConf(StoreDict):
         return out
 
 
-class StoreList(StoreDict):
+
+class StoreList(StoreContainer):
     "Represent a unknown list config"
 
-    def __init__(self, *args, value=UNSET, default=UNSET, **kwargs):
+    _native_type = list
 
-        # Sanity checks
-        # value = self.get_value()
-        # assert isinstance(value, list)
+    # Container methods
+    # -----------------
 
-        # default = self.get_default()
-        # assert isinstance(default, list)
+    def _iter_value(self, _start=0):
 
-        if value != UNSET:
-            value = list_to_dict(value)
-        default = list_to_dict(default)
+        for item in self.get_value():
+            yield str(_start), item
+            _start += 1
 
-        # _value = list(values)
-        super(StoreList, self).__init__(*args, value=value, default=default, **kwargs)
+    def _init_children(self):
 
-    # def get_default(self):
-    #     "Top level function to get current value of config, exclude NOT_SET values"
+        # Fetch current value - dict
+        local_value = self.get_value()
+        local_default = self.get_default()
+        print ("YOOOOO")
+        pprint (repr(self))
+        pprint (self.__dict__)
+        pprint (self._children_class)
+        pprint (self.Meta.__dict__)
+        local_cls = self.get_children_class(default=StoreValue)
 
-    #     print ("RUN get_default: StoreList", self)
+        if local_cls is None:
+            return
 
-    #     # BROKEN IF DISABLED
-    #     out = super(StoreList, self).get_default()
-    #     if out != UNSET:
-    #         return out
-    #     return {}
+        _child_cls = local_cls
+        for key, val in self._iter_value():
+            assert isinstance(key, str), "Invalid key"
+            
+            if not key in self._children:
+                self.log.warn(f"Instanciate list item: {key}, {_child_cls}")
 
+                if val == UNSET or not val:
+                    val = local_default
 
+                assert issubclass(_child_cls, StoreValue), f"Must be an class of StoreValue"
+                inst = _child_cls(key=key, value=val)
+                self.add_child(inst)
+
+        
 ################################### Values
 
 
@@ -378,10 +467,10 @@ class Value(StoreValue):
 
     _children_class = StoreValue
 
-    def __init__(self, *args, item_class=None, **kwargs):
+    def __init__(self, *args, item_class=UNSET, **kwargs):
 
         self._children_class = (
-            self._children_class if item_class is None else item_class
+            self._children_class if item_class == UNSET else item_class
         )
         assert issubclass(
             self._children_class, StoreValue
@@ -398,20 +487,20 @@ class ValueConf(Value):
 class ValueDict(Value):
     "Value to another Dict of conf"
 
-    def __init__(self, *args, item_class=None, **kwargs):
+    def __init__(self, *args, item_class=UNSET, **kwargs):
 
-        sub_children_class = self._children_class if item_class is None else item_class
+        sub_children_class = self._children_class if item_class == UNSET else item_class
         parent_class = StoreDict
-        parent_class._children_class = sub_children_class
+        parent_class._item_class = sub_children_class
         super(ValueDict, self).__init__(*args, item_class=parent_class, **kwargs)
 
 
 class ValueList(Value):
     "Value to another List of conf"
 
-    def __init__(self, *args, item_class=None, **kwargs):
+    def __init__(self, *args, item_class=UNSET, **kwargs):
 
-        sub_children_class = self._children_class if item_class is None else item_class
+        sub_children_class = self._children_class if item_class == UNSET else item_class
         parent_class = StoreList
-        parent_class._children_class = sub_children_class
+        parent_class._item_class = sub_children_class
         super(ValueList, self).__init__(*args, item_class=parent_class, **kwargs)
