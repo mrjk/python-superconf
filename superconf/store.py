@@ -122,10 +122,10 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         #     value = self.get_value()
         # except AttributeError:
         #     pass
+        # if isinstance(value, dict):
+        #     value = "keys=" + str(tuple(value.keys()))
+        #     # value = f"[{value}]"
 
-        if isinstance(value, dict):
-            value = "keys=" + str(tuple(value.keys()))
-            # value = f"[{value}]"
         name = self.fname
         # out = f"{name}({addr})={value}"
         out = f"{name}.???[{value}]"
@@ -143,7 +143,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         yield from self.get_children().items()
 
     def __contains__(self, key):
-        return self.get_children(key)
+        return True if key in self.get_children() else False
 
     def __len__(self):
         return len(self.get_children())
