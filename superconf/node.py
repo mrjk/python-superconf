@@ -202,7 +202,7 @@ class NodeMeta(NodeBase):
 
         # Check from Metadata
         out = getattr(self.Meta, name, UNSET)
-        if out != UNSET:
+        if out != DEFAULT_VALUE and out != UNSET:
             return out
 
         # Check from class inheritance
@@ -216,6 +216,8 @@ class NodeMeta(NodeBase):
 
 class NodeChildren(NodeBase):
     "Manage node children"
+
+    _children = UNSET
 
     def __init__(self, *args, **kwargs):
         """

@@ -51,6 +51,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     # Disable children when set to None
     _children_class = None
     _native_type = str
+    item_class = None
 
     def __init__(
         self,
@@ -71,8 +72,8 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         :param logger_prefix:  Determine logger_prefix.
         """
 
+        self.item_class = self.item_class or StoreValue
         self.key = key or self.key
-        self._item_class = UNSET
         assert isinstance(index, (str, int, type(None)))
 
         super(StoreValue, self).__init__(*args, **kwargs)
@@ -239,7 +240,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         return out1
 
-    def get_children_class(self, default=None):
+    def get_children_class(self):
         "Return default class to use for new children, must return a StoreNode class or UNSET"
 
         out = self.get_inst_cfg("item_class", default=self._children_class)
@@ -263,8 +264,9 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 class _StoreContainer(StoreValue):
     "Represent a unknown keys config"
 
-    _children = UNSET
     _native_type = dict
+
+    # Enable children
     _children_class = StoreValue
 
     # Container methods
@@ -272,7 +274,6 @@ class _StoreContainer(StoreValue):
 
     def __init__(self, *args, **kwargs):
 
-        assert isinstance(self._children, UnSet)
         super(_StoreContainer, self).__init__(*args, **kwargs)
 
         # Sanity checks
@@ -358,7 +359,7 @@ class StoreDict(_StoreContainer):
         # Fetch current value - dict
         local_default = self.get_default()
         local_value = self.get_value()
-        local_cls = self.get_children_class(default=UNSET)
+        local_cls = self.get_children_class()
 
         for key, val in self._iter_value():
             assert isinstance(key, str), "Invalid key"
@@ -371,21 +372,21 @@ class StoreDict(_StoreContainer):
             if isinstance(val, Value):
                 source = f"Value: {val}"
                 _child_value = local_value_subkey
-                # print ("NEW CHILD FROM Value", key, "from data", type(val), "default=", _child_default)
+                # print("NEW CHILD FROM Value", key, "from data", type(val), "default=")
                 inst = val
 
             # As Store
             elif isinstance(val, StoreValue):
                 source = f"Store: {val}"
                 _child_value = local_value_subkey
-                # print ("NEW CHILD FROM StoreValue", key, "from", type(val))
+                # print("NEW CHILD FROM StoreValue", key, "from", type(val))
                 inst = val
 
             # As random Dict
             else:
                 source = f"dict: {val}"
                 _child_value = val
-                # print ("NEW CHILD FROM Dict", key, "from", type(val))
+                # print("NEW CHILD FROM Dict", key, local_cls, "from", type(val))
                 inst = local_cls(value=val, default=local_default_subkey)
 
             _child_default = inst.get_default()
@@ -394,7 +395,7 @@ class StoreDict(_StoreContainer):
             # print ("CHILD VALUE", key, _child_value, _child_value2)
 
             # Check if have a child class or skip key
-            _child_cls = inst.get_children_class(default=StoreValue)
+            _child_cls = inst.get_children_class()
             if _child_cls is None:
                 continue
             assert issubclass(
@@ -471,7 +472,7 @@ class StoreList(_StoreContainer):
         # Fetch current value - dict
         local_value = self.get_value()
         local_default = self.get_default()
-        local_cls = self.get_children_class(default=StoreValue)
+        local_cls = self.get_children_class()
 
         if local_cls is None:
             return
@@ -514,9 +515,7 @@ class Value(StoreValue):
 
     def __init__(self, *args, item_class=UNSET, **kwargs):
 
-        self._children_class = (
-            self._children_class if item_class == UNSET else item_class
-        )
+        self.item_class = self._children_class if item_class == UNSET else item_class
         assert issubclass(
             self._children_class, StoreValue
         ), f"Got: {self._children_class}"
@@ -536,7 +535,7 @@ class ValueDict(Value):
 
         sub_children_class = self._children_class if item_class == UNSET else item_class
         parent_class = StoreDict
-        parent_class._item_class = sub_children_class
+        parent_class.item_class = sub_children_class
         super(ValueDict, self).__init__(*args, item_class=parent_class, **kwargs)
 
 
@@ -547,5 +546,5 @@ class ValueList(Value):
 
         sub_children_class = self._children_class if item_class == UNSET else item_class
         parent_class = StoreList
-        parent_class._item_class = sub_children_class
+        parent_class.item_class = sub_children_class
         super(ValueList, self).__init__(*args, item_class=parent_class, **kwargs)

@@ -50,29 +50,6 @@ class Project(Configuration):
         default={"prj_dir": "DEFAULT_OVERRIDE"},
     )
 
-    # config2 = ValueDict()
-
-    # # EX1: Explicit declaration
-    # stacks_list1 = ValueConf(
-    #     child=StackList,
-    # )
-    # stacks_list2 = ValueList(
-    #     children=Stack,
-    # )
-    # stacks_dict1 = ValueConf(
-    #     child=StackDict,
-    # )
-    # stacks_dict2 = ValueDict(
-    #     children=Stack,
-    # )
-
-    # # EX2: Container declaration
-    # stacks_list_direct = ValueDict(
-    #     children=Stack, # Must be existing Configuration
-    # )
-
-    # stacks = stacks_list_explicit
-
 
 exemple_conf0 = {}
 
