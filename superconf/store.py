@@ -20,6 +20,10 @@ from . import exceptions
 log = logging.getLogger(__name__)
 
 
+# Local helpers
+# ======================================
+
+
 def store_to_json(obj):
     "Return a node object to serializable thing"
 
@@ -35,7 +39,8 @@ def store_to_json(obj):
     return dict_to_json(obj, fn=t_funct)
 
 
-################## Config Models
+# Base Store class
+# ======================================
 
 
 class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
@@ -226,6 +231,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         out = self.get_inst_cfg("item_class", default=self._children_class)
 
+        # Sanity checks
         if inspect.isclass(out):
             assert issubclass(out, (StoreValue, NodeContainer, UnSet, type(None)))
         else:
@@ -235,6 +241,10 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
     # Goodies
     # ----
+
+
+# Container Store class
+# ======================================
 
 
 class _StoreContainer(StoreValue):
@@ -473,7 +483,8 @@ class StoreList(_StoreContainer):
                 self.add_child(inst)
 
 
-################################### Values
+# Main Values class
+# ======================================
 
 
 class Value(StoreValue):

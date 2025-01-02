@@ -10,7 +10,7 @@ from .common import NOT_SET, UNSET
 log = logging.getLogger(__name__)
 
 
-# Top class
+# Base class
 # ======================================
 
 
@@ -165,7 +165,7 @@ class NodeBase:
         self.log.debug(f"Create new node: {self}")
 
 
-# Second Level class
+# Node Mixin classes
 # ======================================
 
 

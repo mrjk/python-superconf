@@ -1,8 +1,14 @@
+"""Provide Store Mixins
+
+Returns:
+    _type_: _description_
+"""
+
 from .common import NOT_SET, UNSET
 
 
-# Store Mixins Class
-# ==================
+# Store Mixins Base Class
+# ======================================
 
 
 class StoreMixin:
@@ -17,8 +23,8 @@ class StoreContainerMixin(StoreMixin):
     "StroceValue Mixinx"
 
 
-# Store Mixins
-# ==================
+# Store Mixins Catalog
+# ======================================
 
 
 class StoreExtra(StoreMixin):

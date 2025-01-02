@@ -1,3 +1,9 @@
+"""Superconf exceptions
+
+Provide generic exceptions
+"""
+
+
 class ConfigurationException(Exception):
     pass
 
