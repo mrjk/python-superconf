@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 class NodeBase:
     "Represent a node"
 
-    _name = None
+    _name = ""
     parent = None
 
     def __init__(
@@ -43,9 +43,8 @@ class NodeBase:
     @property
     def name(self):
         """Return name as string. Empty string is returned when no name."""
-        if isinstance(self._name, str):
-            return self._name
-        return ""
+        assert isinstance(self._name, str)
+        return self._name
 
     @property
     def fname(self):
@@ -78,19 +77,13 @@ class NodeBase:
             return out
 
         # Return item
-        if mode in ["self"]:
-            return self
         if mode in ["first"]:
             return self.parent or None
         if mode in ["root"]:
             out = get_all_parents()
-            if len(out) > 0:
-                out = out[-1]
-            else:
-                out = self
-            return out
-        else:
-            raise Exception(f"Unknown mode: {mode}")
+            return out[-1]
+
+        raise Exception(f"Unknown mode: {mode}")
 
     # Logging
     # -------------------------------
@@ -153,8 +146,8 @@ class NodeBase:
                 obj_name = ".".join(
                     [logger_prefix, self.__class__.__qualname__, self.name]
                 )
-            else:
-                assert False, f"VALUE: {logger_mode}"
+            # else:
+            #     assert False, f"VALUE: {logger_mode}"
 
             # Set logger
             # logger_name = ".".join([obj_name, obj_id])
@@ -170,12 +163,14 @@ class NodeBase:
 
 
 class DefaultValue:
+    "Define a default value"
 
     def __str__(self):
         return "<DEFAULT_VALUE>"
 
 
 class UnsetValue:
+    "Define an unset value"
 
     def __str__(self):
         return "<UNSET_VALUE>"
@@ -211,7 +206,7 @@ class NodeMeta(NodeBase):
             return out
 
         # Check from class inheritance
-        # TOFIX fallback value ?
+        # TOFIX fallback value name ?
         out = getattr(self, f"{name}", UNSET)
         if out != DEFAULT_VALUE and out != UNSET:
             return out
@@ -229,20 +224,6 @@ class NodeChildren(NodeBase):
 
         super(NodeChildren, self).__init__(*args, **kwargs)
         self._children = UNSET
-
-    # Dunder methods
-    # -----------------
-    def __getitem__(self, key):
-        return self.get_children(key)
-
-    def __iter__(self):
-        yield from self.get_children().items()
-
-    def __contains__(self, key):
-        return self.get_children(key)
-
-    def __len__(self):
-        return len(self.get_children())
 
     # Children
     # -------------------------------
@@ -280,11 +261,8 @@ class NodeChildren(NodeBase):
             self.log.debug(f"Add child: {name}=>{child}")
             self._children[name] = child
         else:
-            if self._children[name] != child:
-                self.log.debug(f"Update child: {name}=>{child}")
-                self._children[name] = child
-            else:
-                self.log.debug(f"Skip existing child: {name}=>{child}")
+            self.log.debug(f"Update child: {name}=>{child}")
+            self._children[name] = child
 
         # Attach child
         child.parent = self
