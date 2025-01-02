@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+cd examples
+
 python example_104.py --debug true &&
   python example_105.py --debug true &&
   python example_106.py --debug true &&
