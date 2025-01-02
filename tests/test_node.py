@@ -5,19 +5,19 @@ from pprint import pprint
 # from classyconf.casts import Boolean, List, Option, Tuple, evaluate
 # from classyconf.exceptions import InvalidConfiguration
 
-from superconf.node import Node, NodeContainer
+from superconf.node import NodeBase, NodeContainer
 import superconf.exceptions
 
 
 # ================================================
-# Tests Class: Node
+# Tests Class: NodeBase
 # ================================================
 
 
 def test_node_cls_default():
-    "Test a default Node"
+    "Test a default NodeBase"
 
-    inst = Node()
+    inst = NodeBase()
 
     assert isinstance(inst.name, str)
     assert inst.name == ""
@@ -27,8 +27,8 @@ def test_node_cls_default():
 def test_node_cls_base_args():
     "Test with overrides"
 
-    inst1 = Node(name="My Parent")
-    inst2 = Node(name="My Child", parent=inst1)
+    inst1 = NodeBase(name="My Parent")
+    inst2 = NodeBase(name="My Child", parent=inst1)
 
     assert inst1.name == "My Parent"
     assert inst1.parent == None
@@ -40,78 +40,78 @@ def test_nodecont_cls_parent_links():
     "Test parent modes"
 
     # Simple hierarchy
-    p1 = Node(name="My Parent")
-    c1 = Node(name="My Child1", parent=p1)
-    c2 = Node(name="My Child2", parent=p1)
+    p1 = NodeBase(name="My Parent")
+    c1 = NodeBase(name="My Child1", parent=p1)
+    c2 = NodeBase(name="My Child2", parent=p1)
 
     assert c1.parent is p1
     assert c2.parent is p1
 
     # Let's create another hier
-    p2 = Node(name="My Sub Parent", parent=c2)
-    c3 = Node(name="My Sub Child3", parent=p2)
-    c4 = Node(name="My Sub Child4", parent=p2)
+    p2 = NodeBase(name="My Sub Parent", parent=c2)
+    c3 = NodeBase(name="My Sub Child3", parent=p2)
+    c4 = NodeBase(name="My Sub Child4", parent=p2)
 
     # Ensure parents are correctly setup
     assert c3.parent is p2
     assert c4.parent is p2
     assert p2.parent is c2
 
-    # Test get_hier, mode=parent
-    assert [x.name for x in p1.get_hier(mode="parents")] == []
-    assert [x.name for x in p2.get_hier(mode="parents")] == ["My Child2", "My Parent"]
-    assert [x.name for x in c1.get_hier(mode="parents")] == ["My Parent"]
-    assert [x.name for x in c2.get_hier(mode="parents")] == ["My Parent"]
-    assert [x.name for x in c3.get_hier(mode="parents")] == [
+    # Test get_parents, mode=parent
+    assert [x.name for x in p1.get_parents(mode="parents")] == []
+    assert [x.name for x in p2.get_parents(mode="parents")] == ["My Child2", "My Parent"]
+    assert [x.name for x in c1.get_parents(mode="parents")] == ["My Parent"]
+    assert [x.name for x in c2.get_parents(mode="parents")] == ["My Parent"]
+    assert [x.name for x in c3.get_parents(mode="parents")] == [
         "My Sub Parent",
         "My Child2",
         "My Parent",
     ]
-    assert [x.name for x in c4.get_hier(mode="parents")] == [
+    assert [x.name for x in c4.get_parents(mode="parents")] == [
         "My Sub Parent",
         "My Child2",
         "My Parent",
     ]
 
-    # Test get_hier, mode=full
-    pprint([x.name for x in p2.get_hier(mode="full")])
-    assert [x.name for x in p1.get_hier(mode="full")] == ["My Parent"]
-    assert [x.name for x in p2.get_hier(mode="full")] == [
+    # Test get_parents, mode=full
+    pprint([x.name for x in p2.get_parents(mode="full")])
+    assert [x.name for x in p1.get_parents(mode="full")] == ["My Parent"]
+    assert [x.name for x in p2.get_parents(mode="full")] == [
         "My Sub Parent",
         "My Child2",
         "My Parent",
     ]
-    assert [x.name for x in c1.get_hier(mode="full")] == ["My Child1", "My Parent"]
-    assert [x.name for x in c2.get_hier(mode="full")] == ["My Child2", "My Parent"]
-    assert [x.name for x in c3.get_hier(mode="full")] == [
+    assert [x.name for x in c1.get_parents(mode="full")] == ["My Child1", "My Parent"]
+    assert [x.name for x in c2.get_parents(mode="full")] == ["My Child2", "My Parent"]
+    assert [x.name for x in c3.get_parents(mode="full")] == [
         "My Sub Child3",
         "My Sub Parent",
         "My Child2",
         "My Parent",
     ]
-    assert [x.name for x in c4.get_hier(mode="full")] == [
+    assert [x.name for x in c4.get_parents(mode="full")] == [
         "My Sub Child4",
         "My Sub Parent",
         "My Child2",
         "My Parent",
     ]
 
-    # Test get_hier, mode=root
-    assert p1.get_hier(mode="root").name == "My Parent"
-    assert p2.get_hier(mode="root").name == "My Parent"
-    assert c1.get_hier(mode="root").name == "My Parent"
-    assert c2.get_hier(mode="root").name == "My Parent"
-    assert c3.get_hier(mode="root").name == "My Parent"
-    assert c4.get_hier(mode="root").name == "My Parent"
+    # Test get_parents, mode=root
+    assert p1.get_parents(mode="root").name == "My Parent"
+    assert p2.get_parents(mode="root").name == "My Parent"
+    assert c1.get_parents(mode="root").name == "My Parent"
+    assert c2.get_parents(mode="root").name == "My Parent"
+    assert c3.get_parents(mode="root").name == "My Parent"
+    assert c4.get_parents(mode="root").name == "My Parent"
 
-    # Test get_hier, mode=first
-    pprint(p2.get_hier(mode="first").name)
-    assert p1.get_hier(mode="first") == None
-    assert p2.get_hier(mode="first").name == "My Child2"
-    assert c1.get_hier(mode="first").name == "My Parent"
-    assert c2.get_hier(mode="first").name == "My Parent"
-    assert c3.get_hier(mode="first").name == "My Sub Parent"
-    assert c4.get_hier(mode="first").name == "My Sub Parent"
+    # Test get_parents, mode=first
+    pprint(p2.get_parents(mode="first").name)
+    assert p1.get_parents(mode="first") == None
+    assert p2.get_parents(mode="first").name == "My Child2"
+    assert c1.get_parents(mode="first").name == "My Parent"
+    assert c2.get_parents(mode="first").name == "My Parent"
+    assert c3.get_parents(mode="first").name == "My Sub Parent"
+    assert c4.get_parents(mode="first").name == "My Sub Parent"
 
 
 # ================================================
@@ -170,16 +170,16 @@ def test_nodecont_cls_children_links():
         pass
 
     # Test parent ship
-    assert [x.name for x in p1.get_hier(mode="parents")] == []
-    assert [x.name for x in p2.get_hier(mode="parents")] == ["My Child1", "My Parent"]
-    assert [x.name for x in c1.get_hier(mode="parents")] == ["My Parent"]
-    assert [x.name for x in c2.get_hier(mode="parents")] == ["My Parent"]
-    assert [x.name for x in c3.get_hier(mode="parents")] == [
+    assert [x.name for x in p1.get_parents(mode="parents")] == []
+    assert [x.name for x in p2.get_parents(mode="parents")] == ["My Child1", "My Parent"]
+    assert [x.name for x in c1.get_parents(mode="parents")] == ["My Parent"]
+    assert [x.name for x in c2.get_parents(mode="parents")] == ["My Parent"]
+    assert [x.name for x in c3.get_parents(mode="parents")] == [
         "My Sub Parent",
         "My Child1",
         "My Parent",
     ]
-    assert [x.name for x in c4.get_hier(mode="parents")] == [
+    assert [x.name for x in c4.get_parents(mode="parents")] == [
         "My Sub Parent",
         "My Child1",
         "My Parent",

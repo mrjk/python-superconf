@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 # Top class
 # ======================================
 
-class Node:
+class NodeBase:
     "Represent a node"
 
     _name = None
@@ -21,7 +21,7 @@ class Node:
 
     def __init__(
         self,
-        name: str = None,
+        name: str = "",
         parent=None,
         logger_mode=None,
         logger_prefix=None,
@@ -32,7 +32,7 @@ class Node:
         :param parent:  Determine parent object, creator of the instance.
         """
         self.parent = parent or None
-        self._name = name or self._name
+        self._name = name or self._name or ""
 
         self.set_logger(logger_mode=logger_mode, logger_prefix=logger_prefix)
 
@@ -49,15 +49,15 @@ class Node:
     @property
     def fname(self):
         """Return the full string name of object with parent"""
-        _t = self.get_hier(mode="full")
-        _t = [x.name for x in _t]
-        _t = list(reversed(_t))
-        return ".".join(_t) or self.name
+        out = [str(x.name) for x in self.get_parents(mode="full")]
+        out = list(reversed(out))
+        return ".".join(out) or self.name
+
 
     # Hiererachy methods
     # -------------------------------
 
-    def get_hier(self, mode="parents"):
+    def get_parents(self, mode="parents"):
         "Return list of parents, last element is the root element"
 
         def get_all_parents():
@@ -116,7 +116,7 @@ class Node:
 
         # Determine value
         if logger_mode == None or logger_mode == "inherit":
-            parents = self.get_hier(mode="full")
+            parents = self.get_parents(mode="full")
             for parent in parents:
                 match = getattr(parent, "_logger_mode", "inherit")
                 if match != "inherit":
@@ -189,8 +189,8 @@ UNSET_VALUE = UnsetValue()
 
 
 
-class NodeMeta(Node):
-    "Represent a container"
+class NodeMeta(NodeBase):
+    "Add metadata feature to each instances"
 
 
     class Meta:
@@ -198,12 +198,13 @@ class NodeMeta(Node):
 
 
     def get_inst_cfg(self, name, default=UNSET):
-        "Return instance config"
-
-        # Check in order: 
-        # - inst._NAME
-        # - CLASS.Meta.NAME
-        # - inst._NAME_default
+        """Return instance config
+        
+        Lookup order:
+        - Check in: self._NAME
+        - Check in: self.__class__.Meta.NAME
+        - Check in: self.NAME  # TODFIX: Use self.NAME_default
+        """
 
         # Check default override value
         out = getattr(self, f"_{name}", UNSET)
@@ -216,6 +217,7 @@ class NodeMeta(Node):
             return out
 
         # Check from class inheritance
+        # TOFIX fallback value ?
         out = getattr(self, f"{name}", UNSET)
         if out != DEFAULT_VALUE and out != UNSET:
             return out
@@ -224,10 +226,8 @@ class NodeMeta(Node):
 
 
 
-
-
-class NodeContainer(NodeMeta):
-    "Represent a container"
+class NodeChildren(NodeBase):
+    "Manage node children"
 
 
     def __init__(self, *args, **kwargs):
@@ -235,20 +235,20 @@ class NodeContainer(NodeMeta):
         Define children mode
         """
 
-        super(NodeContainer, self).__init__(*args, **kwargs)
+        super(NodeChildren, self).__init__(*args, **kwargs)
         self._children = UNSET
 
 
     # Dunder methods
     # -----------------
-    def __getitem__(self, value):
-        return self.get_children(value)
+    def __getitem__(self, key):
+        return self.get_children(key)
 
     def __iter__(self):
         yield from self.get_children().items()
 
-    def __contains__(self, value):
-        return self.get_children(value)
+    def __contains__(self, key):
+        return self.get_children(key)
 
     def __len__(self):
         return len(self.get_children())
@@ -279,7 +279,7 @@ class NodeContainer(NodeMeta):
 
         cparent = getattr(child, "parent", None)
         if cparent is not None:
-            msg = f"Node already have a parent ! {child} attached to {cparent}"
+            msg = f"NodeBase already have a parent ! {child} attached to {cparent}"
             self.log.error(msg)
             raise Exception(msg)
 
@@ -298,3 +298,15 @@ class NodeContainer(NodeMeta):
 
         # Attach child
         child.parent = self
+
+
+
+
+# Exposed Classes
+# ======================================
+
+
+
+class NodeContainer(NodeMeta,NodeChildren):
+    "Represent a NodeBase container"
+

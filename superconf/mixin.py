@@ -63,7 +63,7 @@ class StoreExtra(StoreMixin):
         print(f"  fname     => {self.fname}")
         print(f"  default   => {str(self.get_default())}")
         print(f"  value     => {str(self.get_value())}")
-        print(f"  parents   => {[str(x) for x in self.get_hier(mode='full')]}")
+        print(f"  parents   => {[str(x) for x in self.get_parents(mode='full')]}")
         print(f"  children cls  => {str(self.get_children_class())}")
 
         children = self.get_children()
@@ -132,7 +132,7 @@ class StoreValueEnvVars(StoreMixin):
             return out
 
         # out =
-        for node in self.get_hier(mode="full"):
+        for node in self.get_parents(mode="full"):
             if node == self:
                 continue
             ret = node.get_envvar_prefix()

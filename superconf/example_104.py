@@ -152,31 +152,31 @@ def test1():
     # assert t2 == {}
     assert t1 is not t2
 
-    # Test get_hier
+    # Test get_parents
     # ===========================
 
     print("\n---TEST: Test hier - full")
-    t = config1.get_hier(mode="full")
+    t = config1.get_parents(mode="full")
     # pprint (t)
     assert t == [config1]
 
     print("\n---TEST: Test hier - parents")
-    t = config1.get_hier(mode="parents")
+    t = config1.get_parents(mode="parents")
     # pprint (t)
     assert t == []
 
     print("\n---TEST: Test hier - first")
-    t = config1.get_hier(mode="first")
+    t = config1.get_parents(mode="first")
     # pprint (t)
     assert t == None
 
     print("\n---TEST: Test hier - self")
-    t = config1.get_hier(mode="self")
+    t = config1.get_parents(mode="self")
     # pprint (t)
     assert t is config1
 
     print("\n---TEST: Test hier - root")
-    t = config1.get_hier(mode="root")
+    t = config1.get_parents(mode="root")
     # pprint (t)
     assert t is config1
 

@@ -68,13 +68,13 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         :param logger_prefix:  Determine logger_prefix.
         """
 
+        self.key = key or self.key
         self._item_class = UNSET
         assert isinstance(index, (str, int, type(None)))
 
         super(StoreValue, self).__init__(*args, **kwargs)
 
         # Set store elements
-        self.key = key or self.key
         self._help = help
 
         # Prepare closest type
@@ -88,9 +88,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         self._value = value if value is not UNSET else self._value
         self._default = default if default != UNSET else self._default
 
-    def to_json(self):
-        "Return json value of ..."
-        return store_to_json(self)
 
 
     # Node overrides API Changes
@@ -101,14 +98,44 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         super(StoreValue, self).add_child(child, name_attr="key", **kwargs)
 
 
-    # TOFIX
     @property
-    def fname(self):
-        """Return the full string name of object with parent"""
-        _t = self.get_hier(mode="full")
-        _t = [x.key for x in _t]
-        _t = list(reversed(_t))
-        return ".".join(_t) or self.name
+    def name(self):
+        """Return name as string. Empty string is returned when no name."""
+        
+        # Return key first
+        key = getattr(self, "key", None)
+        if isinstance(key, str) and key:
+            return key
+
+        # Fallback on default method
+        return super(StoreValue, self).name
+
+
+    # Dunder methods
+    # -----------------
+
+    def __str__(self):
+        addr = hex(id(self))
+        value = None
+        # try:
+        #     value = self.get_value()
+        # except AttributeError:
+        #     pass
+
+        if isinstance(value, dict):
+            value = "keys=" + str(tuple(value.keys()))
+            # value = f"[{value}]"
+        name = self.fname
+        # out = f"{name}({addr})={value}"
+        out = f"{name}.???[{value}]"
+        if hasattr(self, "closest_type"):
+            middle = f"{self.__class__.__name__}/{self.closest_type}"
+            if str(self.__class__.__name__) == str(self.closest_type):
+                middle = str(self.__class__.__name__)
+            out = f"{name}|{middle}[{value}]"
+        return str(out)
+
+
 
 
     # Key management (based on parents and children)
@@ -125,7 +152,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         "Return object key, eventually with parent"
 
         def get_all_parent_keys():
-            out = self.get_hier(mode="full")
+            out = self.get_parents(mode="full")
             out = [x.key for x in out]
             return out
 
@@ -168,6 +195,12 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     def get_default(self):
         "Get default values"
         return self.get_inst_cfg("default")
+
+
+    def to_json(self):
+        "Return json value of object"
+        return store_to_json(self.get_value())
+        # return store_to_json(self)
 
 
     # Children methods
@@ -213,38 +246,13 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         return out
 
-    # Dunder methods
-    # -----------------
-
-    def __str__(self):
-        addr = hex(id(self))
-        value = None
-        # try:
-        #     value = self.get_value()
-        # except AttributeError:
-        #     pass
-
-        if isinstance(value, dict):
-            value = "keys=" + str(tuple(value.keys()))
-            # value = f"[{value}]"
-        name = self.fname
-        # out = f"{name}({addr})={value}"
-        out = f"{name}.???[{value}]"
-        if hasattr(self, "closest_type"):
-            middle = f"{self.__class__.__name__}/{self.closest_type}"
-            if str(self.__class__.__name__) == str(self.closest_type):
-                middle = str(self.__class__.__name__)
-            out = f"{name}|{middle}[{value}]"
-        return out
-
     # Goodies
     # ----
 
 
-## ---
 
 
-class StoreContainer(StoreValue):
+class _StoreContainer(StoreValue):
     "Represent a unknown keys config"
 
     _native_type = dict
@@ -255,7 +263,7 @@ class StoreContainer(StoreValue):
 
     def __init__(self, *args, **kwargs):
 
-        super(StoreContainer, self).__init__(*args, **kwargs)
+        super(_StoreContainer, self).__init__(*args, **kwargs)
         native_type = self._native_type
 
         # Sanity checks
@@ -278,7 +286,7 @@ class StoreContainer(StoreValue):
 
         if self.get_children() == UNSET:
 
-            out = super(StoreContainer, self).get_value()
+            out = super(_StoreContainer, self).get_value()
             out = native_type() if not out else out
             # out = native_type() if out is None else out
 
@@ -290,7 +298,7 @@ class StoreContainer(StoreValue):
         out = native_type()
         if len(self.get_children()) > 0:
 
-            for key, child in self._iter_children():
+            for key, child in self.get_children().items():
                 if native_type == dict:
                     out[key] = child.get_value()
                 elif native_type == list:
@@ -308,28 +316,25 @@ class StoreContainer(StoreValue):
         "Top level function to get current value of config, exclude NOT_SET values"
         native_type = self._native_type
 
-        out = super(StoreContainer, self).get_default()
+        out = super(_StoreContainer, self).get_default()
         if out != UNSET:
-            # print ("RUN get_default: StoreContainer - up_in_hier", self, out)
+            # print ("RUN get_default: _StoreContainer - up_in_hier", self, out)
             if not isinstance(out, (native_type)):
                 msg = f"Expected {native_type} for default in {self}, got {type(out)}: {out}"
                 raise exceptions.InvalidContainerDefault(msg)
             return out
 
-        # print ("RUN get_default: StoreContainer - Hard coded", self, dict())
+        # print ("RUN get_default: _StoreContainer - Hard coded", self, dict())
         return native_type()
 
-    # TOFIX
-    _iter_children = NodeContainer.__iter__
-
-
-class StoreDict(StoreContainer):
+class StoreDict(_StoreContainer):
     "Represent a unknown keys config"
 
     # Container methods
     # -----------------
 
     def _iter_value(self):
+        "Iterate over initial values"
         yield from self.get_value().items()
 
     def _init_children(self):
@@ -410,7 +415,8 @@ class StoreConf(StoreDict):
     "Represent a known keys config"
 
     def _iter_value(self):
-        # Iterate over children payloads instead of values
+        "Iterate over preset/declared values"
+        # yield from self._declared_values.items()
         yield from getattr(self, "_declared_values", {}).items()
 
     def get_default(self):
@@ -429,7 +435,7 @@ class StoreConf(StoreDict):
         return out
 
 
-class StoreList(StoreContainer):
+class StoreList(_StoreContainer):
     "Represent a unknown list config"
 
     _native_type = list
@@ -438,6 +444,7 @@ class StoreList(StoreContainer):
     # -----------------
 
     def _iter_value(self, _start=0):
+        "Iterate over initial values, list from keyed list"
 
         for item in self.get_value():
             yield str(_start), item
