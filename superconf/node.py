@@ -31,93 +31,56 @@ log = logging.getLogger(__name__)
 #     return out
 
 
+
 class Node:
     "Represent a node"
 
-    name = None
+    _name = None
     key = ""
     parent = None
 
     def __init__(
         self,
         name: str = None,
-        key: str = None,
         parent=None,
-        help: str = "",
+        logger_mode=None,
+        logger_prefix=None,
     ):
         """
         :param key:     Name of the value used in file or environment
                         variable. Set automatically by the metaclass.
-        :param help:    Plain-text description of the value.
+        :param parent:  Determine parent object, creator of the instance.
         """
-        self.key = key or self.key
         self.parent = parent or None
-        self.name = name or self.name or self.key or "" or self.__class__.__name__
+        self._name = name or self._name
 
-        self._help = help
-
-        # Enable instance logging
-        _fqn = ".".join([self.__module__, self.__class__.__qualname__])
-        self._logger_name = ".".join([_fqn, str(hex(id(self)))])
-        self.log = logging.getLogger(self._logger_name)
-        self.log.debug(f"Create new node: {self}")
+        self.set_logger(logger_mode=logger_mode, logger_prefix=logger_prefix)
 
 
-class NodeContainer(Node):
-    "Represent a container"
+    # Properties
+    # -------------------------------
 
-    def __init__(self, *args, **kwargs):
-        super(NodeContainer, self).__init__(*args, **kwargs)
+    @property
+    def name(self):
+        """Return name as string. Empty string is returned when no name."""
+        if isinstance(self._name, str):
+            return self._name
+        return ""
 
-        self._children = UNSET
-
-        # PRepare closest type
-        mro = self.__class__.__mro__
-        closest = [x.__name__ for x in mro if x.__name__.startswith("Store")]
-        closest = closest[0] if len(closest) > 0 else "???"
-        self.closest_type = closest
 
     @property
     def fname(self):
-        """I'm the 'x' property."""
+        """Return the full string name of object with parent"""
         _t = self.get_hier(mode="full")
         _t = [x.key for x in _t]
-        # _t = [x.key or x.name or "__root__" for x in _t]
-        # _t = [x.name or x.key or "__root__" for x in _t]
         _t = list(reversed(_t))
         return ".".join(_t) or self.name
 
-    # Key management (based on parents and children)
-    def get_key(self, mode="self"):
-        "Return object key, eventually with parent"
-
-        def get_all_parent_keys():
-            out = self.get_hier(mode="full")
-            out = [x.key for x in out]
-            return out
-
-        if mode in ["self"]:
-            return self.key
-        if mode in ["full"]:
-            out = get_all_parent_keys()
-            return out
-        if mode in ["parents"]:
-            out = get_all_parent_keys()
-            out = list(reversed(out))
-            out = ".".join(out)
-            return out
-        if mode in ["children"]:
-            if isinstance(self._children, dict):
-                out = list(self._children.keys())
-            else:
-                out = []
-            return out
-        else:
-            raise Exception(f"Unknown mode: {mode}")
-
     # Hiererachy methods
+    # -------------------------------
+
     def get_hier(self, mode="parents"):
-        "Return hierachy"
+        "Return list of parents, last element is the root element"
 
         def get_all_parents():
             curr_parent = self
@@ -151,17 +114,102 @@ class NodeContainer(Node):
         else:
             raise Exception(f"Unknown mode: {mode}")
 
-    # Children methods
+
+    # Logging
+    # -------------------------------
+
+    def set_logger(self, logger_mode=None, logger_prefix=None):
+        """
+        Define object logger
+
+        Modes:
+          - "absent": Does not create log attribute
+          - "default": Use library logger shortcut
+          - "instance": Use per instance logger
+
+        Raises:
+            Exception: _description_
+
+        Returns:
+            None: Return nothing
+        """
+
+        # Validate input
+        NODE_SET_LOGGER_MODES = ["absent", "default", "instance", "inherit"]
+
+        # Determine value
+        if logger_mode == None or logger_mode == "inherit":
+            if self.parent:
+                logger_mode = getattr(self.parent, "_logger_mode", None)
+        logger_mode = logger_mode or "default"
+        
+        # Set logger mode
+        if logger_mode not in NODE_SET_LOGGER_MODES:
+            raise Exception(f"Unsupported mode '{logger_mode}', please use one of: {NODE_SET_LOGGER_MODES}")
+        self._logger_mode = logger_mode
+        self._logger_prefix = logger_prefix
+
+
+        # Check base modes
+        if logger_mode in ["absent"]:
+            return
+        elif logger_mode in ["default"]:
+            self.log = log
+        else:
+            
+            logger_prefix = logger_prefix or self.__module__
+
+            # Fetch infos
+            obj_id = str(hex(id(self)))
+            if logger_mode in ["class"]:
+                obj_name = ".".join([logger_prefix, self.__class__.__qualname__])
+            elif logger_mode in ["instance"]:
+                obj_name = ".".join([logger_prefix, self.__class__.__qualname__, self.name])
+
+            # Set logger
+            # logger_name = ".".join([obj_name, obj_id])
+            logger_name = obj_name
+            self.log = logging.getLogger(logger_name)
+
+        # Use logger
+        self.log.debug(f"Create new node: {self}")
+
+
+
+
+class NodeContainer(Node):
+    "Represent a container"
+
+
+    def __init__(
+        self,
+        *args,
+        **kwargs
+    ):
+        """
+        Define children mode
+        """
+        
+        super(NodeContainer, self).__init__(*args, **kwargs)
+        self._children = UNSET
+
+
+
+    # Children
+    # -------------------------------
+
     def get_children(self, *args):
         "Return one or all children inst as dict"
 
         children = self._children  # or dict()
         if len(args) == 0:
-            return children
+            return children or {}
         else:
             return children.get(args[0], None)
 
-    def add_child(self, child, key=None):
+
+
+    def add_child(self, child, name=None, name_attr="name"):
         "Add a child"
 
         if not self._children:
@@ -178,18 +226,18 @@ class NodeContainer(Node):
             self.log.error(msg)
             raise Exception(msg)
 
-        key = key if key is not None else child.key
-        assert key, f"Can't use this key for child: {key}"
+        name = name if name is not None else getattr(child, name_attr, None)
+        assert name, f"Can't use this name for child: {name}"
 
-        if not key in self._children:
-            self.log.debug(f"Add child: {key}=>{child}")
-            self._children[key] = child
+        if not name in self._children:
+            self.log.debug(f"Add child: {name}=>{child}")
+            self._children[name] = child
         else:
-            if self._children[key] != child:
-                self.log.debug(f"Update child: {key}=>{child}")
-                self._children[key] = child
+            if self._children[name] != child:
+                self.log.debug(f"Update child: {name}=>{child}")
+                self._children[name] = child
             else:
-                self.log.debug(f"Skip existing child: {key}=>{child}")
+                self.log.debug(f"Skip existing child: {name}=>{child}")
 
         # Attach child
         child.parent = self

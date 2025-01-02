@@ -67,10 +67,20 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     class Meta:
         pass
 
-    def __init__(self, *args, index=None, value=UNSET, default=UNSET, loaders=None, **kwargs):
+    def __init__(self, *args, 
+        index=None,
+        key: str = None,
+        help: str = "",
+        value=UNSET, 
+        default=UNSET, 
+        loaders=None, 
+        **kwargs):
         """
-        :param value:   Current value
-        :param default: Default value if none is provided.
+        :param key:     Name of the value used in file or environment
+                        variable. Set automatically by the metaclass.
+        :param help:    Plain-text description of the value.
+        :param logger_mode:  Determine logger_mode.
+        :param logger_prefix:  Determine logger_prefix.
         """
 
         self._item_class = UNSET
@@ -78,13 +88,69 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         super(StoreValue, self).__init__(*args, **kwargs)
 
+        # Set store elements
+        self.key = key or self.key
+        self._help = help
+
+
+        # Prepare closest type
+        mro = self.__class__.__mro__
+        closest = [x.__name__ for x in mro if x.__name__.startswith("Store")]
+        closest = closest[0] if len(closest) > 0 else "???"
+        self.closest_type = closest
+
+        # PRepare other stuffs
         self._index = index
         self._value = value if value is not UNSET else self._value
         self._default = default if default != UNSET else self._default
 
+
     def to_json(self):
         "Return json value of ..."
         return store_to_json(self)
+
+
+
+
+    # Node overrides (TEMP)
+    # -----------------
+    def add_child(self, child, key=None, **kwargs):
+        "Add a child"
+
+        super(StoreValue, self).add_child(child, name=key, name_attr="key", **kwargs)
+
+
+
+
+    # Key management (based on parents and children)
+    # -------------------------------
+    def get_key(self, mode="self"):
+        "Return object key, eventually with parent"
+
+        def get_all_parent_keys():
+            out = self.get_hier(mode="full")
+            out = [x.key for x in out]
+            return out
+
+        if mode in ["self"]:
+            return self.key
+        if mode in ["full"]:
+            out = get_all_parent_keys()
+            return out
+        if mode in ["parents"]:
+            out = get_all_parent_keys()
+            out = list(reversed(out))
+            out = ".".join(out)
+            return out
+        if mode in ["children"]:
+            if isinstance(self._children, dict):
+                out = list(self._children.keys())
+            else:
+                out = []
+            return out
+        else:
+            raise Exception(f"Unknown mode: {mode}")
+
 
     # Value methods
     # -----------------
