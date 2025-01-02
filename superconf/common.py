@@ -134,7 +134,6 @@ NOT_SET = NotSet()
 UNSET = UnSet()
 
 
-
 def filter_NOT_UNSET(array, only=None, key=None):
     assert isinstance(array, list)
     out = []
@@ -154,6 +153,3 @@ def filter_NOT_UNSET(array, only=None, key=None):
 
         out.append(item)
     return out
-
-
-

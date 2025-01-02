@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 # Top class
 # ======================================
 
+
 class NodeBase:
     "Represent a node"
 
@@ -52,7 +53,6 @@ class NodeBase:
         out = [str(x.name) for x in self.get_parents(mode="full")]
         out = list(reversed(out))
         return ".".join(out) or self.name
-
 
     # Hiererachy methods
     # -------------------------------
@@ -124,8 +124,8 @@ class NodeBase:
                     break
             if logger_mode == "inherit":
                 logger_mode = "instance"
-        
-        # 
+
+        #
         logger_mode = logger_mode or "default"
 
         # Set logger mode
@@ -165,11 +165,8 @@ class NodeBase:
         self.log.debug(f"Create new node: {self}")
 
 
-
-
 # Second Level class
 # ======================================
-
 
 
 class DefaultValue:
@@ -188,18 +185,15 @@ DEFAULT_VALUE = DefaultValue()
 UNSET_VALUE = UnsetValue()
 
 
-
 class NodeMeta(NodeBase):
     "Add metadata feature to each instances"
-
 
     class Meta:
         "Local class configurator"
 
-
     def get_inst_cfg(self, name, default=UNSET):
         """Return instance config
-        
+
         Lookup order:
         - Check in: self._NAME
         - Check in: self.__class__.Meta.NAME
@@ -225,10 +219,8 @@ class NodeMeta(NodeBase):
         return default
 
 
-
 class NodeChildren(NodeBase):
     "Manage node children"
-
 
     def __init__(self, *args, **kwargs):
         """
@@ -237,7 +229,6 @@ class NodeChildren(NodeBase):
 
         super(NodeChildren, self).__init__(*args, **kwargs)
         self._children = UNSET
-
 
     # Dunder methods
     # -----------------
@@ -252,7 +243,6 @@ class NodeChildren(NodeBase):
 
     def __len__(self):
         return len(self.get_children())
-
 
     # Children
     # -------------------------------
@@ -300,13 +290,9 @@ class NodeChildren(NodeBase):
         child.parent = self
 
 
-
-
 # Exposed Classes
 # ======================================
 
 
-
-class NodeContainer(NodeMeta,NodeChildren):
+class NodeContainer(NodeMeta, NodeChildren):
     "Represent a NodeBase container"
-

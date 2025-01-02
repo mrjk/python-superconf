@@ -59,7 +59,10 @@ def test_nodecont_cls_parent_links():
 
     # Test get_parents, mode=parent
     assert [x.name for x in p1.get_parents(mode="parents")] == []
-    assert [x.name for x in p2.get_parents(mode="parents")] == ["My Child2", "My Parent"]
+    assert [x.name for x in p2.get_parents(mode="parents")] == [
+        "My Child2",
+        "My Parent",
+    ]
     assert [x.name for x in c1.get_parents(mode="parents")] == ["My Parent"]
     assert [x.name for x in c2.get_parents(mode="parents")] == ["My Parent"]
     assert [x.name for x in c3.get_parents(mode="parents")] == [
@@ -171,7 +174,10 @@ def test_nodecont_cls_children_links():
 
     # Test parent ship
     assert [x.name for x in p1.get_parents(mode="parents")] == []
-    assert [x.name for x in p2.get_parents(mode="parents")] == ["My Child1", "My Parent"]
+    assert [x.name for x in p2.get_parents(mode="parents")] == [
+        "My Child1",
+        "My Parent",
+    ]
     assert [x.name for x in c1.get_parents(mode="parents")] == ["My Parent"]
     assert [x.name for x in c2.get_parents(mode="parents")] == ["My Parent"]
     assert [x.name for x in c3.get_parents(mode="parents")] == [

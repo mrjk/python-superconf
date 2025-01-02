@@ -88,8 +88,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         self._value = value if value is not UNSET else self._value
         self._default = default if default != UNSET else self._default
 
-
-
     # Node overrides API Changes
     # -----------------
     def add_child(self, child, **kwargs):
@@ -97,11 +95,10 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         super(StoreValue, self).add_child(child, name_attr="key", **kwargs)
 
-
     @property
     def name(self):
         """Return name as string. Empty string is returned when no name."""
-        
+
         # Return key first
         key = getattr(self, "key", None)
         if isinstance(key, str) and key:
@@ -109,7 +106,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         # Fallback on default method
         return super(StoreValue, self).name
-
 
     # Dunder methods
     # -----------------
@@ -135,17 +131,12 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
             out = f"{name}|{middle}[{value}]"
         return str(out)
 
-
-
-
     # Key management (based on parents and children)
     # -------------------------------
-
 
     def get_index(self):
         "Return object parent index"
         return self._index
-
 
     # TOFIX: To be replaced by attribute ... eventually
     def get_key(self, mode="self"):
@@ -196,12 +187,10 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         "Get default values"
         return self.get_inst_cfg("default")
 
-
     def to_json(self):
         "Return json value of object"
         return store_to_json(self.get_value())
         # return store_to_json(self)
-
 
     # Children methods
     # -----------------
@@ -232,8 +221,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         return out1
 
-
-
     def get_children_class(self, default=None):
         "Return default class to use for new children, must return a StoreNode class or UNSET"
 
@@ -248,8 +235,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
     # Goodies
     # ----
-
-
 
 
 class _StoreContainer(StoreValue):
@@ -326,6 +311,7 @@ class _StoreContainer(StoreValue):
 
         # print ("RUN get_default: _StoreContainer - Hard coded", self, dict())
         return native_type()
+
 
 class StoreDict(_StoreContainer):
     "Represent a unknown keys config"
