@@ -170,11 +170,6 @@ def test1():
     # pprint (t)
     assert t == None
 
-    print("\n---TEST: Test hier - self")
-    t = config1.get_parents(mode="self")
-    # pprint (t)
-    assert t is config1
-
     print("\n---TEST: Test hier - root")
     t = config1.get_parents(mode="root")
     # pprint (t)

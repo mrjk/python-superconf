@@ -135,6 +135,18 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
             out = f"{name}|{middle}[{value}]"
         return str(out)
 
+    def __getitem__(self, key):
+        return self.get_children(key)
+
+    def __iter__(self):
+        yield from self.get_children().items()
+
+    def __contains__(self, key):
+        return self.get_children(key)
+
+    def __len__(self):
+        return len(self.get_children())
+
     # Key management (based on parents and children)
     # -------------------------------
 
@@ -151,8 +163,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
             out = [x.key for x in out]
             return out
 
-        if mode in ["self"]:
-            return self.key
         if mode in ["full"]:
             out = get_all_parent_keys()
             return out
