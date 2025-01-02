@@ -10,27 +10,6 @@ from .common import NOT_SET, UNSET
 log = logging.getLogger(__name__)
 
 
-# def filter_NOT_UNSET(array, only=None, key=None):
-#     assert isinstance(array, list)
-#     out = []
-#     for item in array:
-#         if item == NOT_SET:
-#             continue
-#         if item == UNSET:
-#             continue
-#         if only is not None:
-#             if not isinstance(item, only):
-#                 continue
-#         if key is not None:
-#             if not isinstance(item, dict):
-#                 continue
-#             if not key in item:
-#                 continue
-
-#         out.append(item)
-#     return out
-
-
 # Top class
 # ======================================
 
@@ -38,7 +17,6 @@ class Node:
     "Represent a node"
 
     _name = None
-    key = ""
     parent = None
 
     def __init__(
@@ -72,7 +50,7 @@ class Node:
     def fname(self):
         """Return the full string name of object with parent"""
         _t = self.get_hier(mode="full")
-        _t = [x.key for x in _t]
+        _t = [x.name for x in _t]
         _t = list(reversed(_t))
         return ".".join(_t) or self.name
 
@@ -134,16 +112,24 @@ class Node:
         """
 
         # Validate input
-        NODE_SET_LOGGER_MODES = ["absent", "default", "instance", "inherit"]
+        NODE_SET_LOGGER_MODES = ["absent", "default", "instance", "class", "inherit"]
 
         # Determine value
         if logger_mode == None or logger_mode == "inherit":
-            if self.parent:
-                logger_mode = getattr(self.parent, "_logger_mode", None)
+            parents = self.get_hier(mode="full")
+            for parent in parents:
+                match = getattr(parent, "_logger_mode", "inherit")
+                if match != "inherit":
+                    logger_mode = match
+                    break
+            if logger_mode == "inherit":
+                logger_mode = "instance"
+        
+        # 
         logger_mode = logger_mode or "default"
 
         # Set logger mode
-        if logger_mode not in NODE_SET_LOGGER_MODES:
+        if logger_mode not in NODE_SET_LOGGER_MODES and logger_mode != "inherit":
             raise Exception(
                 f"Unsupported mode '{logger_mode}', please use one of: {NODE_SET_LOGGER_MODES}"
             )
@@ -167,6 +153,8 @@ class Node:
                 obj_name = ".".join(
                     [logger_prefix, self.__class__.__qualname__, self.name]
                 )
+            else:
+                assert False, f"VALUE: {logger_mode}"
 
             # Set logger
             # logger_name = ".".join([obj_name, obj_id])
@@ -241,6 +229,7 @@ class NodeMeta(Node):
 class NodeContainer(NodeMeta):
     "Represent a container"
 
+
     def __init__(self, *args, **kwargs):
         """
         Define children mode
@@ -254,25 +243,15 @@ class NodeContainer(NodeMeta):
     # -----------------
     def __getitem__(self, value):
         return self.get_children(value)
-        # children = getattr(self, "_children", {})
-        # child = children.get(value)
-        # return child
 
     def __iter__(self):
         yield from self.get_children().items()
 
-        # children = getattr(self, "_children", {})
-        # yield from children.items()
-
     def __contains__(self, value):
         return self.get_children(value)
-        # children = getattr(self, "_children", {})
-        # return value in children
 
     def __len__(self):
         return len(self.get_children())
-        # children = getattr(self, "_children", {})
-        # return len(children)
 
 
     # Children
@@ -305,7 +284,7 @@ class NodeContainer(NodeMeta):
             raise Exception(msg)
 
         name = name if name is not None else getattr(child, name_attr, None)
-        assert name, f"Can't use this name for child: {name}"
+        assert name, f"Can't use this name for child: {type(name)} {name}"
 
         if not name in self._children:
             self.log.debug(f"Add child: {name}=>{child}")

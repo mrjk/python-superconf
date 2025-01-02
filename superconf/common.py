@@ -132,3 +132,28 @@ class UnSet(object):
 
 NOT_SET = NotSet()
 UNSET = UnSet()
+
+
+
+def filter_NOT_UNSET(array, only=None, key=None):
+    assert isinstance(array, list)
+    out = []
+    for item in array:
+        if item == NOT_SET:
+            continue
+        if item == UNSET:
+            continue
+        if only is not None:
+            if not isinstance(item, only):
+                continue
+        if key is not None:
+            if not isinstance(item, dict):
+                continue
+            if not key in item:
+                continue
+
+        out.append(item)
+    return out
+
+
+

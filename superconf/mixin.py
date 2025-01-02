@@ -65,9 +65,9 @@ class StoreExtra(StoreMixin):
         print(f"  value     => {str(self.get_value())}")
         print(f"  parents   => {[str(x) for x in self.get_hier(mode='full')]}")
         print(f"  children cls  => {str(self.get_children_class())}")
-        print(f"  children  => {len(self._children)}")
 
-        children = self._children
+        children = self.get_children()
+        print(f"  children  => {len(children)}")
         for key, child in children.items():
             print(f"    {key:<20} => {str(child)}")
 
