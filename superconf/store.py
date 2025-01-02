@@ -28,8 +28,6 @@ def store_to_json(obj):
     "Return a node object to serializable thing"
 
     def t_funct(item):
-        # return str(item)
-
         if item is UNSET:
             return None
         if hasattr(item, "get_value"):
@@ -90,8 +88,9 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         # PRepare other stuffs
         self._index = index
-        self._value = value if value is not UNSET else self._value
+        # self._value = value if value is not UNSET else self._value
         self._default = default if default != UNSET else self._default
+        self.set_value(value if value is not UNSET else self._value)
 
     # Node overrides API Changes
     # -----------------
@@ -188,6 +187,10 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         # If value is not present, return default instead
         return self.get_default()
 
+    def set_value(self, value):
+        "Set current value of config"
+        self._value = value
+
     def get_default(self):
         "Get default values"
         return self.get_inst_cfg("default")
@@ -250,6 +253,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 class _StoreContainer(StoreValue):
     "Represent a unknown keys config"
 
+    _children = UNSET
     _native_type = dict
     _children_class = StoreValue
 
@@ -258,23 +262,29 @@ class _StoreContainer(StoreValue):
 
     def __init__(self, *args, **kwargs):
 
+        assert isinstance(self._children, UnSet)
         super(_StoreContainer, self).__init__(*args, **kwargs)
-        native_type = self._native_type
 
         # Sanity checks
+        native_type = self._native_type
         value = self.get_value()
         assert isinstance(value, (native_type, UnSet)), f"Got: {value}"
         default = self.get_default()
         assert isinstance(default, (native_type, UnSet))
-        assert isinstance(self._children, UnSet)
-
-        # Init children
-        self._init_children()
-
         assert isinstance(self._children, (dict, UnSet))
 
     # Value methods
     # -----------------
+
+    def set_value(self, value):
+        "Set current value of config and children"
+
+        # Run parent method
+        super(_StoreContainer, self).set_value(value)
+
+        # Init children
+        self._init_children()
+
     def get_value(self):
         "Always return a dict"
         native_type = self._native_type
