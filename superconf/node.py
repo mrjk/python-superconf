@@ -31,6 +31,9 @@ log = logging.getLogger(__name__)
 #     return out
 
 
+# Top class
+# ======================================
+
 class Node:
     "Represent a node"
 
@@ -174,7 +177,68 @@ class Node:
         self.log.debug(f"Create new node: {self}")
 
 
-class NodeContainer(Node):
+
+
+# Second Level class
+# ======================================
+
+
+
+class DefaultValue:
+
+    def __str__(self):
+        return "<DEFAULT_VALUE>"
+
+
+class UnsetValue:
+
+    def __str__(self):
+        return "<UNSET_VALUE>"
+
+
+DEFAULT_VALUE = DefaultValue()
+UNSET_VALUE = UnsetValue()
+
+
+
+class NodeMeta(Node):
+    "Represent a container"
+
+
+    class Meta:
+        "Local class configurator"
+
+
+    def get_inst_cfg(self, name, default=UNSET):
+        "Return instance config"
+
+        # Check in order: 
+        # - inst._NAME
+        # - CLASS.Meta.NAME
+        # - inst._NAME_default
+
+        # Check default override value
+        out = getattr(self, f"_{name}", UNSET)
+        if out != DEFAULT_VALUE and out != UNSET:
+            return out
+
+        # Check from Metadata
+        out = getattr(self.Meta, name, UNSET)
+        if out != UNSET:
+            return out
+
+        # Check from class inheritance
+        out = getattr(self, f"{name}", UNSET)
+        if out != DEFAULT_VALUE and out != UNSET:
+            return out
+
+        return default
+
+
+
+
+
+class NodeContainer(NodeMeta):
     "Represent a container"
 
     def __init__(self, *args, **kwargs):
@@ -185,15 +249,41 @@ class NodeContainer(Node):
         super(NodeContainer, self).__init__(*args, **kwargs)
         self._children = UNSET
 
+
+    # Dunder methods
+    # -----------------
+    def __getitem__(self, value):
+        return self.get_children(value)
+        # children = getattr(self, "_children", {})
+        # child = children.get(value)
+        # return child
+
+    def __iter__(self):
+        yield from self.get_children().items()
+
+        # children = getattr(self, "_children", {})
+        # yield from children.items()
+
+    def __contains__(self, value):
+        return self.get_children(value)
+        # children = getattr(self, "_children", {})
+        # return value in children
+
+    def __len__(self):
+        return len(self.get_children())
+        # children = getattr(self, "_children", {})
+        # return len(children)
+
+
     # Children
     # -------------------------------
 
     def get_children(self, *args):
         "Return one or all children inst as dict"
 
-        children = self._children  # or dict()
+        children = self._children or dict()
         if len(args) == 0:
-            return children or {}
+            return children or UNSET
         else:
             return children.get(args[0], None)
 

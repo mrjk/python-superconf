@@ -13,27 +13,11 @@ from pprint import pprint
 from .common import NOT_SET, UNSET, UnSet
 from .common import list_to_dict, dict_to_list, dict_to_json
 from .loaders import Environment
-from .node import NodeContainer
+from .node import NodeContainer, DEFAULT_VALUE, UNSET_VALUE
 from .mixin import StoreValueEnvVars, StoreExtra
 from . import exceptions
 
 log = logging.getLogger(__name__)
-
-
-class DefaultValue:
-
-    def __str__(self):
-        return "<DEFAULT_VALUE>"
-
-
-class UnsetValue:
-
-    def __str__(self):
-        return "<UNSET_VALUE>"
-
-
-DEFAULT_VALUE = DefaultValue()
-UNSET_VALUE = UnsetValue()
 
 
 def store_to_json(obj):
@@ -63,9 +47,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     # Disable children when set to None
     _children_class = None
     _native_type = str
-
-    class Meta:
-        pass
 
     def __init__(
         self,
@@ -110,15 +91,30 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         "Return json value of ..."
         return store_to_json(self)
 
-    # Node overrides (TEMP)
+
+
+
+
+
+
+    # Node overrides API Changes
     # -----------------
     def add_child(self, child, key=None, **kwargs):
         "Add a child"
 
         super(StoreValue, self).add_child(child, name=key, name_attr="key", **kwargs)
 
+
     # Key management (based on parents and children)
     # -------------------------------
+
+
+    def get_index(self):
+        "Return object parent index"
+        return self._index
+
+
+    # TOFIX: To be replaced by attribute ... eventually
     def get_key(self, mode="self"):
         "Return object key, eventually with parent"
 
@@ -138,20 +134,17 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
             out = ".".join(out)
             return out
         if mode in ["children"]:
-            if isinstance(self._children, dict):
-                out = list(self._children.keys())
-            else:
-                out = []
+            out = list(self.get_children().keys())
+            # if isinstance(self._children, dict):
+            #     out = list(self._children.keys())
+            # else:
+            #     out = []
             return out
         else:
             raise Exception(f"Unknown mode: {mode}")
 
     # Value methods
     # -----------------
-    def get_index(self):
-        "Return object parent index"
-        return self._index
-
     def get_value(self, kind=None):
         "Get current value of config, exclude NOT_SET values"
 
@@ -169,24 +162,27 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     def get_default(self):
         "Get default values"
 
-        # Check default override value
-        out = getattr(self, "_default", UNSET)
-        if out != DEFAULT_VALUE and out != UNSET:
-            # print ("RUN get_default: StoreValue - Attribute", self, out)
-            return out
+        return self.get_inst_cfg("default")
 
-        # Check default from Metadata
-        out = getattr(self.Meta, "default", UNSET)
-        if out != DEFAULT_VALUE and out != UNSET:
-            # print ("RUN get_default: StoreValue - Meta", self, out)
-            return out
+        # # Check default override value
+        # out = getattr(self, "_default", UNSET)
+        # if out != DEFAULT_VALUE and out != UNSET:
+        #     # print ("RUN get_default: StoreValue - Attribute", self, out)
+        #     return out
 
-        # print ("RUN get_default: StoreValue - FAllBack", self, UNSET)
-        return UNSET
+        # # Check default from Metadata
+        # out = getattr(self.Meta, "default", UNSET)
+        # if out != DEFAULT_VALUE and out != UNSET:
+        #     # print ("RUN get_default: StoreValue - Meta", self, out)
+        #     return out
+
+        # # print ("RUN get_default: StoreValue - FAllBack", self, UNSET)
+        # return UNSET
+
 
     # Children methods
     # -----------------
-    def get_children_stores(self, mode="all", lvl=-1):
+    def walk_children(self, mode="all", lvl=-1):
         """Return a flat list of all children stores
         Allow to filter per type
         """
@@ -206,49 +202,61 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
 
         children = self.get_children()
         for key, child in children.items():
-            ret = child.get_children_stores(mode=mode, lvl=lvl)
+            ret = child.walk_children(mode=mode, lvl=lvl)
             out1.extend(ret)
 
         out1 = list(set(out1))
 
         return out1
 
+
+
     def get_children_class(self, default=None):
         "Return default class to use for new children, must return a StoreNode class or UNSET"
 
-        # Check from direct override
-        out = self._item_class
-        if out != UNSET:
-            assert isinstance(out, (NodeContainer, type(None)))
-            # print("RUN get_children_class: get_children_class - _item_class", self, out)
-            return out
+        out = self.get_inst_cfg("item_class", default=self._children_class)
 
-        # Check from Metadata
-        out = getattr(self.Meta, "item_class", UNSET)
-        if out != UNSET:
-            assert issubclass(out, (NodeContainer, UnSet, type(None)))
-            # print("RUN get_children_class: get_children_class - Meta", self, out)
-            return out
+        if inspect.isclass(out):
+            assert issubclass(out, (StoreValue, NodeContainer, UnSet, type(None)))
+        else:
+            assert isinstance(out, (NodeContainer, type(None))), f"Got: {out}"
 
-        # Check from children class
-        out = self._children_class
-        if out != UNSET:
+        return out
 
-            if inspect.isclass(out):
-                assert issubclass(out, StoreValue)
-            else:
-                assert isinstance(out, type(None)), f"Got: {out}"
-            return out
 
-        # Return Native type
-        # # out = getattr(self, "_native_type", UNSET)
-        # out = self._native_type
+        # # Check from direct override
+        # out = self._item_class
         # if out != UNSET:
-        #     # print("RUN get_children_class: get_children_class - Native", self, out)
+        #     assert isinstance(out, (NodeContainer, type(None)))
+        #     # print("RUN get_children_class: get_children_class - _item_class", self, out)
         #     return out
 
-        # print("RUN get_children_class: get_children_class - NotFound", self, default)
-        return default
+        # # Check from Metadata
+        # out = getattr(self.Meta, "item_class", UNSET)
+        # if out != UNSET:
+        #     assert issubclass(out, (NodeContainer, UnSet, type(None)))
+        #     # print("RUN get_children_class: get_children_class - Meta", self, out)
+        #     return out
+
+        # # Check from children class
+        # out = self._children_class
+        # if out != UNSET:
+
+        #     if inspect.isclass(out):
+        #         assert issubclass(out, StoreValue)
+        #     else:
+        #         assert isinstance(out, type(None)), f"Got: {out}"
+        #     return out
+
+        # # Return Native type
+        # # # out = getattr(self, "_native_type", UNSET)
+        # # out = self._native_type
+        # # if out != UNSET:
+        # #     # print("RUN get_children_class: get_children_class - Native", self, out)
+        # #     return out
+
+        # # print("RUN get_children_class: get_children_class - NotFound", self, default)
+        # return default
 
     # Dunder methods
     # -----------------
@@ -312,7 +320,9 @@ class StoreContainer(StoreValue):
         "Always return a dict"
         native_type = self._native_type
 
-        if self._children == UNSET:
+        # if self._children == UNSET:
+        if self.get_children() == UNSET:
+
             out = super(StoreContainer, self).get_value()
             out = native_type() if not out else out
             # out = native_type() if out is None else out
@@ -323,7 +333,9 @@ class StoreContainer(StoreValue):
             return out
 
         out = native_type()
-        if len(self._children) > 0:
+        # if len(self._children) > 0:
+        if len(self.get_children()) > 0:
+
             for key, child in self._iter_children():
                 if native_type == dict:
                     out[key] = child.get_value()
@@ -353,29 +365,12 @@ class StoreContainer(StoreValue):
         # print ("RUN get_default: StoreContainer - Hard coded", self, dict())
         return native_type()
 
-    def _iter_children(self):
-        "Iterator over children"
-        # Iterate over children payloads
-        yield from self._children.items()
-
-    # Dunder methods
-    # -----------------
-    def __getitem__(self, value):
-        children = getattr(self, "_children", {})
-        child = children.get(value)
-        return child
-
-    def __iter__(self):
-        children = getattr(self, "_children", {})
-        yield from children.items()
-
-    def __contains__(self, value):
-        children = getattr(self, "_children", {})
-        return value in children
-
-    def __len__(self):
-        children = getattr(self, "_children", {})
-        return len(children)
+    # TOFIX
+    # def _iter_children(self):
+    #     "Iterator over children"
+    #     # Iterate over children payloads
+    #     yield from self._children.items()
+    _iter_children = NodeContainer.__iter__
 
 
 class StoreDict(StoreContainer):

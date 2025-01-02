@@ -43,7 +43,7 @@ class StoreExtra(StoreMixin):
 
         out2 = {self.fname: self}
 
-        for child in self.get_children_stores(mode=mode, lvl=lvl):
+        for child in self.walk_children(mode=mode, lvl=lvl):
             out2[child.get_key("parents")] = child
 
         return out2
@@ -168,7 +168,7 @@ class StoreValueEnvVars(StoreMixin):
         "Return a list of all children envvars"
         out = {}
 
-        for child in self.get_children_stores(mode=mode, lvl=lvl):
+        for child in self.walk_children(mode=mode, lvl=lvl):
             key_name = child.get_envvar()
             out[key_name] = child
 
