@@ -67,14 +67,17 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     class Meta:
         pass
 
-    def __init__(self, *args, 
+    def __init__(
+        self,
+        *args,
         index=None,
         key: str = None,
         help: str = "",
-        value=UNSET, 
-        default=UNSET, 
-        loaders=None, 
-        **kwargs):
+        value=UNSET,
+        default=UNSET,
+        loaders=None,
+        **kwargs,
+    ):
         """
         :param key:     Name of the value used in file or environment
                         variable. Set automatically by the metaclass.
@@ -92,7 +95,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         self.key = key or self.key
         self._help = help
 
-
         # Prepare closest type
         mro = self.__class__.__mro__
         closest = [x.__name__ for x in mro if x.__name__.startswith("Store")]
@@ -104,13 +106,9 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         self._value = value if value is not UNSET else self._value
         self._default = default if default != UNSET else self._default
 
-
     def to_json(self):
         "Return json value of ..."
         return store_to_json(self)
-
-
-
 
     # Node overrides (TEMP)
     # -----------------
@@ -118,9 +116,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         "Add a child"
 
         super(StoreValue, self).add_child(child, name=key, name_attr="key", **kwargs)
-
-
-
 
     # Key management (based on parents and children)
     # -------------------------------
@@ -150,7 +145,6 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
             return out
         else:
             raise Exception(f"Unknown mode: {mode}")
-
 
     # Value methods
     # -----------------
@@ -461,7 +455,9 @@ class StoreDict(StoreContainer):
                 assert issubclass(
                     _child_cls, StoreValue
                 ), f"Must be an class of StoreValue"
-                inst = _child_cls(key=key, index=key, value=_child_value, default=_child_default)
+                inst = _child_cls(
+                    key=key, index=key, value=_child_value, default=_child_default
+                )
                 self.add_child(inst)
 
 

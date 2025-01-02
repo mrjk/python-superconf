@@ -7,12 +7,14 @@ import json
 # Class helpers
 # --------------------
 
+
 def obj_repr(self):
     "Default python representation of an object"
     addr = hex(id(self))
     name = f"{self.__class__.__module__}.{self.__class__.__name__}"
     out = f"<{name} object at {addr}>"
     return out
+
 
 def obj_repr_short(self):
     "Shorter python representation of an object"
@@ -25,6 +27,7 @@ def obj_repr_short(self):
 # Functions helpers
 # --------------------
 
+
 def list_to_dict(array, key=None):
     "Transform a list to a dict in number as string for keys"
     return {str(v.__dict__.get(key, k) if key else k): v for k, v in enumerate(array)}
@@ -33,7 +36,6 @@ def list_to_dict(array, key=None):
 def dict_to_list(map):
     "Transform a dict to a list. Original dick keys are lost"
     return list(map.values())
-
 
 
 def dict_to_json(obj, fn=None):
@@ -57,6 +59,7 @@ def dict_to_json(obj, fn=None):
 
 # Objectss helpers
 # --------------------
+
 
 class NotSet(str):
     """

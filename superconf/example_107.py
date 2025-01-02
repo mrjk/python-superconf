@@ -6,7 +6,13 @@ import argparse
 from superconf.common import dict_to_json
 from superconf.loaders import YamlFile, UNSET, NOT_SET
 
-from superconf.configuration import StoreValue, StoreDict, StoreList, DEFAULT_VALUE, UNSET_VALUE
+from superconf.configuration import (
+    StoreValue,
+    StoreDict,
+    StoreList,
+    DEFAULT_VALUE,
+    UNSET_VALUE,
+)
 
 # from superconf.mixin import StoreValueEnvVars
 # StoreValue = type('StoreValue',(StoreValue, StoreValueEnvVars),{})
@@ -28,8 +34,6 @@ args = parser.parse_args()
 #     pass
 
 # p.__class__ = type('GentlePerson',(Person,Gentleman),{})
-
-
 
 
 ######### Stack Level
@@ -84,7 +88,14 @@ class Stack(Configuration):
     )
     tags = ValueList(
         item_class=StackTag,
-        default=[{"always1": "value1", "always2": "value2", "always3": None, "always3": UNSET }]
+        default=[
+            {
+                "always1": "value1",
+                "always2": "value2",
+                "always3": None,
+                "always3": UNSET,
+            }
+        ],
     )
 
 
@@ -183,8 +194,7 @@ def test1():
     print(p1.to_json())
     # print(dict_to_json(p1.explain_tree(mode="struct")))
 
-
-    pprint (p1.get_envvars())
+    pprint(p1.get_envvars())
 
 
 test1()

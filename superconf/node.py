@@ -31,7 +31,6 @@ log = logging.getLogger(__name__)
 #     return out
 
 
-
 class Node:
     "Represent a node"
 
@@ -56,7 +55,6 @@ class Node:
 
         self.set_logger(logger_mode=logger_mode, logger_prefix=logger_prefix)
 
-
     # Properties
     # -------------------------------
 
@@ -66,7 +64,6 @@ class Node:
         if isinstance(self._name, str):
             return self._name
         return ""
-
 
     @property
     def fname(self):
@@ -114,7 +111,6 @@ class Node:
         else:
             raise Exception(f"Unknown mode: {mode}")
 
-
     # Logging
     # -------------------------------
 
@@ -142,13 +138,14 @@ class Node:
             if self.parent:
                 logger_mode = getattr(self.parent, "_logger_mode", None)
         logger_mode = logger_mode or "default"
-        
+
         # Set logger mode
         if logger_mode not in NODE_SET_LOGGER_MODES:
-            raise Exception(f"Unsupported mode '{logger_mode}', please use one of: {NODE_SET_LOGGER_MODES}")
+            raise Exception(
+                f"Unsupported mode '{logger_mode}', please use one of: {NODE_SET_LOGGER_MODES}"
+            )
         self._logger_mode = logger_mode
         self._logger_prefix = logger_prefix
-
 
         # Check base modes
         if logger_mode in ["absent"]:
@@ -156,7 +153,7 @@ class Node:
         elif logger_mode in ["default"]:
             self.log = log
         else:
-            
+
             logger_prefix = logger_prefix or self.__module__
 
             # Fetch infos
@@ -164,7 +161,9 @@ class Node:
             if logger_mode in ["class"]:
                 obj_name = ".".join([logger_prefix, self.__class__.__qualname__])
             elif logger_mode in ["instance"]:
-                obj_name = ".".join([logger_prefix, self.__class__.__qualname__, self.name])
+                obj_name = ".".join(
+                    [logger_prefix, self.__class__.__qualname__, self.name]
+                )
 
             # Set logger
             # logger_name = ".".join([obj_name, obj_id])
@@ -175,25 +174,16 @@ class Node:
         self.log.debug(f"Create new node: {self}")
 
 
-
-
 class NodeContainer(Node):
     "Represent a container"
 
-
-    def __init__(
-        self,
-        *args,
-        **kwargs
-    ):
+    def __init__(self, *args, **kwargs):
         """
         Define children mode
         """
-        
+
         super(NodeContainer, self).__init__(*args, **kwargs)
         self._children = UNSET
-
-
 
     # Children
     # -------------------------------
@@ -206,8 +196,6 @@ class NodeContainer(Node):
             return children or {}
         else:
             return children.get(args[0], None)
-
-
 
     def add_child(self, child, name=None, name_attr="name"):
         "Add a child"
