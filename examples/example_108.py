@@ -99,7 +99,7 @@ exemple_conf_list1 = [
 
 def test1():
 
-    print("\n\n===> Test suite List: Validate dict config <====\n\n")
+    print("\n\n===> Test suite1 List: Validate dict config <====\n\n")
 
     p1 = VarCtlDict(
         value=dict(exemple_conf1),
@@ -119,7 +119,7 @@ def test1():
 def test2():
     "Test default values"
 
-    print("\n\n===> Test suite Dict: Validate default config <====\n\n")
+    print("\n\n===> Test suite2 Dict: Validate default config <====\n\n")
     p1 = VarCtlDict()
     # p1.explain()
     # p1["placeholder"].explain()
@@ -138,7 +138,7 @@ def test2():
 
 def test3():
 
-    print("\n\n===> Test suite List: Validate dict config <====\n\n")
+    print("\n\n===> Test suite3 List: Validate dict config <====\n\n")
 
     conf = exemple_conf_list1
     p1 = VarCtlList(
@@ -159,7 +159,7 @@ def test3():
 
 def test4():
 
-    print("\n\n===> Test suite List: Validate dict config <====\n\n")
+    print("\n\n===> Test suite4 List: Validate dict config <====\n\n")
 
     conf = exemple_conf_list1
     p1 = VarCtlList()
