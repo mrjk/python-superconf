@@ -62,6 +62,7 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         value=UNSET,
         default=UNSET,
         loaders=None,
+        item_class=UNSET,
         **kwargs,
     ):
         """
@@ -75,6 +76,9 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
         self.item_class = self.item_class or StoreValue
         self.key = key or self.key
         assert isinstance(index, (str, int, type(None)))
+
+        if item_class != UNSET:
+            self._item_class = item_class
 
         super(StoreValue, self).__init__(*args, **kwargs)
 
@@ -159,6 +163,11 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
     def get_key(self, mode="self"):
         "Return object key, eventually with parent"
 
+        if mode in ["self"]:
+            return self.key
+        if mode in ["children"]:
+            return list(self.get_children().keys())
+
         def get_all_parent_keys():
             out = self.get_parents(mode="full")
             out = [x.key for x in out]
@@ -172,15 +181,8 @@ class StoreValue(NodeContainer, StoreValueEnvVars, StoreExtra):
             out = list(reversed(out))
             out = ".".join(out)
             return out
-        if mode in ["children"]:
-            out = list(self.get_children().keys())
-            # if isinstance(self._children, dict):
-            #     out = list(self._children.keys())
-            # else:
-            #     out = []
-            return out
-        else:
-            raise Exception(f"Unknown mode: {mode}")
+
+        raise Exception(f"Unknown mode: {mode}")
 
     # Value methods
     # -----------------
