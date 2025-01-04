@@ -1,0 +1,110 @@
+dict_flat_empty: <class 'superconf.exceptions.InvalidValueType'>
+dict_flat_mixed: <class 'superconf.exceptions.InvalidValueType'>
+dict_flat_none: <class 'superconf.exceptions.InvalidValueType'>
+dict_flat_string: <class 'superconf.exceptions.InvalidValueType'>
+dict_flat_string_unset: <class 'superconf.exceptions.InvalidValueType'>
+list_flat_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreList'>
+    default: []
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): []
+  get_key(): ''
+  get_value(): []
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+list_flat_mixed:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreList'>
+    default:
+    - null
+    - string_value
+    - false
+    - 0
+    - 42
+    - -51
+    - {}
+    - []
+  get_children():
+    '0': .0|StoreValue
+    '1': .1|StoreValue
+    '2': .2|StoreValue
+    '3': .3|StoreValue
+    '4': .4|StoreValue
+    '5': .5|StoreValue
+    '6': .6|StoreValue
+    '7': .7|StoreValue
+  get_children_count: 8
+  get_default():
+  - null
+  - string_value
+  - false
+  - 0
+  - 42
+  - -51
+  - {}
+  - []
+  get_key(): ''
+  get_value():
+  - null
+  - string_value
+  - false
+  - 0
+  - 42
+  - -51
+  - {}
+  - []
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+list_flat_none:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreList'>
+    default:
+    - null
+    - null
+    - null
+  get_children():
+    '0': .0|StoreValue
+    '1': .1|StoreValue
+    '2': .2|StoreValue
+  get_children_count: 3
+  get_default():
+  - null
+  - null
+  - null
+  get_key(): ''
+  get_value():
+  - null
+  - null
+  - null
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+list_flat_string: <class 'superconf.exceptions.InvalidValueType'>
+list_flat_string_unset: <class 'superconf.exceptions.InvalidValueType'>
+val_bool_true: <class 'superconf.exceptions.InvalidValueType'>
+val_dict_empty: <class 'superconf.exceptions.InvalidValueType'>
+val_int: <class 'superconf.exceptions.InvalidValueType'>
+val_int_42: <class 'superconf.exceptions.InvalidValueType'>
+val_int__51: <class 'superconf.exceptions.InvalidValueType'>
+val_list_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreList'>
+    default: []
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): []
+  get_key(): ''
+  get_value(): []
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+val_none: <class 'superconf.exceptions.InvalidValueType'>
+val_string: <class 'superconf.exceptions.InvalidValueType'>

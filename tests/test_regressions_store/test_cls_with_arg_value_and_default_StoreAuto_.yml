@@ -1,0 +1,366 @@
+dict_flat_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: {}
+    value: {}
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): {}
+  get_key(): ''
+  get_value(): {}
+  name: ''
+  namef: ''
+  str(): '|StoreDict'
+  type: <class 'superconf.store.StoreDict'>
+dict_flat_mixed:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default:
+      val_bool_true: false
+      val_dict_empty: {}
+      val_int: 0
+      val_int_42: 42
+      val_int__51: -51
+      val_list_empty: []
+      val_none: null
+      val_string: string_value
+    value:
+      val_bool_true: false
+      val_dict_empty: {}
+      val_int: 0
+      val_int_42: 42
+      val_int__51: -51
+      val_list_empty: []
+      val_none: null
+      val_string: string_value
+  get_children():
+    val_bool_true: .val_bool_true|StoreValue
+    val_dict_empty: .val_dict_empty|StoreDict
+    val_int: .val_int|StoreValue
+    val_int_42: .val_int_42|StoreValue
+    val_int__51: .val_int__51|StoreValue
+    val_list_empty: .val_list_empty|StoreList
+    val_none: .val_none|StoreValue
+    val_string: .val_string|StoreValue
+  get_children_count: 8
+  get_default():
+    val_bool_true: false
+    val_dict_empty: {}
+    val_int: 0
+    val_int_42: 42
+    val_int__51: -51
+    val_list_empty: []
+    val_none: null
+    val_string: string_value
+  get_key(): ''
+  get_value():
+    val_bool_true: false
+    val_dict_empty: {}
+    val_int: 0
+    val_int_42: 42
+    val_int__51: -51
+    val_list_empty: []
+    val_none: null
+    val_string: string_value
+  name: ''
+  namef: ''
+  str(): '|StoreDict'
+  type: <class 'superconf.store.StoreDict'>
+dict_flat_none:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default:
+      dict_key1: null
+      dict_key2: null
+      dict_key3: null
+    value:
+      dict_key1: null
+      dict_key2: null
+      dict_key3: null
+  get_children():
+    dict_key1: .dict_key1|StoreValue
+    dict_key2: .dict_key2|StoreValue
+    dict_key3: .dict_key3|StoreValue
+  get_children_count: 3
+  get_default():
+    dict_key1: null
+    dict_key2: null
+    dict_key3: null
+  get_key(): ''
+  get_value():
+    dict_key1: null
+    dict_key2: null
+    dict_key3: null
+  name: ''
+  namef: ''
+  str(): '|StoreDict'
+  type: <class 'superconf.store.StoreDict'>
+dict_flat_string:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default:
+      dict_key1: dict_string_val1
+      dict_key2: dict_string_val2
+      dict_key3: dict_string_val3
+    value:
+      dict_key1: dict_string_val1
+      dict_key2: dict_string_val2
+      dict_key3: dict_string_val3
+  get_children():
+    dict_key1: .dict_key1|StoreValue
+    dict_key2: .dict_key2|StoreValue
+    dict_key3: .dict_key3|StoreValue
+  get_children_count: 3
+  get_default():
+    dict_key1: dict_string_val1
+    dict_key2: dict_string_val2
+    dict_key3: dict_string_val3
+  get_key(): ''
+  get_value():
+    dict_key1: dict_string_val1
+    dict_key2: dict_string_val2
+    dict_key3: dict_string_val3
+  name: ''
+  namef: ''
+  str(): '|StoreDict'
+  type: <class 'superconf.store.StoreDict'>
+dict_flat_string_unset:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default:
+      key1: dict_string_val1
+      key2: null
+      key3: null
+    value:
+      key1: dict_string_val1
+      key2: null
+      key3: null
+  get_children():
+    key1: .key1|StoreValue
+    key2: .key2|StoreValue
+    key3: .key3|StoreValue
+  get_children_count: 3
+  get_default():
+    key1: dict_string_val1
+    key2: null
+    key3: null
+  get_key(): ''
+  get_value():
+    key1: dict_string_val1
+    key2: null
+    key3: null
+  name: ''
+  namef: ''
+  str(): '|StoreDict'
+  type: <class 'superconf.store.StoreDict'>
+list_flat_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: []
+    value: []
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): []
+  get_key(): ''
+  get_value(): []
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+list_flat_mixed:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default:
+    - null
+    - string_value
+    - false
+    - 0
+    - 42
+    - -51
+    - {}
+    - []
+    value:
+    - null
+    - string_value
+    - false
+    - 0
+    - 42
+    - -51
+    - {}
+    - []
+  get_children():
+    '0': .0|StoreValue
+    '1': .1|StoreValue
+    '2': .2|StoreValue
+    '3': .3|StoreValue
+    '4': .4|StoreValue
+    '5': .5|StoreValue
+    '6': .6|StoreDict
+    '7': .7|StoreList
+  get_children_count: 8
+  get_default():
+  - null
+  - string_value
+  - false
+  - 0
+  - 42
+  - -51
+  - {}
+  - []
+  get_key(): ''
+  get_value():
+  - null
+  - string_value
+  - false
+  - 0
+  - 42
+  - -51
+  - {}
+  - []
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+list_flat_none:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default:
+    - null
+    - null
+    - null
+    value:
+    - null
+    - null
+    - null
+  get_children():
+    '0': .0|StoreValue
+    '1': .1|StoreValue
+    '2': .2|StoreValue
+  get_children_count: 3
+  get_default():
+  - null
+  - null
+  - null
+  get_key(): ''
+  get_value():
+  - null
+  - null
+  - null
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+list_flat_string: <class 'AssertionError'>
+list_flat_string_unset: <class 'AssertionError'>
+val_bool_true:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: false
+    value: false
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): false
+  get_key(): ''
+  get_value(): false
+  name: ''
+  namef: ''
+  str(): '|StoreValue'
+  type: <class 'superconf.store.StoreValue'>
+val_dict_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: {}
+    value: {}
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): {}
+  get_key(): ''
+  get_value(): {}
+  name: ''
+  namef: ''
+  str(): '|StoreDict'
+  type: <class 'superconf.store.StoreDict'>
+val_int:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: 0
+    value: 0
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): 0
+  get_key(): ''
+  get_value(): 0
+  name: ''
+  namef: ''
+  str(): '|StoreValue'
+  type: <class 'superconf.store.StoreValue'>
+val_int_42:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: 42
+    value: 42
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): 42
+  get_key(): ''
+  get_value(): 42
+  name: ''
+  namef: ''
+  str(): '|StoreValue'
+  type: <class 'superconf.store.StoreValue'>
+val_int__51:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: -51
+    value: -51
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): -51
+  get_key(): ''
+  get_value(): -51
+  name: ''
+  namef: ''
+  str(): '|StoreValue'
+  type: <class 'superconf.store.StoreValue'>
+val_list_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: []
+    value: []
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): []
+  get_key(): ''
+  get_value(): []
+  name: ''
+  namef: ''
+  str(): '|StoreList'
+  type: <class 'superconf.store.StoreList'>
+val_none:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: null
+    value: null
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): null
+  get_key(): ''
+  get_value(): null
+  name: ''
+  namef: ''
+  str(): '|StoreValue'
+  type: <class 'superconf.store.StoreValue'>
+val_string:
+  ____CONTEXT:
+    cls: <class 'superconf.store.StoreAuto'>
+    default: string_value
+    value: string_value
+  get_children(): <UNSET>
+  get_children_count: 0
+  get_default(): string_value
+  get_key(): ''
+  get_value(): string_value
+  name: ''
+  namef: ''
+  str(): '|StoreValue'
+  type: <class 'superconf.store.StoreValue'>

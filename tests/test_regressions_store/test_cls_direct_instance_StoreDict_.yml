@@ -1,0 +1,11 @@
+____CONTEXT:
+  cls: <class 'superconf.store.StoreDict'>
+get_children(): <UNSET>
+get_children_count: 0
+get_default(): {}
+get_key(): ''
+get_value(): {}
+name: ''
+namef: ''
+str(): '|StoreDict'
+type: <class 'superconf.store.StoreDict'>
