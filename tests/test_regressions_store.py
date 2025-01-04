@@ -6,11 +6,6 @@ import json
 from dataclasses import dataclass
 
 
-# from classyconf.casts import Boolean, List, Option, Tuple, evaluate
-# from classyconf.exceptions import InvalidConfiguration
-
-# from superconf.node import NodeBase, NodeContainer, NodeMeta, NodeChildren
-# from superconf.node import UNSET, DEFAULT_VALUE, UNSET_VALUE
 from superconf.store import UNSET, DEFAULT_VALUE, UNSET_VALUE
 from superconf.store import StoreValue, StoreDict, StoreList, StoreConf
 from superconf.store import StoreAny, StoreAuto
@@ -23,15 +18,24 @@ from superconf.common import to_json
 
 from tests.common import store_value_base, store_dict_base, store_list_base
 
-CLS_VALUE_TESTS = [
-    Value, ValueConf, ValueDict, ValueList
-]
 
 
 
 # ================================================
 # Datasets
 # ================================================
+
+
+CLS_STORE_TESTS = [
+    StoreValue, StoreDict, StoreList, StoreConf,
+    StoreAny, StoreAuto
+]
+
+CLS_VALUE_TESTS = [
+    Value, ValueConf, ValueDict, ValueList
+]
+
+CLS_TEST = CLS_STORE_TESTS + CLS_VALUE_TESTS
 
 
 # Prepare large datasets
@@ -74,13 +78,7 @@ def report_store_values(inst, **kwargs):
 # Base tests on classes
 # ================================================
 
-CLS_STORE_TESTS = [
-    StoreValue, StoreDict, StoreList, StoreConf,
-    StoreAny, StoreAuto
-]
-
-
-@pytest.mark.parametrize('cls', CLS_STORE_TESTS)
+@pytest.mark.parametrize('cls', CLS_TEST)
 def test_cls_direct_instance(data_regression, cls):
     "Test each classes directly without arguments"
 
@@ -96,7 +94,7 @@ def test_cls_direct_instance(data_regression, cls):
     data_regression.check(test_results)
 
 
-@pytest.mark.parametrize('cls', CLS_STORE_TESTS)
+@pytest.mark.parametrize('cls', CLS_TEST)
 def test_cls_with_arg_value(types_base, data_regression, cls):
     "Test each classes with argument value"
 
@@ -117,7 +115,7 @@ def test_cls_with_arg_value(types_base, data_regression, cls):
     data_regression.check(test_results)
 
 
-@pytest.mark.parametrize('cls', CLS_STORE_TESTS)
+@pytest.mark.parametrize('cls', CLS_TEST)
 def test_cls_with_arg_default(types_base, data_regression, cls):
     "Test each classes with argument default"
 
@@ -138,7 +136,7 @@ def test_cls_with_arg_default(types_base, data_regression, cls):
     data_regression.check(test_results)
 
 
-@pytest.mark.parametrize('cls', CLS_STORE_TESTS)
+@pytest.mark.parametrize('cls', CLS_TEST)
 def test_cls_with_arg_value_and_default(types_base, data_regression, cls):
     "Test each classes with value and default arguments"
 
