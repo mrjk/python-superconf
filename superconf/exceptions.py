@@ -33,6 +33,7 @@ class InvalidConfiguration(ConfigurationException):
 
 
 class InvalidValueType(ConfigurationException):
+    "Returned when a value does not fit the expected type"
     pass
 
 
