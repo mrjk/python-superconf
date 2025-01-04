@@ -1,0 +1,58 @@
+val_bool_true:
+  ____CONTEXT:
+    cls: <class 'superconf.node.NodeChildren'>
+    default: false
+  get_parents(): 0
+  get_parents_count: 0
+  name: ''
+  namef: ''
+  type: <class 'superconf.node.NodeChildren'>
+val_dict_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.node.NodeChildren'>
+    default: {}
+  get_parents(): 0
+  get_parents_count: 0
+  name: ''
+  namef: ''
+  type: <class 'superconf.node.NodeChildren'>
+val_int:
+  ____CONTEXT:
+    cls: <class 'superconf.node.NodeChildren'>
+    default: 0
+  get_parents(): 0
+  get_parents_count: 0
+  name: ''
+  namef: ''
+  type: <class 'superconf.node.NodeChildren'>
+val_int_42:
+  exception: <class 'AssertionError'>
+val_int__51:
+  exception: <class 'AssertionError'>
+val_list_empty:
+  ____CONTEXT:
+    cls: <class 'superconf.node.NodeChildren'>
+    default: []
+  get_parents(): 0
+  get_parents_count: 0
+  name: ''
+  namef: ''
+  type: <class 'superconf.node.NodeChildren'>
+val_none:
+  ____CONTEXT:
+    cls: <class 'superconf.node.NodeChildren'>
+    default: null
+  get_parents(): 0
+  get_parents_count: 0
+  name: ''
+  namef: ''
+  type: <class 'superconf.node.NodeChildren'>
+val_string:
+  ____CONTEXT:
+    cls: <class 'superconf.node.NodeChildren'>
+    default: string_value
+  get_parents(): 0
+  get_parents_count: 0
+  name: string_value
+  namef: string_value
+  type: <class 'superconf.node.NodeChildren'>

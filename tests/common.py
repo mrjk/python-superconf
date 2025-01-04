@@ -1,10 +1,39 @@
 
-
+# import pytest
 from pprint import pprint
 import json
 from dataclasses import dataclass
 
 
+
+# ================================================
+# Helpers
+# ================================================
+
+
+def report_store_values(inst, **kwargs):
+    "Aggreagate values to watch/test"
+
+    result = {
+        "type": type(inst),
+        "get_key()": inst.get_key(),
+        "get_default()": inst.get_default(),
+        "name": inst.name,
+        "namef": inst.fname,
+        "str()": str(inst),
+        # "__repr__": repr(inst), # TOFIX, HEXID
+        # "index": inst.get_index(),
+
+        "get_default()": inst.get_default(),
+        "get_value()": inst.get_value(),
+        "get_children_count": len(inst.get_children()),
+        "get_children()": inst.get_children(),
+        # "to_json": inst.to_json(),
+    }
+    # result.update(kwargs)
+    if kwargs:
+        result["____CONTEXT"] = kwargs
+    return result
 
 
 # ================================================
@@ -144,4 +173,7 @@ store_list_base = {
     ),
 
 }
+
+
+
 
