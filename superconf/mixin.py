@@ -6,7 +6,6 @@ Returns:
 
 from .common import NOT_SET, UNSET
 
-
 # Store Mixins Base Class
 # ======================================
 

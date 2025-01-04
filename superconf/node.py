@@ -1,11 +1,9 @@
 import logging
 from collections import OrderedDict
+from pprint import pprint
 from typing import Callable
 
-from pprint import pprint
-
 from .common import NOT_SET, UNSET
-
 
 log = logging.getLogger(__name__)
 
@@ -247,8 +245,8 @@ class NodeChildren(NodeBase):
 
         assert isinstance(self._children, dict), f"Uninitiated _children !"
         assert isinstance(
-            child, NodeContainer
-        ), f"Expected NodeContainer, got: {type(child)}"
+            child, NodeBase
+        ), f"Expected NodeBase, got: {type(child)}"
 
         cparent = getattr(child, "parent", None)
         if cparent is not None:
