@@ -12,9 +12,9 @@ from superconf.configuration import UNSET, DEFAULT_VALUE, UNSET_VALUE
 from superconf.configuration import StoreValue, StoreDict, StoreList
 from superconf.configuration import Value, ValueConf, ValueDict, ValueList
 
-from superconf.store import store_to_json
+from superconf.store import store_to_json, StoreAny, StoreAuto
 
-import superconf.exceptions
+import superconf.exceptions as exceptions
 
 
 def test_to_json():
@@ -137,7 +137,12 @@ def test_storedict_get_key_nested():
         "item1": {
             "sub1": {
                 "sub11": {
-                    "yooo": "YEAHHHH",
+                    "sub111": {
+                        "yooo": "YEAHHHH",
+                    },
+                    "sub112": {
+                        "yooo": "YEAHHHH",
+                    },
                 }
             },
         },
@@ -149,16 +154,15 @@ def test_storedict_get_key_nested():
         },
     }
 
-    # TEst getitems
-    inst3 = StoreDict(value=d2, item_class=StoreDict)
+    d3 = {
+        # Mixed content
+        "item4": ["val1", "val2"],
+        "item5": "value5",
+    }
+    d3.update(d2)
 
-    # pprint(inst3["item1"].get_key())
-    assert inst3.get_key() == ""
-    assert inst3["item1"].get_key() == "item1"
-
-    return
-
-    "WIPPP"
+    inst3 = StoreDict(value=d3, item_class=StoreAuto)
+    # print(store_to_json(inst3.explain_tree(mode="struct")))
 
     assert inst3["item1"]["sub1"].get_key() == "sub1"
     assert inst3["item1"]["sub1"]["sub11"].get_key() == "sub11"
@@ -171,25 +175,6 @@ def test_storedict_get_key_nested():
     assert (
         inst3["item3"]["sub3"]["sub33"].get_key(mode="parents") == ".item3.sub3.sub33"
     )
-
-    # assert inst3["item3"].get_key() == "item3"
-
-    # print ("TESSSSSSSSSSSSSSSSSS")
-    # inst3["item1"].explain()
-    # pprint (inst3["item1"]["sub1"])
-
-    # assert inst3["item1"]["sub1"] != None
-
-    # print(store_to_json(inst3.explain_tree(mode="struct")))
-    # assert False
-
-    return
-
-    assert inst3["item3"]["sub1"].get_key() == "sub1"
-
-    t = inst3["item1"].get_envvars()
-    pprint(t)
-    assert False
 
 
 # ================================================
@@ -261,3 +246,155 @@ def test_storelist_cls_dunders():
     # Test contain
     assert "0" in inst3
     assert "8" not in inst3
+
+
+# ================================================
+# Tests Values: Base and mixed values
+# ================================================
+
+
+def test_config_base_types():
+    "Test each config types"
+
+    c_string1 = "string_value1"
+
+    c_dict1 = {"key1": "dict_value1"}
+
+    c_list1 = ["list_value1"]
+
+    # Test generic
+    def test_generic(cls):
+        t1 = cls(value=c_string1)
+        t2 = cls(value=c_dict1)
+        t3 = cls(value=c_list1)
+
+        # print(store_to_json(t1.explain_tree(mode="struct")))
+        # print(store_to_json(t2.explain_tree(mode="struct")))
+        # print(store_to_json(t3.explain_tree(mode="struct")))
+
+        assert t1.get_value() == "string_value1"
+        assert t2["key1"].get_value() == "dict_value1"
+        assert t3["0"].get_value() == "list_value1"
+
+    test_generic(StoreAuto)
+    test_generic(StoreAny)
+
+    # Test specific
+    StoreValue(value=c_string1)
+    StoreDict(value=c_dict1)
+    StoreList(value=c_list1)
+
+    # Test invalid matches
+    def test_invalid(cls, value):
+        try:
+            cls(value=value)
+            assert False, f"Should have throwh error for {cls} with {value}"
+        except exceptions.InvalidValueType:
+            pass
+
+    test_invalid(StoreDict, c_list1)
+    test_invalid(StoreDict, c_string1)
+    test_invalid(StoreList, c_dict1)
+    test_invalid(StoreList, c_string1)
+
+    # assert False, "YOO"
+
+
+def test_config_base_mixed_types():
+    "Test each config types"
+
+    c_string1 = "string_value1"
+
+    c_dict1 = {"key1": "dict_value1"}
+
+    c_list1 = ["list_value1"]
+
+    c_mixed = {
+        "mixed1": c_string1,
+        "mixed2": c_dict1,
+        "mixed3": c_list1,
+    }
+
+    # Test generic
+    def test_generic(cls):
+        t = cls(value=c_mixed)
+        # t2 = cls(value=c_dict1)
+        # t3 = cls(value=c_list1)
+
+        # print(store_to_json(t.explain_tree(mode="struct")))
+        # pprint(t.get_value())
+        # print(store_to_json(t2.explain_tree(mode="struct")))
+        # print(store_to_json(t3.explain_tree(mode="struct")))
+
+        assert t.get_value() == c_mixed
+        # assert t2["key1"].get_value() == "dict_value1"
+        # assert t3["0"].get_value() == "list_value1"
+
+        return t
+
+    t1 = test_generic(StoreAuto)
+    t2 = test_generic(StoreAny)
+
+    assert len(t1.get_children()) == 3
+    assert len(t2.get_children()) == 3
+
+    assert len(t1["mixed1"].get_children()) == 0
+    assert len(t2["mixed1"].get_children()) == 0
+
+    assert len(t1["mixed2"].get_children()) == 1
+    assert len(t2["mixed2"].get_children()) == 0
+
+    assert len(t1["mixed3"].get_children()) == 1
+    assert len(t2["mixed3"].get_children()) == 0
+
+
+def test_config_base_nested_types():
+    "Test each config types"
+
+    c_dict1 = {"key1": "dict_value1", "key2": "dict_value2"}
+
+    c_list1 = ["list_value1"]
+
+    c_dict_nested = {
+        "nested1": c_dict1,
+        "nested2": c_dict1,
+        "nested3": c_dict1,
+    }
+    c_list_nested = [
+        c_list1,
+        c_list1,
+        c_list1,
+    ]
+
+    # Test generic
+    def test_generic(cls):
+        t1 = cls(value=c_dict_nested)
+        t2 = cls(value=c_list_nested)
+        # t3 = cls(value=c_list1)
+
+        print(store_to_json(t1.explain_tree(mode="struct")))
+        # pprint(t.get_value())
+        print(store_to_json(t2.explain_tree(mode="struct")))
+        # print(store_to_json(t3.explain_tree(mode="struct")))
+
+        assert t1.get_value() == c_dict_nested
+        assert t2.get_value() == c_list_nested
+        # assert t3["0"].get_value() == "list_value1"
+
+        return t1, t2
+
+    t1, t2 = test_generic(StoreAuto)
+    # t2 = test_generic(StoreAny)
+
+    assert len(t1.get_children()) == 3
+    assert len(t2.get_children()) == 3
+
+    assert len(t1["nested1"].get_children()) == 2
+    assert len(t2["0"].get_children()) == 1
+
+    assert len(t1["nested2"].get_children()) == 2
+    assert len(t2["1"].get_children()) == 1
+
+    assert len(t1["nested3"].get_children()) == 2
+    assert len(t2["2"].get_children()) == 1
+    # assert False

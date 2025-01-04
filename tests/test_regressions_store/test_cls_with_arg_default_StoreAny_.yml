@@ -214,8 +214,10 @@ list_flat_none:
   namef: ''
   str(): '|StoreList'
   type: <class 'superconf.store.StoreList'>
-list_flat_string: <class 'AssertionError'>
-list_flat_string_unset: <class 'AssertionError'>
+list_flat_string:
+  exception: <class 'AssertionError'>
+list_flat_string_unset:
+  exception: <class 'AssertionError'>
 val_bool_true:
   ____CONTEXT:
     cls: <class 'superconf.store.StoreAny'>

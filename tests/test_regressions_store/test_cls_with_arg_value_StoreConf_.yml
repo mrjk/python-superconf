@@ -97,12 +97,18 @@ dict_flat_string_unset:
   namef: ''
   str(): '|StoreConf'
   type: <class 'superconf.store.StoreConf'>
-list_flat_empty: <class 'superconf.exceptions.InvalidValueType'>
-list_flat_mixed: <class 'superconf.exceptions.InvalidValueType'>
-list_flat_none: <class 'superconf.exceptions.InvalidValueType'>
-list_flat_string: <class 'superconf.exceptions.InvalidValueType'>
-list_flat_string_unset: <class 'superconf.exceptions.InvalidValueType'>
-val_bool_true: <class 'superconf.exceptions.InvalidValueType'>
+list_flat_empty:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+list_flat_mixed:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+list_flat_none:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+list_flat_string:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+list_flat_string_unset:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+val_bool_true:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
 val_dict_empty:
   ____CONTEXT:
     cls: <class 'superconf.store.StoreConf'>
@@ -116,9 +122,15 @@ val_dict_empty:
   namef: ''
   str(): '|StoreConf'
   type: <class 'superconf.store.StoreConf'>
-val_int: <class 'superconf.exceptions.InvalidValueType'>
-val_int_42: <class 'superconf.exceptions.InvalidValueType'>
-val_int__51: <class 'superconf.exceptions.InvalidValueType'>
-val_list_empty: <class 'superconf.exceptions.InvalidValueType'>
-val_none: <class 'superconf.exceptions.InvalidValueType'>
-val_string: <class 'superconf.exceptions.InvalidValueType'>
+val_int:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+val_int_42:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+val_int__51:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+val_list_empty:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+val_none:
+  exception: <class 'superconf.exceptions.InvalidValueType'>
+val_string:
+  exception: <class 'superconf.exceptions.InvalidValueType'>

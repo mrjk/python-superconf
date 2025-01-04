@@ -17,7 +17,8 @@ import superconf.exceptions as exceptions
 from superconf.common import to_json
 
 from tests.common import store_value_base, store_dict_base, store_list_base
-
+from tests.common import report_store_values
+# from tests.common import types_base
 
 
 
@@ -38,41 +39,6 @@ CLS_VALUE_TESTS = [
 CLS_TEST = CLS_STORE_TESTS + CLS_VALUE_TESTS
 
 
-# Prepare large datasets
-@pytest.fixture
-def types_base():
-
-    dataset = dict()
-    dataset.update(store_value_base)
-    dataset.update(store_dict_base)
-    dataset.update(store_list_base)
-
-    return dataset
-
-
-def report_store_values(inst, **kwargs):
-    "Aggreagate values to watch/test"
-
-    result = {
-        "type": type(inst),
-        "get_key()": inst.get_key(),
-        "get_default()": inst.get_default(),
-        "name": inst.name,
-        "namef": inst.fname,
-        "str()": str(inst),
-        # "__repr__": repr(inst), # TOFIX, HEXID
-        # "index": inst.get_index(),
-
-        "get_default()": inst.get_default(),
-        "get_value()": inst.get_value(),
-        "get_children_count": len(inst.get_children()),
-        "get_children()": inst.get_children(),
-        # "to_json": inst.to_json(),
-    }
-    # result.update(kwargs)
-    if kwargs:
-        result["____CONTEXT"] = kwargs
-    return result
 
 # ================================================
 # Base tests on classes
@@ -88,7 +54,7 @@ def test_cls_direct_instance(data_regression, cls):
         test_results = report_store_values(inst, cls=cls)
 
     except Exception as err:
-        test_results = str(type(err))
+        test_results = {"exception": str(type(err))}
             
     test_results = json.loads(to_json(test_results))
     data_regression.check(test_results)
@@ -106,7 +72,7 @@ def test_cls_with_arg_value(types_base, data_regression, cls):
             result = report_store_values(inst, cls=cls, value=val.value)
 
         except Exception as err:
-            result = str(type(err))
+            result = {"exception": str(type(err))}
                 
         test_results[key] = result
 
@@ -127,7 +93,7 @@ def test_cls_with_arg_default(types_base, data_regression, cls):
             result = report_store_values(inst, cls=cls, default=val.value)
 
         except Exception as err:
-            result = str(type(err))
+            result = {"exception": str(type(err))}
                 
         test_results[key] = result
 
@@ -148,7 +114,7 @@ def test_cls_with_arg_value_and_default(types_base, data_regression, cls):
             result = report_store_values(inst, cls=cls, value=val.value, default=val.value)
 
         except Exception as err:
-            result = str(type(err))
+            result = {"exception": str(type(err))}
                 
         test_results[key] = result
 

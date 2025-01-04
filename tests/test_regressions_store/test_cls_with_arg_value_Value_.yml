@@ -158,8 +158,10 @@ list_flat_none:
   namef: ''
   str(): '|Value/StoreValue'
   type: <class 'superconf.store.Value'>
-list_flat_string: <class 'AssertionError'>
-list_flat_string_unset: <class 'AssertionError'>
+list_flat_string:
+  exception: <class 'AssertionError'>
+list_flat_string_unset:
+  exception: <class 'AssertionError'>
 val_bool_true:
   ____CONTEXT:
     cls: <class 'superconf.store.Value'>
