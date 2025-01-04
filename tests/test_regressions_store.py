@@ -18,8 +18,8 @@ from superconf.common import to_json
 
 from tests.common import store_value_base, store_dict_base, store_list_base
 from tests.common import report_store_values
-# from tests.common import types_base
 
+# from tests.common import types_base
 
 
 # ================================================
@@ -27,24 +27,19 @@ from tests.common import report_store_values
 # ================================================
 
 
-CLS_STORE_TESTS = [
-    StoreValue, StoreDict, StoreList, StoreConf,
-    StoreAny, StoreAuto
-]
+CLS_STORE_TESTS = [StoreValue, StoreDict, StoreList, StoreConf, StoreAny, StoreAuto]
 
-CLS_VALUE_TESTS = [
-    Value, ValueConf, ValueDict, ValueList
-]
+CLS_VALUE_TESTS = [Value, ValueConf, ValueDict, ValueList]
 
 CLS_TEST = CLS_STORE_TESTS + CLS_VALUE_TESTS
-
 
 
 # ================================================
 # Base tests on classes
 # ================================================
 
-@pytest.mark.parametrize('cls', CLS_TEST)
+
+@pytest.mark.parametrize("cls", CLS_TEST)
 def test_cls_direct_instance(data_regression, cls):
     "Test each classes directly without arguments"
 
@@ -55,12 +50,12 @@ def test_cls_direct_instance(data_regression, cls):
 
     except Exception as err:
         test_results = {"exception": str(type(err))}
-            
+
     test_results = json.loads(to_json(test_results))
     data_regression.check(test_results)
 
 
-@pytest.mark.parametrize('cls', CLS_TEST)
+@pytest.mark.parametrize("cls", CLS_TEST)
 def test_cls_with_arg_value(types_base, data_regression, cls):
     "Test each classes with argument value"
 
@@ -73,7 +68,7 @@ def test_cls_with_arg_value(types_base, data_regression, cls):
 
         except Exception as err:
             result = {"exception": str(type(err))}
-                
+
         test_results[key] = result
 
     # assert False
@@ -81,7 +76,7 @@ def test_cls_with_arg_value(types_base, data_regression, cls):
     data_regression.check(test_results)
 
 
-@pytest.mark.parametrize('cls', CLS_TEST)
+@pytest.mark.parametrize("cls", CLS_TEST)
 def test_cls_with_arg_default(types_base, data_regression, cls):
     "Test each classes with argument default"
 
@@ -94,7 +89,7 @@ def test_cls_with_arg_default(types_base, data_regression, cls):
 
         except Exception as err:
             result = {"exception": str(type(err))}
-                
+
         test_results[key] = result
 
     # assert False
@@ -102,7 +97,7 @@ def test_cls_with_arg_default(types_base, data_regression, cls):
     data_regression.check(test_results)
 
 
-@pytest.mark.parametrize('cls', CLS_TEST)
+@pytest.mark.parametrize("cls", CLS_TEST)
 def test_cls_with_arg_value_and_default(types_base, data_regression, cls):
     "Test each classes with value and default arguments"
 
@@ -111,32 +106,18 @@ def test_cls_with_arg_value_and_default(types_base, data_regression, cls):
 
         try:
             inst = cls(value=val.value, default=val.value)
-            result = report_store_values(inst, cls=cls, value=val.value, default=val.value)
+            result = report_store_values(
+                inst, cls=cls, value=val.value, default=val.value
+            )
 
         except Exception as err:
             result = {"exception": str(type(err))}
-                
+
         test_results[key] = result
 
     # assert False
     test_results = json.loads(to_json(test_results))
     data_regression.check(test_results)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # ================================================

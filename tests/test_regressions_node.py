@@ -22,12 +22,9 @@ from superconf.common import to_json
 # from tests.common import types_base
 
 
-
 from superconf.node import NodeBase, NodeContainer, NodeMeta, NodeChildren
 from superconf.node import UNSET, DEFAULT_VALUE, UNSET_VALUE
 import superconf.exceptions
-
-
 
 
 # ================================================
@@ -45,13 +42,12 @@ def report_node_values(inst, **kwargs):
         "type": type(inst),
         "name": inst.name,
         "namef": inst.fname,
-        "get_parents_count": len(inst.get_parents(mode='parents')),
-        "get_parents()": len(inst.get_parents(mode='parents')),
+        "get_parents_count": len(inst.get_parents(mode="parents")),
+        "get_parents()": len(inst.get_parents(mode="parents")),
     }
     if kwargs:
         result["____CONTEXT"] = kwargs
     return result
-
 
 
 # ================================================
@@ -59,7 +55,7 @@ def report_node_values(inst, **kwargs):
 # ================================================
 
 
-@pytest.mark.parametrize('cls', CLS_TEST)
+@pytest.mark.parametrize("cls", CLS_TEST)
 def test_node_init(fx_store_value_base, data_regression, cls):
     "Test a default Node"
 
@@ -71,20 +67,16 @@ def test_node_init(fx_store_value_base, data_regression, cls):
         # Build regression report
         test_results = report_node_values(inst, cls=cls)
 
-        
     except Exception as err:
         test_results = {"exception": str(type(err))}
         assert False, "No exception should happen"
-
 
     # assert False
     test_results = json.loads(to_json(test_results))
     data_regression.check(test_results)
 
 
-
-
-@pytest.mark.parametrize('cls', CLS_TEST)
+@pytest.mark.parametrize("cls", CLS_TEST)
 def test_node_name(fx_store_value_base, data_regression, cls):
     "Test a default Storevalue"
 
@@ -96,7 +88,7 @@ def test_node_name(fx_store_value_base, data_regression, cls):
 
             # Build regression report
             result = report_node_values(inst, cls=cls, default=val.value)
-            
+
         except Exception as err:
             result = {"exception": str(type(err))}
 
@@ -108,8 +100,6 @@ def test_node_name(fx_store_value_base, data_regression, cls):
     # assert False
     test_results = json.loads(to_json(test_results))
     data_regression.check(test_results)
-
-
 
 
 # ================================================

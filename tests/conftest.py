@@ -1,9 +1,7 @@
-
 import pytest
 
 
 from tests.common import store_value_base, store_dict_base, store_list_base
-
 
 
 # Prepare large datasets
@@ -29,6 +27,7 @@ def fx_store_value_base():
 
     return dataset
 
+
 @pytest.fixture
 def fx_store_value_dict():
 
@@ -39,6 +38,7 @@ def fx_store_value_dict():
 
     return dataset
 
+
 @pytest.fixture
 def fx_store_value_list():
 
@@ -48,6 +48,3 @@ def fx_store_value_list():
     dataset.update(store_list_base)
 
     return dataset
-
-
-
