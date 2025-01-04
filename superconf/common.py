@@ -38,8 +38,9 @@ def dict_to_list(map):
     return list(map.values())
 
 
-def dict_to_json(obj, fn=None):
+def to_json(obj, fn=None, indent=2, default=None, **kwargs):
     "Return a node object to serializable thing"
+    fn = fn if fn else default
 
     def t_funct(item):
         return str(item)
@@ -50,12 +51,10 @@ def dict_to_json(obj, fn=None):
         #     return item.get_value()
         # raise Exception(f"Unparseable item: {item}")
 
-    return json.dumps(
-        obj,
-        indent=2,
-        default=fn or t_funct,
-    )
+    return json.dumps(obj, indent=indent, default=fn or t_funct, **kwargs)
 
+
+dict_to_json = to_json
 
 # Objectss helpers
 # --------------------
