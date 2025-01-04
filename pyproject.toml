@@ -19,6 +19,7 @@ black = "^24.10.0"
 pytest = "^8.3.4"
 pytest-cov = "^6.0.0"
 jupyterlab = "^4.3.4"
+pytest-regressions = "^2.6.0"
 
 [build-system]
 requires = ["poetry-core"]
