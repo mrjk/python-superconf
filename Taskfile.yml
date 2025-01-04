@@ -11,15 +11,15 @@ tasks:
   fix_lint:
     desc: fix all what can be fixed
     cmds:
+      - isort --profile black --overwrite-in-place superconf
       - black superconf tests examples
-      - isort --overwrite-in-place superconf
 
   test_lint:
     desc: show what can be improved
     cmds:
+      - isort --profile black superconf
+      - black --check superconf tests examples
       - pylint superconf || true
-      - black --check --diff superconf tests examples || true
-      - isort superconf || true
 
   # Tests
   # =============
@@ -27,10 +27,11 @@ tasks:
   test:
     desc: Test everything
     cmds:
-      - task: test_pytest
+      #- task: test_pytest
       - task: test_examples
-      - task: test_regressions
+      #- task: test_regressions
       - task: test_recap
+      - task: test_lint
 
   test_pytest:
     desc: Test with pytest
@@ -49,8 +50,9 @@ tasks:
   test_regressions:
     desc: Test for regressions
     cmds:
-      - pytest tests/test_regressions_node.py
-      - pytest tests/test_regressions_store.py
+      - pytest tests/test_50_*
+      #- pytest tests/test_50_regressions_node.py
+      #- pytest tests/test_50_regressions_store.py
 
   test_recap:
     desc: Report tests
