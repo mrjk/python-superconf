@@ -275,4 +275,10 @@ class NodeChildren(NodeBase):
 
 
 class NodeContainer(NodeMeta, NodeChildren):
-    "Represent a NodeBase container"
+    """
+    A container class that combines metadata and children management features.
+
+    This class inherits from `NodeMeta` and `NodeChildren`, providing
+    functionality to manage metadata and children nodes within a node
+    hierarchy.
+    """
