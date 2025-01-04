@@ -244,9 +244,7 @@ class NodeChildren(NodeBase):
             self._children = dict()
 
         assert isinstance(self._children, dict), f"Uninitiated _children !"
-        assert isinstance(
-            child, NodeBase
-        ), f"Expected NodeBase, got: {type(child)}"
+        assert isinstance(child, NodeBase), f"Expected NodeBase, got: {type(child)}"
 
         cparent = getattr(child, "parent", None)
         if cparent is not None:
