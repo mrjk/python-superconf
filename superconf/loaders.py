@@ -5,8 +5,7 @@ from glob import glob
 import yaml
 
 from .common import NOT_SET, UNSET
-from .exceptions import (InvalidConfigurationFile, InvalidPath,
-                         MissingSettingsSection)
+from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 from .parsers import EnvFileParser
 
 
