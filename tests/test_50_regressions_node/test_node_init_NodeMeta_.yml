@@ -1,7 +1,0 @@
-____CONTEXT:
-  cls: <class 'superconf.node.NodeMeta'>
-get_parents(): 0
-get_parents_count: 0
-name: ''
-namef: ''
-type: <class 'superconf.node.NodeMeta'>
