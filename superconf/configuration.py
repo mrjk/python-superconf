@@ -49,7 +49,7 @@ def getconf(item, default=NOT_SET, cast=None, loaders=None):
     return cast(default)
 
 
-class Value:
+class Field:
     def __init__(
         self,
         key: str = None,
@@ -75,9 +75,9 @@ class Value:
         self.default = default
         self.cast = cast
 
-    def __get__(self, instance, owner):
-        if instance:
-            return instance(
+    def __get__(self, conf_instance, owner):
+        if conf_instance:
+            return conf_instance.get_value(
                 self.key,
                 default=self.default,
                 cast=self.cast,
@@ -88,6 +88,9 @@ class Value:
         return '{}(key="{}", help="{}")'.format(
             self.__class__.__name__, self.key, self.help
         )
+
+# Compatibility
+Value = Field
 
 
 class DeclarativeValuesMetaclass(type):
@@ -105,7 +108,7 @@ class DeclarativeValuesMetaclass(type):
                 values.update(base._declared_values)
 
         for key, value in attrs.items():
-            if isinstance(value, Value):
+            if isinstance(value, Field):
                 if value.key and key != value.key:
                     raise AttributeError(
                         "Don't explicitly set keys when declaring values"
@@ -180,7 +183,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     def __getitem__(self, value):
         return self._declared_values[value].__get__(self, self.__class__)
 
-    def __call__(self, key, *, default=NOT_SET, cast=None):
+    def get_value(self, key, *, default=NOT_SET, cast=None):
         if self._cache and key in self._cached_values:
             return self._cached_values[key]
         conf = getconf(key, default, cast=cast, loaders=self._loaders)
