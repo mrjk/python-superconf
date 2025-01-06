@@ -1,9 +1,9 @@
 from collections import OrderedDict
 from typing import Callable
 
-from .casts import Boolean, Identity, List, Option, Tuple, evaluate
-from .exceptions import UnknownConfiguration
-from .loaders import NOT_SET, Environment
+from classyconf.casts import Boolean, Identity, List, Option, Tuple, evaluate
+from classyconf.exceptions import UnknownConfiguration
+from classyconf.loaders import NOT_SET, Environment
 
 # Shortcuts for standard casts
 as_boolean = Boolean()
