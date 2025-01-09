@@ -20,55 +20,48 @@ RESOURCES = {
     },
 }
 
+
 class Resource(Configuration):
     "Represent resources"
 
     # class Meta:
     #     loaders=[Dict(RESOURCES)]
-        
+
     location = Field(default="MISSING LOCATION")
     owner = Field(default="MISSING OWNER")
-
 
 
 class ResourcesCtl(Configuration):
     "Represent resources"
 
     class Meta:
-        loaders=[Dict(RESOURCES)]
+        loaders = [Dict(RESOURCES)]
         children_class = Resource
 
 
 class AppConfig(Configuration):
     "Main app config"
 
-
     # meta__custom_field = "My VALUUUUuuueeeee 555555"
 
     class Meta:
-        default ={ 
-            "resources": {
-                "res1": {
-                    "owner": "bob"
-                }
-            }
-        }
+        default = {"resources": {"res1": {"owner": "bob"}}}
+
     #     cache = False
     #     children_class = Resources
-        # custom_field = "My VALUUUUuuueeeee"
+    # custom_field = "My VALUUUUuuueeeee"
 
     resources = Field(
-        children_class=ResourcesCtl, 
+        children_class=ResourcesCtl,
     )
-
 
 
 app = AppConfig()
 
-print ("+++++++++++++++++++")
+print("+++++++++++++++++++")
 pprint(app.__dict__)
 pprint(app["resources"].__dict__)
-print ("+++++++++++++++++++")
+print("+++++++++++++++++++")
 
 
 o = app["resources"].get_values()
@@ -76,10 +69,7 @@ pprint(o)
 # assert "laptop" in o
 
 
-
 # assert False
-
-
 
 
 # # Test to get all values
@@ -100,11 +90,7 @@ pprint(o)
 # pprint (o)
 
 
-
-
 # # Ensure default resources are created
-
-
 
 
 print("All tests OK")

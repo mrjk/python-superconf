@@ -23,10 +23,12 @@ as_is = Identity()
 class UnSetArg(NotSet):
     "Only forinternal methods"
 
-UNSET_ARG=UnSetArg()
+
+UNSET_ARG = UnSetArg()
 assert UNSET_ARG is not NOT_SET
 # assert UNSET_ARG is not NOT_SET
 # assert UNSET_ARG == NOT_SET
+
 
 def getconf(item, default=NOT_SET, cast=None, loaders=None):
     """
@@ -102,6 +104,7 @@ class Field:
             self.__class__.__name__, self.key, self.help
         )
 
+
 # Compatibility
 Value = Field
 
@@ -141,7 +144,7 @@ class DeclarativeValuesMetaclass(type):
         return OrderedDict()
 
 
-class ConfigurationCtrl():
+class ConfigurationCtrl:
     "Controller"
 
     meta__custom_field = "My VALUUUUuuueeeee"
@@ -153,7 +156,7 @@ class ConfigurationCtrl():
     # meta__extra_fields = NOT_SET # dict()
 
     class Meta:
-        "Class to store class overrides"     
+        "Class to store class overrides"
 
     def __init__(self, *, key=None, parent=None, value=None, **kwargs):
         self._key = key
@@ -171,13 +174,15 @@ class ConfigurationCtrl():
 
         self._loaders = self.query_inst_cfg("loaders", override=kwargs)
         self._cache = self.query_inst_cfg("cache", override=kwargs)
-        self._extra_fields = self.query_inst_cfg("extra_fields", override=kwargs, default=NOT_SET)
-        
+        self._extra_fields = self.query_inst_cfg(
+            "extra_fields", override=kwargs, default=NOT_SET
+        )
 
         self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
         if self._default is NOT_SET:
-            self._default = self.query_parent_cfg("default", as_subkey=True, default=NOT_SET)
-
+            self._default = self.query_parent_cfg(
+                "default", as_subkey=True, default=NOT_SET
+            )
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
@@ -191,7 +196,9 @@ class ConfigurationCtrl():
             # Try to cast if asked
             if not out:
                 out = cast()
-            assert isinstance(out, cast), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
+            assert isinstance(
+                out, cast
+            ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
         return out
 
     @classmethod
@@ -240,8 +247,6 @@ class ConfigurationCtrl():
 
         raise Exception(f"Missing config: {name} in {repr(self)}")
 
-
-
     def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
         "Query parent config"
 
@@ -251,13 +256,12 @@ class ConfigurationCtrl():
                 return default
             raise Exception(f"Missing config: {name} in {repr(self)}")
 
-
         def fetch_closest_parent(name):
             # Fetch from closest parent
             val = self._parent._query_inst_cfg(name, default=NOT_SET)
             if val is NOT_SET:
                 return val
-                
+
             # TOFIX; Only works for dicts ?
             if as_subkey is True and isinstance(val, dict):
                 val = val.get(self._key, NOT_SET)
@@ -279,9 +283,10 @@ class ConfigurationCtrl():
             # Try to cast if asked
             if not out:
                 out = cast()
-            assert isinstance(out, cast), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
+            assert isinstance(
+                out, cast
+            ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
         return out
-
 
     @property
     def declared_fields(self):
@@ -293,8 +298,6 @@ class ConfigurationCtrl():
         # Always use explicit fields
         out.update(self._declared_values)
         return out
-
-
 
     def get_field_value(self, key=None, field=None, default=UNSET_ARG, **kwargs):
 
@@ -321,15 +324,13 @@ class ConfigurationCtrl():
             return self._cached_values[key]
 
         conf = self.getconf3(key, field, **kwargs)
-        assert isinstance(conf, (type(None), dict, bool, int, str, Configuration)), f"Got: {type(conf)}"
+        assert isinstance(
+            conf, (type(None), dict, bool, int, str, Configuration)
+        ), f"Got: {type(conf)}"
 
         if self._cache:
             self._cached_values[key] = conf
         return conf
-
-
-
-
 
     def getconf3(self, key, field, **kwargs):
         """
@@ -345,22 +346,20 @@ class ConfigurationCtrl():
                         looked into. Defaults to `[Environment()]`
         """
 
-
         # Default lookup child_cls
         #  - kwargs default override
         #  - current object defaults
         #      - Must be a dict, and the key must be present or NEXT
         #  - child
         #      - DEfault must be set
-        #  - UNSET        
+        #  - UNSET
         children_class = self.query_inst_cfg(
             "children_class",
             override=kwargs,
             default=NOT_SET,
-            )
+        )
         if children_class is NOT_SET and field:
             children_class = field.children_class
-
 
         # Default lookup
         #  - kwargs default override
@@ -378,23 +377,21 @@ class ConfigurationCtrl():
             "cast",
             override=kwargs,
             default=NOT_SET,
-            )
+        )
         if cast is NOT_SET and field:
             cast = field.cast
 
-        
         # Load loaders
         loaders = self.query_inst_cfg(
             "loaders",
             override=kwargs,
             default=NOT_SET,
-            )
+        )
         if loaders is NOT_SET and field:
             # loaders = field.loaders
             loaders = []
 
         assert key, f"Got: {type(key)} {key}"
-
 
         if callable(cast):
             cast = cast
@@ -405,20 +402,19 @@ class ConfigurationCtrl():
         elif cast is None:
             cast = type(default)
         elif cast is NOT_SET:
-            if (default is NOT_SET or default is None):
+            if default is NOT_SET or default is None:
                 cast = type(default)
             else:
                 cast = as_is
         else:
             raise TypeError(f"Cast must be callable, got: {type(cast)}")
 
-        
         # DEtermine child loader
         if children_class:
             child_loaders = children_class._query_cls_cfg(
                 "loaders",
                 default=NOT_SET,
-                )
+            )
 
         for loader in loaders:
             # print (f"LOOK OF {key} in", loader)
@@ -440,10 +436,8 @@ class ConfigurationCtrl():
                     # print ("CREATE NEW CHILD WIRH", key, _default)
                     out = children_class(
                         key=key,
-                        parent = self,
-                        loaders = [
-                            Dict(_default)
-                        ],
+                        parent=self,
+                        loaders=[Dict(_default)],
                     )
                 return out
 
@@ -456,10 +450,10 @@ class ConfigurationCtrl():
             # self should be a subitem if provided
             # loaders should have child class
             child_inst = children_class(
-                key=key, 
-                parent = self,
-                loaders = child_loaders,
-                )
+                key=key,
+                parent=self,
+                loaders=child_loaders,
+            )
             # print("CREATE NEW CHILDREN instance", id(child_inst), children_class, loaders)
             return child_inst
 
@@ -467,14 +461,6 @@ class ConfigurationCtrl():
             raise UnknownConfiguration("Configuration '{}' not found".format(key))
 
         return cast(default)
-
-
-
-
-
-
-
-
 
     def get_value(self, key, lvl=-1, **kwargs):
         assert isinstance(key, str)
@@ -490,19 +476,17 @@ class ConfigurationCtrl():
             # val = obj #.get_values(lvl=lvl-1)
             val = self.get_field_value(key)
             if isinstance(val, Configuration):
-                val = val.get_values(lvl=lvl-1)
-            
-            out[key] = val
-        
-        return out
+                val = val.get_values(lvl=lvl - 1)
 
+            out[key] = val
+
+        return out
 
     def reset(self):
         """Anytime you want to pick up new values call this function."""
         for loader in self._loaders:
             loader.reset()
         self._cached_values = {}
-
 
     # def _iterate_declared_values(self):
     #     return self.declared_fields
@@ -513,9 +497,6 @@ class Configuration(ConfigurationCtrl, metaclass=DeclarativeValuesMetaclass):
     Encapsulates settings than can be loaded from different
     sources.
     """
-
-
-
 
     def __iter__(self):
         yield from self.declared_fields.items()

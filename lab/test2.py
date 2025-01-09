@@ -15,19 +15,19 @@ example_dict = {
 }
 
 FULL_CONFIG = {
-    'field1': False,
-    'field2': 'Default value',
-    'field3': 42,
-    'field4': example_dict,
-    'field5': example_dict
+    "field1": False,
+    "field2": "Default value",
+    "field3": 42,
+    "field4": example_dict,
+    "field5": example_dict,
 }
 CHILDREN_COUNT = len(FULL_CONFIG)
+
 
 class AppConfig(Configuration):
 
     class Meta:
-        loaders=[Environment()]
-
+        loaders = [Environment()]
 
     field5 = Field(default=example_dict, help="Another dict field")
 
@@ -41,16 +41,15 @@ class TopConfig(Configuration):
 
     class Meta:
         cache = False
-        
+
     field1 = Field(default="default top value")
     field2 = Field(
-        children_class=AppConfig, 
+        children_class=AppConfig,
         # default={
         #     "field1": True,
         #     "field2": "Parent override",
         # }
     )
-
 
 
 app = TopConfig()
@@ -66,7 +65,6 @@ assert isinstance(app["field1"], str)
 # pprint(app)
 # pprint(app.declared_fields)
 # pprint(app._children)
-
 
 
 ###################################
@@ -85,13 +83,13 @@ assert id(app.field2) == id(app.field2), "TOFIX THIS BUG"
 t1 = app.field2
 
 # print(type(t1))
-assert isinstance(t1, AppConfig) 
+assert isinstance(t1, AppConfig)
 assert t1.field3 is t1.field3
-assert t1.field3 == 42 , f"Got: {t1.field3}"
+assert t1.field3 == 42, f"Got: {t1.field3}"
 assert t1.field1 == False
 
 # assert values of child
-assert t1.get_value("field2") == 'Default value'
+assert t1.get_value("field2") == "Default value"
 assert t1.get_value("field4") == example_dict
 # pprint (t1.get_value("field2"))
 
@@ -102,26 +100,21 @@ assert t1.get_value("field4") == example_dict
 # Create a simple child object with value
 
 
-
 # Note first field1 is boolean casted to text since
 # superconf use default type value to auto-cast
 FULL_CONFIG2 = {
-    'field1': 'False',
-    'field2': {
-        'field1': False,
-        'field2': 'Default value',
-        'field3': 42,
-        'field4': {'item1': True, 'item2': 4333},
-        'field5': {'item1': True, 'item2': 4333}
-        }
-    }
+    "field1": "False",
+    "field2": {
+        "field1": False,
+        "field2": "Default value",
+        "field3": 42,
+        "field4": {"item1": True, "item2": 4333},
+        "field5": {"item1": True, "item2": 4333},
+    },
+}
 
 
-app = TopConfig(
-    loaders=[
-        Dict(FULL_CONFIG)
-    ]
-)
+app = TopConfig(loaders=[Dict(FULL_CONFIG)])
 
 
 # Test child access
@@ -135,21 +128,18 @@ assert isinstance(child1, AppConfig)
 
 
 ###################################
-# Test nested get_value, with and wihtout levels 
+# Test nested get_value, with and wihtout levels
 
 # Check we get the full config with get_value()
 o = app.get_values(lvl=-1)
 pprint(o)
-pprint (FULL_CONFIG2)
+pprint(FULL_CONFIG2)
 assert o == FULL_CONFIG2
 
 # Check levels depth
 result = app.get_values(lvl=1)
 assert result["field1"] == "False"
 assert isinstance(result["field2"], AppConfig)
-
-
-
 
 
 print("All tests OK")

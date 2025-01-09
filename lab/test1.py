@@ -15,18 +15,19 @@ example_dict = {
 }
 
 FULL_CONFIG = {
-    'field1': False,
-    'field2': 'Default value',
-    'field3': 42,
-    'field4': example_dict,
-    'field5': example_dict
+    "field1": False,
+    "field2": "Default value",
+    "field3": 42,
+    "field4": example_dict,
+    "field5": example_dict,
 }
 CHILDREN_COUNT = len(FULL_CONFIG)
+
 
 class AppConfig(Configuration):
 
     class Meta:
-        loaders=[Environment()]
+        loaders = [Environment()]
 
     field1 = Field(default=False, help="Toggle debugging on/off.")
     field2 = Field(default="Default value", help="Another field")
@@ -35,11 +36,7 @@ class AppConfig(Configuration):
     field5 = Field(default=example_dict, help="Another dict field")
 
 
-app = AppConfig(
-    loaders=[
-        Dict(FULL_CONFIG)
-    ]
-)
+app = AppConfig(loaders=[Dict(FULL_CONFIG)])
 
 # We check here we can access via attributes and items
 assert app.field1 is False
@@ -68,7 +65,6 @@ assert isinstance(app.field2, str)
 assert app.field2 is app.field2
 assert app.field2 == app.field2
 assert app.field2 == "Default value"
-
 
 
 # For mutable objects, ensure we have different ids
