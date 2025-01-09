@@ -37,7 +37,7 @@ Libraries:
 * https://github.com/naorlivne/parse_it
 * https://github.com/ssato/python-anyconfig 
 * https://github.com/HBNetwork/python-decouple
-
+* https://github.com/prostomarkeloff/betterconf
 
 Other:
 * https://github.com/coqui-ai/coqpit
