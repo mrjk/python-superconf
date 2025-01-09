@@ -1,12 +1,16 @@
 from collections import OrderedDict
 from typing import Callable
 import inspect
+import logging
 
 from classyconf.casts import Boolean, Identity, List, Option, Tuple, evaluate
 from classyconf.exceptions import UnknownConfiguration
 from classyconf.loaders import NOT_SET, Environment, Dict, NotSet
 
 from pprint import pprint
+
+
+logger = logging.getLogger(__name__)
 
 # Shortcuts for standard casts
 as_boolean = Boolean()
@@ -340,11 +344,13 @@ class DeclarativeValuesMetaclass(type):
 class ConfigurationCtrl():
     "Controller"
 
-    meta__default = dict()
     meta__custom_field = "My VALUUUUuuueeeee"
     meta__loaders = [Environment()]
     meta__cache = False
-    # meta__extra_fields = dict()
+
+    # Optional fields
+    # meta__default = NOT_SET # dict()
+    # meta__extra_fields = NOT_SET # dict()
 
     class Meta:
         "Class to store class overrides"
@@ -369,8 +375,29 @@ class ConfigurationCtrl():
 
         self._loaders = self.query_inst_cfg("loaders", override=kwargs)
         self._cache = self.query_inst_cfg("cache", override=kwargs)
-        self._extra_fields = self.query_inst_cfg("extra_fields", override=kwargs, cast=dict)
-        self._default2 = self.query_inst_cfg("default", override=kwargs, cast=dict)
+        self._extra_fields = self.query_inst_cfg("extra_fields", override=kwargs, default=NOT_SET)
+        
+
+        self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
+        if self._default is NOT_SET:
+            self._default = self.query_parent_cfg("default", as_subkey=True, default=NOT_SET)
+
+
+
+        # if self._key == "resources":
+        #     print("\n\n==== DEBUG RESOURCES DEFAULTS")
+        #     self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
+
+        #     if self._default is NOT_SET:
+        #         self._default = self.query_parent_cfg("default", as_subkey=True, default=NOT_SET)
+
+        # else:
+        #     self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
+
+        print ("REGISTERED DEFAULT, ", self, "|", self._key, "|",  self._default)
+        # self._default = self._default2
+
+        # assert 
 
         # # OLD TO REMOVE
 
@@ -399,12 +426,15 @@ class ConfigurationCtrl():
 
 
 
+
+
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
-        try:
-            out = self._query_inst_cfg(*args, **kwargs)
-        except Exception:
-            out = cast()
+        out = self._query_inst_cfg(*args, **kwargs)
+        # try:
+        #     out = self._query_inst_cfg(*args, **kwargs)
+        # except Exception:
+        #     out = cast()
 
         if cast is not None:
             # Try to cast if asked
@@ -413,7 +443,7 @@ class ConfigurationCtrl():
             assert isinstance(out, cast), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
         return out
 
-    def _query_inst_cfg(self, name, override=None, default=UNSET_ARG):
+    def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
         "Query instance settings, or fallback on class settings"
 
         # Fetch from dict override, if providedchildren_class
@@ -434,7 +464,7 @@ class ConfigurationCtrl():
         if hasattr(cls, "Meta"):
             val = getattr(cls.Meta, name, NOT_SET)
             if val is not NOT_SET:
-                print ("SELF CLASS Meta retrieval for: {cls}" , name, val)
+                # print ("SELF CLASS Meta retrieval for: {cls}" , name, val)
                 return val
 
         # Fetch from self.meta__NAME
@@ -453,6 +483,50 @@ class ConfigurationCtrl():
             return default
 
         raise Exception(f"Missing config: {name} in {repr(self)}")
+
+
+
+    # def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
+
+    def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
+        "Temporary wrapper"
+
+        # Fast exit or raise exception
+        if not self._parent:
+            if default is not UNSET_ARG:
+                return default
+            raise Exception(f"Missing config: {name} in {repr(self)}")
+
+
+        def fetch_closest_parent(name):
+            # Fetch from closest parent
+            val = self._parent._query_inst_cfg(name, default=NOT_SET)
+            if val is NOT_SET:
+                return val
+                
+            # TOFIX; Only works for dicts ?
+            if as_subkey is True and isinstance(val, dict):
+                val = val.get(self._key, NOT_SET)
+
+            return val
+
+        func_list = [
+            fetch_closest_parent,
+        ]
+
+        # Loop over functions
+        out = NOT_SET
+        for func in func_list:
+            out = func(name)
+            if out is not NOT_SET:
+                break
+
+        if cast is not None:
+            # Try to cast if asked
+            if not out:
+                out = cast()
+            assert isinstance(out, cast), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
+        return out
 
 
     @property
@@ -564,10 +638,6 @@ class ConfigurationCtrl():
                         looked into. Defaults to `[Environment()]`
         """
 
-        # item = field.key
-        # item = key
-        # default= field.default
-
 
         # Default lookup child_cls
         #  - kwargs default override
@@ -576,11 +646,12 @@ class ConfigurationCtrl():
         #  - child
         #      - DEfault must be set
         #  - UNSET        
-        
-        children_class = NOT_SET
-        if children_class == NOT_SET and self:
-            children_class = get_param("children_class", obj_meta=self, obj=self, override=kwargs)
-        if children_class == NOT_SET and field:
+        children_class = self.query_inst_cfg(
+            "children_class",
+            override=kwargs,
+            default=NOT_SET,
+            )
+        if children_class is NOT_SET and field:
             children_class = field.children_class
 
 
@@ -591,38 +662,46 @@ class ConfigurationCtrl():
         #  - child
         #      - DEfault must be set
         #  - UNSET
-
-        default2= NOT_SET
-        if field:
-            default2 = field.default
-        default = NOT_SET
-        if default == NOT_SET and kwargs and "default" in kwargs:
-            default = kwargs["default"]
-        if default == NOT_SET and self:
-            default = get_param("default", obj_meta=self, obj=self, override=kwargs)
-        if default == NOT_SET and field:
+        default = self._default
+        if default is NOT_SET and field:
             default = field.default
-        
-        # if not default == default2:
-        #     print ("MISMATCH", f"Got: {default} VS {default2}")
 
-        # print ("default=", default)
+        # cast = NOT_SET
+        # if cast == NOT_SET and kwargs and "cast" in kwargs:
+        #     cast = kwargs["cast"]
+        # # if cast == NOT_SET and self:
+        # #     cast = get_param("cast", obj_meta=self, obj=self, override=kwargs)
+        # if cast == NOT_SET and field:
+        #     cast = field.cast
 
-        cast = NOT_SET
-        if cast == NOT_SET and kwargs and "cast" in kwargs:
-            cast = kwargs["cast"]
-        # if cast == NOT_SET and self:
-        #     cast = get_param("cast", obj_meta=self, obj=self, override=kwargs)
-        if cast == NOT_SET and field:
+        cast = self.query_inst_cfg(
+            "cast",
+            override=kwargs,
+            default=NOT_SET,
+            )
+        if cast is NOT_SET and field:
             cast = field.cast
 
+        
+        # assert cast == cast2
 
-        loaders = NOT_SET
-        if loaders == NOT_SET and kwargs and "loaders" in kwargs:
-            loaders = kwargs["loaders"]
 
-        if loaders == NOT_SET and self:
-            loaders = get_param("loaders", obj=self)
+        loaders = self.query_inst_cfg(
+            "loaders",
+            override=kwargs,
+            default=NOT_SET,
+            )
+        if loaders is NOT_SET and field:
+            # loaders = field.loaders
+            loaders = []
+
+        # loaders = NOT_SET
+        # if loaders == NOT_SET and kwargs and "loaders" in kwargs:
+        #     loaders = kwargs["loaders"]
+
+        # if loaders == NOT_SET and self:
+        #     loaders = get_param("loaders", obj=self)
+
         # if loaders == NOT_SET and field:
         #     loaders = field.loaders
         # print ("LOADERS", type(self), key,  loaders)
@@ -664,7 +743,7 @@ class ConfigurationCtrl():
             try:
                 # print (f"  > LOADER: try search in {loader} key: {key}")
                 out = cast(loader[key])
-            except KeyError:
+            except (KeyError, TypeError):
                 continue
 
             if out is not NOT_SET:
