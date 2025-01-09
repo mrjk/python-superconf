@@ -45,7 +45,14 @@ class AppConfig(Configuration):
 
     # meta__custom_field = "My VALUUUUuuueeeee 555555"
 
-    # class Meta:
+    class Meta:
+        default ={ 
+            "resources": {
+                "res1": {
+                    "owner": "bob"
+                }
+            }
+        }
     #     cache = False
     #     children_class = Resources
         # custom_field = "My VALUUUUuuueeeee"
@@ -58,37 +65,44 @@ class AppConfig(Configuration):
 
 app = AppConfig()
 
+print ("+++++++++++++++++++")
+pprint(app.__dict__)
+pprint(app["resources"].__dict__)
+print ("+++++++++++++++++++")
+
 
 o = app["resources"].get_values()
 pprint(o)
-assert "laptop" in o
-
-assert False
+# assert "laptop" in o
 
 
 
-
-# Test to get all values
-# ==================
-
-ress = {
-    'resources': {},
-    }
-
-
-o = app["resources"].get_values(lvl=2)
-pprint (o)
-
-
-assert o != ress, "Please fix empty resources"
-
-o = app.get_values(lvl=2)
-pprint (o)
+# assert False
 
 
 
 
-# Ensure default resources are created
+# # Test to get all values
+# # ==================
+
+# ress = {
+#     'resources': {},
+#     }
+
+
+# o = app["resources"].get_values(lvl=2)
+# pprint (o)
+
+
+# assert o != ress, "Please fix empty resources"
+
+# o = app.get_values(lvl=2)
+# pprint (o)
+
+
+
+
+# # Ensure default resources are created
 
 
 

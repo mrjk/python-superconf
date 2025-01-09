@@ -64,7 +64,8 @@ assert isinstance(app["field1"], str)
 
 # pprint (app.__dict__)
 # pprint(app)
-# pprint(TopConfig.__dict__)
+# pprint(app.declared_fields)
+# pprint(app._children)
 
 
 
@@ -86,7 +87,7 @@ t1 = app.field2
 # print(type(t1))
 assert isinstance(t1, AppConfig) 
 assert t1.field3 is t1.field3
-assert t1.field3 == 42
+assert t1.field3 == 42 , f"Got: {t1.field3}"
 assert t1.field1 == False
 
 # assert values of child

@@ -64,206 +64,6 @@ def getconf(item, default=NOT_SET, cast=None, loaders=None):
     return cast(default)
 
 
-# Check best config:
-
-# first(
-#     cache = bool or NOT_SET,
-#     self._cache = bool or NOT_SET,
-
-# )
-
-
-def get_param(name, obj_meta=None, obj=None, override=None, unset=NOT_SET):
-    "Return an object param, from override, Meta, or class attr"
-
-    # if name == "loaders":
-    #     print ("DUMP HERE")
-
-    # Look first in overrides
-    if isinstance(override, dict):
-        if name in override:
-            val = override[name]
-            if val is not NOT_SET:
-                return val
-
-    # Look in parent Meta
-#     if inspect.isclass(obj_meta):
-#         print ("YOOOO")
-#     if hasattr(obj_meta, "Meta"):
-#         print ("YESSS", type(obj_meta))
-#     # if isinstance(obj_meta, Configuration):
-# #  or inspect.isclass(obj_meta)
-
-    # print ("INSPECT", type(obj_meta), ":", name)
-    if hasattr(obj_meta, "Meta"):
-        val = getattr(obj_meta.Meta, name, NOT_SET)
-        if val is not NOT_SET:
-            # assert False
-            # print ("Meta retrieval for:" , name, val)
-            return val
-
-    # Look in class attributes
-    if obj:
-        # pprint (obj.__dict__)
-        val = getattr(obj, name, NOT_SET)
-        if val is not NOT_SET:
-                return val
-
-        val = getattr(obj, f"_{name}", NOT_SET)
-        if val is not NOT_SET:
-                return val
-
-    return unset
-    # assert False, f"Unknown param: {name}"
-
-# def getconf2(key, config, field, **kwargs):
-#     """
-#     :param item:    Name of the setting to lookup.
-#     :param default: Default value if none is provided. If left unset,
-#                     loading a config that fails to provide this value
-#                     will raise a UnknownConfiguration exception.
-#     :param cast:    Callable to cast variable with. Defaults to type of
-#                     default (if provided), identity if default is not
-#                     provided or raises TypeError if provided cast is not
-#                     callable.
-#     :param loaders: A list of loader instances in the order they should be
-#                     looked into. Defaults to `[Environment()]`
-#     """
-
-#     # item = field.key
-#     # item = key
-#     # default= field.default 
-    
-#     child = NOT_SET
-#     if child == NOT_SET and config:
-#         child = get_param("child", obj_meta=config, obj=config, override=kwargs)
-#     if child == NOT_SET and field:
-#         child = field.child
-
-
-#     default2= NOT_SET
-#     if field:
-#         default2 = field.default
-#     default = NOT_SET
-#     if default == NOT_SET and kwargs and "default" in kwargs:
-#         default = kwargs["default"]
-#     if default == NOT_SET and config:
-#         default = get_param("default", obj_meta=config, obj=config, override=kwargs)
-#     if default == NOT_SET and field:
-#         default = field.default
-    
-#     # if not default == default2:
-#     #     print ("MISMATCH", f"Got: {default} VS {default2}")
-
-#     # print ("default=", default)
-
-#     cast = NOT_SET
-#     if cast == NOT_SET and kwargs and "cast" in kwargs:
-#         cast = kwargs["cast"]
-#     # if cast == NOT_SET and config:
-#     #     cast = get_param("cast", obj_meta=config, obj=config, override=kwargs)
-#     if cast == NOT_SET and field:
-#         cast = field.cast
-
-
-#     loaders = NOT_SET
-#     if loaders == NOT_SET and kwargs and "loaders" in kwargs:
-#         loaders = kwargs["loaders"]
-
-#     if loaders == NOT_SET and config:
-#         loaders = get_param("loaders", obj=config)
-#     # if loaders == NOT_SET and field:
-#     #     loaders = field.loaders
-#     # print ("LOADERS", type(config), key,  loaders)
-
-
-#     # loaders2= config._loaders
-#     # assert loaders == loaders2, f"Got: {loaders} VS {loaders2}"
-
-
-
-
-#     assert key, f"Got: {type(key)} {key}"
-
-
-#     if callable(cast):
-#         cast = cast
-#     elif cast is None and (default is NOT_SET or default is None):
-#         cast = as_is
-#     elif isinstance(default, bool):
-#         cast = as_boolean
-#     elif cast is None:
-#         cast = type(default)
-#     elif cast is NOT_SET:
-#         if (default is NOT_SET or default is None):
-#             cast = type(default)
-#         else:
-#             cast = as_is
-#     else:
-#         raise TypeError(f"Cast must be callable, got: {type(cast)}")
-
-    
-#     # DEtermine child loader
-#     if child:
-#         child_loaders = get_param("loaders", obj_meta=child)
-
-#     for loader in loaders:
-#         # print (f"LOOK OF {key} in", loader)
-#         out = NOT_SET
-#         try:
-#             # print (f"  > LOADER: try search in {loader} key: {key}")
-#             out = cast(loader[key])
-#         except KeyError:
-#             continue
-
-#         if out is not NOT_SET:
-#             # Create a child if requested ...
-#             if child:
-#                 _default = {}
-#                 try:
-#                     _default = out.get(key, {})
-#                 except AttributeError:
-#                     pass
-#                 # print ("CREATE NEW CHILD WIRH", key, _default)
-#                 out = child(
-#                     key=key,
-#                     parent = config,
-#                     loaders = [
-#                         Dict(_default)
-#                     ],
-#                 )
-#             return out
-
-#     # If nothing found, return an empty/default children.
-#     # If no data found in loaders, then create a children object
-#     # and return it. This allow nested configs
-#     if child:
-#         assert inspect.isclass(child)
-
-#         # loaders = get_param("loaders", obj_meta=child)
-
-#         # config should be a subitem if provided
-#         # loaders should have child class
-#         # assert False
-#         child_inst = child(
-#             key=key, 
-#             parent = config,
-#             loaders = child_loaders,
-#             # loaders = [
-#             #     Dict({})
-#             # ],
-#             )
-#         # print("CREATE NEW CHILDREN instance", id(child_inst), child, loaders)
-#         return child_inst
-#         # assert False, "Create a new child instance"
-
-#     if default is NOT_SET:
-#         raise UnknownConfiguration("Configuration '{}' not found".format(key))
-
-#     return cast(default)
-
-
-
 class Field:
     def __init__(
         self,
@@ -353,12 +153,8 @@ class ConfigurationCtrl():
     # meta__extra_fields = NOT_SET # dict()
 
     class Meta:
-        "Class to store class overrides"
-    #     loaders = None
-    #     cache = False
-        
+        "Class to store class overrides"     
 
-    # def __init__(self, *, key=None, parent=None, value=None, loaders=NOT_SET, cache=NOT_SET):
     def __init__(self, *, key=None, parent=None, value=None, **kwargs):
         self._key = key
         self._parent = parent
@@ -383,51 +179,6 @@ class ConfigurationCtrl():
             self._default = self.query_parent_cfg("default", as_subkey=True, default=NOT_SET)
 
 
-
-        # if self._key == "resources":
-        #     print("\n\n==== DEBUG RESOURCES DEFAULTS")
-        #     self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
-
-        #     if self._default is NOT_SET:
-        #         self._default = self.query_parent_cfg("default", as_subkey=True, default=NOT_SET)
-
-        # else:
-        #     self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
-
-        print ("REGISTERED DEFAULT, ", self, "|", self._key, "|",  self._default)
-        # self._default = self._default2
-
-        # assert 
-
-        # # OLD TO REMOVE
-
-        # _loaders = getattr(self.Meta, "loaders", None)
-        # if _loaders is None:
-        #     _loaders = [Environment()]
-        # if loaders:
-        #     _loaders = loaders
-
-        # # _loaders2 = 
-        # self._loaders = _loaders
-        # # assert self._loaders == self._loaders2, f"{self._loaders} VS {self._loaders2}, Probably too strict"
-        # assert [x.__class__ for x in self._loaders] == [x.__class__ for x in self._loaders2], f"{self._loaders} VS {self._loaders2}, Probably too strict"
-
-        # # print ("PRE FAIL", self)
-        # # tmp = self.query_inst_cfg("cache", override=kwargs, default=False)
-        # # pprint (tmp)
-        # self._cache2 = any(
-        #     (
-        #         getattr(self.Meta, "cache", False),
-        #         cache,
-        #     )
-        # )
-        # self._cached_values = {}
-        # assert self._cache2 == self._cache
-
-
-
-
-
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
         out = self._query_inst_cfg(*args, **kwargs)
@@ -442,6 +193,11 @@ class ConfigurationCtrl():
                 out = cast()
             assert isinstance(out, cast), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
         return out
+
+    @classmethod
+    def _query_cls_cfg(cls, *args, **kwargs):
+        "Temporary class method"
+        return cls._query_inst_cfg(cls, *args, **kwargs)
 
     def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
         "Query instance settings, or fallback on class settings"
@@ -486,10 +242,8 @@ class ConfigurationCtrl():
 
 
 
-    # def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
-
     def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
-        "Temporary wrapper"
+        "Query parent config"
 
         # Fast exit or raise exception
         if not self._parent:
@@ -542,52 +296,6 @@ class ConfigurationCtrl():
 
 
 
-
-
-    # def get_field_value_V1(self, field, **kwargs):
-
-    #     # assert isinstance(field, Field), f"Got {type(field)}: {field}"
-
-    #     # print("CALL", field, kwargs)
-    #     key = None
-    #     if isinstance(field, (str, int)):
-    #         key = field
-    #         field = self.declared_fields.get(key, None)
-    #         # if field == None:
-    #         #     raise UnknownConfiguration("Configuration '{}' not found".format(key))
-
-    #     if isinstance(field, Field):
-    #         key = field.key
-
-    #     # assert isinstance(field, (Field, type(None))), f"Got {type(field)}: {field}"
-    #     assert isinstance(key, str), f"Got {type(key)}: {key}"
-        
-    #     cache_enabled = get_param("cache", obj=self, obj_meta=self, override=kwargs)
-    #     assert cache_enabled == self._cache
-
-
-    #     if cache_enabled and key in self._cached_values:
-    #         return self._cached_values[key]
-
-    #     # print("Get cofnig for key:", key)
-    #     # conf = getconf2(key, self, field, _parent=self, **kwargs)
-    #     conf = getconf2(key, self, field, **kwargs)
-    #     # print("DOES NOT PASS")
-    #     if cache_enabled:
-    #         self._cached_values[key] = conf
-    #     return conf
-
-
-
-
-
-    # def _get_field_value(self, field):
-
-    #     key = field.key
-    #     assert key in self.declared_fields, "Unregistred field access"
-    #     return self.get_field_value(key)
-
-
     def get_field_value(self, key=None, field=None, default=UNSET_ARG, **kwargs):
 
         # Parse input
@@ -612,7 +320,6 @@ class ConfigurationCtrl():
         if self._cache and key in self._cached_values:
             return self._cached_values[key]
 
-        # conf = getconf2(key, self, field, **kwargs)
         conf = self.getconf3(key, field, **kwargs)
         assert isinstance(conf, (type(None), dict, bool, int, str, Configuration)), f"Got: {type(conf)}"
 
@@ -666,14 +373,7 @@ class ConfigurationCtrl():
         if default is NOT_SET and field:
             default = field.default
 
-        # cast = NOT_SET
-        # if cast == NOT_SET and kwargs and "cast" in kwargs:
-        #     cast = kwargs["cast"]
-        # # if cast == NOT_SET and self:
-        # #     cast = get_param("cast", obj_meta=self, obj=self, override=kwargs)
-        # if cast == NOT_SET and field:
-        #     cast = field.cast
-
+        # Load cast
         cast = self.query_inst_cfg(
             "cast",
             override=kwargs,
@@ -683,9 +383,7 @@ class ConfigurationCtrl():
             cast = field.cast
 
         
-        # assert cast == cast2
-
-
+        # Load loaders
         loaders = self.query_inst_cfg(
             "loaders",
             override=kwargs,
@@ -694,24 +392,6 @@ class ConfigurationCtrl():
         if loaders is NOT_SET and field:
             # loaders = field.loaders
             loaders = []
-
-        # loaders = NOT_SET
-        # if loaders == NOT_SET and kwargs and "loaders" in kwargs:
-        #     loaders = kwargs["loaders"]
-
-        # if loaders == NOT_SET and self:
-        #     loaders = get_param("loaders", obj=self)
-
-        # if loaders == NOT_SET and field:
-        #     loaders = field.loaders
-        # print ("LOADERS", type(self), key,  loaders)
-
-
-        # loaders2= self._loaders
-        # assert loaders == loaders2, f"Got: {loaders} VS {loaders2}"
-
-
-
 
         assert key, f"Got: {type(key)} {key}"
 
@@ -735,7 +415,10 @@ class ConfigurationCtrl():
         
         # DEtermine child loader
         if children_class:
-            child_loaders = get_param("loaders", obj_meta=children_class)
+            child_loaders = children_class._query_cls_cfg(
+                "loaders",
+                default=NOT_SET,
+                )
 
         for loader in loaders:
             # print (f"LOOK OF {key} in", loader)
@@ -770,22 +453,15 @@ class ConfigurationCtrl():
         if children_class:
             assert inspect.isclass(children_class)
 
-            # loaders = get_param("loaders", obj_meta=children_class)
-
             # self should be a subitem if provided
             # loaders should have child class
-            # assert False
             child_inst = children_class(
                 key=key, 
                 parent = self,
                 loaders = child_loaders,
-                # loaders = [
-                #     Dict({})
-                # ],
                 )
             # print("CREATE NEW CHILDREN instance", id(child_inst), children_class, loaders)
             return child_inst
-            # assert False, "Create a new children_class instance"
 
         if default is NOT_SET:
             raise UnknownConfiguration("Configuration '{}' not found".format(key))
