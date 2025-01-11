@@ -5,8 +5,8 @@ import pytest
 
 from pprint import pprint
 from superconf.configuration import Configuration, Field, Environment
-import classyconf.exceptions
-from classyconf.loaders import Dict
+import superconf.exceptions
+from superconf.loaders import Dict
 
 
 example_dict = {
@@ -78,8 +78,8 @@ assert t1 == "default top value"
 
 
 # Test children object is correctly accessible
-assert id(app.field2) == id(app.field2), "TOFIX THIS BUG"
-# assert id(app.field2) != id(app.field2), "SHould not have the same id since cache is disabled"
+# assert id(app.field2) == id(app.field2), "TOFIX THIS BUG"
+assert id(app.field2) != id(app.field2), "SHould not have the same id since cache is disabled"
 t1 = app.field2
 
 # print(type(t1))
@@ -103,7 +103,7 @@ assert t1.get_value("field4") == example_dict
 # Note first field1 is boolean casted to text since
 # superconf use default type value to auto-cast
 FULL_CONFIG2 = {
-    "field1": "False",
+    "field1": "default top value",
     "field2": {
         "field1": False,
         "field2": "Default value",
@@ -138,7 +138,7 @@ assert o == FULL_CONFIG2
 
 # Check levels depth
 result = app.get_values(lvl=1)
-assert result["field1"] == "False"
+assert result["field1"] == "default top value"
 assert isinstance(result["field2"], AppConfig)
 
 

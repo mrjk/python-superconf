@@ -5,8 +5,8 @@ import pytest
 
 from pprint import pprint
 from superconf.configuration import Configuration, Field, Environment
-from classyconf.loaders import Dict
-import classyconf.exceptions
+from superconf.loaders import Dict
+import superconf.exceptions
 
 
 example_dict = {
@@ -28,6 +28,7 @@ class AppConfig(Configuration):
 
     class Meta:
         loaders = [Environment()]
+        cache = False
 
     field1 = Field(default=False, help="Toggle debugging on/off.")
     field2 = Field(default="Default value", help="Another field")
@@ -55,7 +56,7 @@ assert t1 == 42
 # We check unknown value retrieval here
 t1 = app.get_value("tutu", default="SUPER")
 assert t1 == "SUPER"
-with pytest.raises(classyconf.exceptions.UnknownConfiguration):
+with pytest.raises(superconf.exceptions.UnknownConfiguration):
     # Raise exceptions on unset values without defaults
     app.get_value("toto")
 

@@ -2,10 +2,11 @@ from collections import OrderedDict
 from typing import Callable
 import inspect
 import logging
+import copy
 
 from classyconf.casts import Boolean, Identity, List, Option, Tuple, evaluate
-from classyconf.exceptions import UnknownConfiguration
-from classyconf.loaders import NOT_SET, Environment, Dict, NotSet
+from .exceptions import UnknownConfiguration
+from .loaders import NOT_SET, Environment, Dict, NotSet, _Value
 
 from pprint import pprint
 
@@ -64,7 +65,6 @@ def getconf(item, default=NOT_SET, cast=None, loaders=None):
         raise UnknownConfiguration("Configuration '{}' not found".format(item))
 
     return cast(default)
-
 
 class Field:
     def __init__(
@@ -144,12 +144,16 @@ class DeclarativeValuesMetaclass(type):
         return OrderedDict()
 
 
-class ConfigurationCtrl:
+
+
+class Configuration(metaclass=DeclarativeValuesMetaclass):
+
+# class ConfigurationCtrl:
     "Controller"
 
     meta__custom_field = "My VALUUUUuuueeeee"
     meta__loaders = [Environment()]
-    meta__cache = False
+    meta__cache = True   # Yes by default ...
 
     # Optional fields
     # meta__default = NOT_SET # dict()
@@ -158,10 +162,15 @@ class ConfigurationCtrl:
     class Meta:
         "Class to store class overrides"
 
-    def __init__(self, *, key=None, parent=None, value=None, **kwargs):
-        self._key = key
+    def __init__(self, *, key=None, parent=None, value=None, meta=None, **kwargs):
+        self.key = key
         self._parent = parent
         self._value = value
+
+
+        # As this can be updated during runtime ...
+        self._declared_values = self._declared_values
+        self._cached_values = {}
 
         kwargs.update(
             dict(
@@ -172,17 +181,61 @@ class ConfigurationCtrl:
             )
         )
 
+        # self._loaders = NOT_SET
         self._loaders = self.query_inst_cfg("loaders", override=kwargs)
         self._cache = self.query_inst_cfg("cache", override=kwargs)
-        self._extra_fields = self.query_inst_cfg(
-            "extra_fields", override=kwargs, default=NOT_SET
+
+        self._extra_fields_enabled = self.query_inst_cfg(
+            "extra_fields", override=kwargs, default=True  # TOFIX, should be set to false by default
         )
+        self._extra_fields = {}
+        self._children_class= self.query_inst_cfg(
+            "children_class", override=kwargs, default=NOT_SET
+        )
+
+        self._cast = self.query_inst_cfg(
+            "cast", override=kwargs, default=None
+        )
+
 
         self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
         if self._default is NOT_SET:
             self._default = self.query_parent_cfg(
                 "default", as_subkey=True, default=NOT_SET
             )
+        
+        # print ("NEW INSTANCE CREATED", self, self.key, "loaders=", self._loaders)
+
+
+
+
+
+        # Init children IF value is provided !!!
+        value = self._value
+        # _children = 
+        if isinstance(value, dict):
+            for key, val in value.items():
+                # self.get_field_value(key=key, value=val)
+
+                field = Field()
+                if key in self.declared_fields:
+                    field = self.declared_fields[key]
+                elif self._extra_fields_enabled is True:
+                    pprint (self._children_class)
+                    # field = self._children_class(key=key, parent=self)
+                    field = Field(key=key) #, children_class=self._children_class)
+                else:
+                    raise Exception("Extra fields detected ")
+
+                assert isinstance(field, Field), "Yeahhh"
+                # out = self.getconf3(key=key, field=field, value=val)
+                # self._extra_fields[key] = out
+                self._extra_fields[key] = field
+
+    # def declared_fields(self):
+    #     out = {}
+    #     if self._extra_fields:
+
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
@@ -191,6 +244,8 @@ class ConfigurationCtrl:
         #     out = self._query_inst_cfg(*args, **kwargs)
         # except Exception:
         #     out = cast()
+        if isinstance(out, (dict, list)):
+            out = copy.copy(out)
 
         if cast is not None:
             # Try to cast if asked
@@ -204,7 +259,10 @@ class ConfigurationCtrl:
     @classmethod
     def _query_cls_cfg(cls, *args, **kwargs):
         "Temporary class method"
-        return cls._query_inst_cfg(cls, *args, **kwargs)
+        out = cls._query_inst_cfg(cls, *args, **kwargs)
+        if isinstance(out, (dict, list)):
+            out = copy.copy(out)
+        return out
 
     def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
         "Query instance settings, or fallback on class settings"
@@ -264,7 +322,7 @@ class ConfigurationCtrl:
 
             # TOFIX; Only works for dicts ?
             if as_subkey is True and isinstance(val, dict):
-                val = val.get(self._key, NOT_SET)
+                val = val.get(self.key, NOT_SET)
 
             return val
 
@@ -288,6 +346,19 @@ class ConfigurationCtrl:
             ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
         return out
 
+    # Field compat API
+    @property
+    def default(self):
+        "Temporary property to access to self._default"
+        return self._default
+
+    @property
+    def cast(self):
+        "Temporary property to access to self._default"
+        return self._cast
+
+
+
     @property
     def declared_fields(self):
         out = {}
@@ -298,6 +369,15 @@ class ConfigurationCtrl:
         # Always use explicit fields
         out.update(self._declared_values)
         return out
+
+
+    # Field compatibility layer !
+    # This basically respect default python behavior ...
+    def __get__(self, conf_instance, owner):
+        # if conf_instance:
+        #     return conf_instance.get_field_value(field=self)
+        return self
+
 
     def get_field_value(self, key=None, field=None, default=UNSET_ARG, **kwargs):
 
@@ -313,7 +393,7 @@ class ConfigurationCtrl:
                 if default is not UNSET_ARG:
                     return default
                 raise UnknownConfiguration("Configuration '{}' not found".format(key))
-            assert key == field.key
+            assert key == field.key, f"Got: {key} != {field.key}"
             key = field.key
 
         if key is None:
@@ -323,6 +403,14 @@ class ConfigurationCtrl:
         if self._cache and key in self._cached_values:
             return self._cached_values[key]
 
+        # # Check in value
+        # if isinstance(self._value, dict) and key in self._value:
+        #     # But return an instance instead !!!
+        #     out = self._value[key]
+        #     print ("RETURNING", self, key, out)
+        #     return out
+
+
         conf = self.getconf3(key, field, **kwargs)
         assert isinstance(
             conf, (type(None), dict, bool, int, str, Configuration)
@@ -330,8 +418,11 @@ class ConfigurationCtrl:
 
         if self._cache:
             self._cached_values[key] = conf
+            print ("CACHE CHILD", self, key, conf)
         return conf
 
+
+    # This should be split if field has children or not ...
     def getconf3(self, key, field, **kwargs):
         """
         :param item:    Name of the setting to lookup.
@@ -346,31 +437,35 @@ class ConfigurationCtrl:
                         looked into. Defaults to `[Environment()]`
         """
 
-        # Default lookup child_cls
+        # General lookup policy
         #  - kwargs default override
         #  - current object defaults
         #      - Must be a dict, and the key must be present or NEXT
         #  - child
         #      - DEfault must be set
         #  - UNSET
-        children_class = self.query_inst_cfg(
-            "children_class",
-            override=kwargs,
-            default=NOT_SET,
-        )
+
+        # Default children_class
+        # children_class = self.query_inst_cfg(
+        #     "children_class",
+        #     override=kwargs,
+        #     default=NOT_SET,
+        # )
+        children_class = self._children_class
         if children_class is NOT_SET and field:
             children_class = field.children_class
 
         # Default lookup
-        #  - kwargs default override
-        #  - current object defaults
-        #      - Must be a dict, and the key must be present or NEXT
-        #  - child
-        #      - DEfault must be set
-        #  - UNSET
         default = self._default
         if default is NOT_SET and field:
             default = field.default
+
+        # Value lookup
+        value = NOT_SET
+        if isinstance(self._value, dict) and key in self._value:
+            value = self._value[key]
+        loader_value = _Value(value)
+        # loader_value = Dict(value)
 
         # Load cast
         cast = self.query_inst_cfg(
@@ -382,14 +477,19 @@ class ConfigurationCtrl:
             cast = field.cast
 
         # Load loaders
-        loaders = self.query_inst_cfg(
-            "loaders",
-            override=kwargs,
-            default=NOT_SET,
-        )
+        loaders = list(self._loaders)
+        # loaders = self.query_inst_cfg(
+        #     "loaders",
+        #     override=kwargs,
+        #     default=NOT_SET,
+        # )
+
+        # print ("LOADERS:")
+        # pprint(loaders)
         if loaders is NOT_SET and field:
             # loaders = field.loaders
             loaders = []
+        # loaders.insert(0, loader_value)
 
         assert key, f"Got: {type(key)} {key}"
 
@@ -409,53 +509,114 @@ class ConfigurationCtrl:
         else:
             raise TypeError(f"Cast must be callable, got: {type(cast)}")
 
-        # DEtermine child loader
-        if children_class:
-            child_loaders = children_class._query_cls_cfg(
-                "loaders",
-                default=NOT_SET,
-            )
 
+
+        # Helper to create a children in case of ...
+        # def create_children():
+
+
+        # Create a child if requested ...
+        child_kwargs = {}
+        if children_class:
+            
+            child_kwargs = dict(
+                default=default,
+                value=value,
+                cast=cast,
+                # loaders=loaders,
+                # child_loaders=child_loaders,
+                # children_class=children_class,
+            )
+            
+
+        # Try each loaders
+        # TOFIX: Skip loader step when values are provided ? Nope, we may want to
+        # override a specif value on a full config ...
+        found=False
+        out = NOT_SET
         for loader in loaders:
             # print (f"LOOK OF {key} in", loader)
-            out = NOT_SET
+            
             try:
                 # print (f"  > LOADER: try search in {loader} key: {key}")
-                out = cast(loader[key])
-            except (KeyError, TypeError):
+                out = cast(loader.getitem(self, key, **child_kwargs))
+                if out is not NOT_SET:
+                    break
+                
+            except (KeyError, TypeError) as err:
+                # print (f"{self}: Loader {key} {loader.__class__.__name__} failed with error: {type(err)}{err}")
                 continue
 
-            if out is not NOT_SET:
-                # Create a child if requested ...
-                if children_class:
-                    _default = {}
-                    try:
-                        _default = out.get(key, {})
-                    except AttributeError:
-                        pass
-                    # print ("CREATE NEW CHILD WIRH", key, _default)
-                    out = children_class(
-                        key=key,
-                        parent=self,
-                        loaders=[Dict(_default)],
-                    )
-                return out
+        # Nothing found in all loaders, then fallback on default
+        if out is NOT_SET:
+            out = value
+
+        # Create a child if requested ...
+        if children_class:
+            
+            child_kwargs = dict(
+                default=default,
+                value=value,
+                cast=cast,
+                # loaders=loaders,
+                # child_loaders=child_loaders,
+                # children_class=children_class,
+            )
+            
+            
+            _default = {}
+            try:
+                _default = out.get(key, {})
+            except AttributeError:
+                pass
+            
+            print ("CREATE NEW CHILD WIRH", key, child_kwargs)
+            out = children_class(
+                key=key,
+                parent=self,
+                # loaders=[Dict(_default)],
+                # loaders=loaders,
+                value=value,
+                meta=child_kwargs,
+            )
+
+            return out
+
+
+            # if out is not NOT_SET:
+            #     # Create a child if requested ...
+            #     if children_class:
+            #         _default = {}
+            #         try:
+            #             _default = out.get(key, {})
+            #         except AttributeError:
+            #             pass
+            #         # print ("CREATE NEW CHILD WIRH", key, _default)
+            #         out = children_class(
+            #             key=key,
+            #             parent=self,
+            #             # loaders=[Dict(_default)],
+            #             loaders=loaders,
+            #             value=value,
+            #         )
+            #     return out
 
         # If nothing found, return an empty/default children.
         # If no data found in loaders, then create a children object
         # and return it. This allow nested configs
-        if children_class:
-            assert inspect.isclass(children_class)
+        # if children_class:
+        #     assert inspect.isclass(children_class)
 
-            # self should be a subitem if provided
-            # loaders should have child class
-            child_inst = children_class(
-                key=key,
-                parent=self,
-                loaders=child_loaders,
-            )
-            # print("CREATE NEW CHILDREN instance", id(child_inst), children_class, loaders)
-            return child_inst
+        #     # self should be a subitem if provided
+        #     # loaders should have child class
+        #     child_inst = children_class(
+        #         key=key,
+        #         parent=self,
+        #         loaders=child_loaders,
+        #         value=value,
+        #     )
+        #     # print("CREATE NEW CHILDREN instance", id(child_inst), children_class, loaders)
+        #     return child_inst
 
         if default is NOT_SET:
             raise UnknownConfiguration("Configuration '{}' not found".format(key))
@@ -492,11 +653,11 @@ class ConfigurationCtrl:
     #     return self.declared_fields
 
 
-class Configuration(ConfigurationCtrl, metaclass=DeclarativeValuesMetaclass):
-    """
-    Encapsulates settings than can be loaded from different
-    sources.
-    """
+# class Configuration(ConfigurationCtrl, metaclass=DeclarativeValuesMetaclass):
+#     """
+#     Encapsulates settings than can be loaded from different
+#     sources.
+#     """
 
     def __iter__(self):
         yield from self.declared_fields.items()
