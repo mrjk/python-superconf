@@ -1,15 +1,14 @@
-from collections import OrderedDict
-from typing import Callable
+import copy
 import inspect
 import logging
-import copy
+from collections import OrderedDict
+from pprint import pprint
+from typing import Callable
 
 from classyconf.casts import Boolean, Identity, List, Option, Tuple, evaluate
+
 from .exceptions import UnknownConfiguration
-from .loaders import NOT_SET, Environment, Dict, NotSet, _Value
-
-from pprint import pprint
-
+from .loaders import NOT_SET, Dict, Environment, NotSet, _Value
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +64,7 @@ def getconf(item, default=NOT_SET, cast=None, loaders=None):
         raise UnknownConfiguration("Configuration '{}' not found".format(item))
 
     return cast(default)
+
 
 class Field:
     def __init__(
@@ -144,16 +144,14 @@ class DeclarativeValuesMetaclass(type):
         return OrderedDict()
 
 
-
-
 class Configuration(metaclass=DeclarativeValuesMetaclass):
 
-# class ConfigurationCtrl:
+    # class ConfigurationCtrl:
     "Controller"
 
     meta__custom_field = "My VALUUUUuuueeeee"
     meta__loaders = [Environment()]
-    meta__cache = True   # Yes by default ...
+    meta__cache = True  # Yes by default ...
 
     # Optional fields
     # meta__default = NOT_SET # dict()
@@ -166,7 +164,6 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         self.key = key
         self._parent = parent
         self._value = value
-
 
         # As this can be updated during runtime ...
         self._declared_values = self._declared_values
@@ -186,33 +183,28 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         self._cache = self.query_inst_cfg("cache", override=kwargs)
 
         self._extra_fields_enabled = self.query_inst_cfg(
-            "extra_fields", override=kwargs, default=True  # TOFIX, should be set to false by default
+            "extra_fields",
+            override=kwargs,
+            default=True,  # TOFIX, should be set to false by default
         )
         self._extra_fields = {}
-        self._children_class= self.query_inst_cfg(
+        self._children_class = self.query_inst_cfg(
             "children_class", override=kwargs, default=NOT_SET
         )
 
-        self._cast = self.query_inst_cfg(
-            "cast", override=kwargs, default=None
-        )
-
+        self._cast = self.query_inst_cfg("cast", override=kwargs, default=None)
 
         self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
         if self._default is NOT_SET:
             self._default = self.query_parent_cfg(
                 "default", as_subkey=True, default=NOT_SET
             )
-        
+
         # print ("NEW INSTANCE CREATED", self, self.key, "loaders=", self._loaders)
-
-
-
-
 
         # Init children IF value is provided !!!
         value = self._value
-        # _children = 
+        # _children =
         if isinstance(value, dict):
             for key, val in value.items():
                 # self.get_field_value(key=key, value=val)
@@ -221,9 +213,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                 if key in self.declared_fields:
                     field = self.declared_fields[key]
                 elif self._extra_fields_enabled is True:
-                    pprint (self._children_class)
+                    pprint(self._children_class)
                     # field = self._children_class(key=key, parent=self)
-                    field = Field(key=key) #, children_class=self._children_class)
+                    field = Field(key=key)  # , children_class=self._children_class)
                 else:
                     raise Exception("Extra fields detected ")
 
@@ -235,7 +227,6 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     # def declared_fields(self):
     #     out = {}
     #     if self._extra_fields:
-
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
@@ -357,8 +348,6 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         "Temporary property to access to self._default"
         return self._cast
 
-
-
     @property
     def declared_fields(self):
         out = {}
@@ -370,14 +359,12 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         out.update(self._declared_values)
         return out
 
-
     # Field compatibility layer !
     # This basically respect default python behavior ...
     def __get__(self, conf_instance, owner):
         # if conf_instance:
         #     return conf_instance.get_field_value(field=self)
         return self
-
 
     def get_field_value(self, key=None, field=None, default=UNSET_ARG, **kwargs):
 
@@ -410,7 +397,6 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         #     print ("RETURNING", self, key, out)
         #     return out
 
-
         conf = self.getconf3(key, field, **kwargs)
         assert isinstance(
             conf, (type(None), dict, bool, int, str, Configuration)
@@ -418,9 +404,8 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
         if self._cache:
             self._cached_values[key] = conf
-            print ("CACHE CHILD", self, key, conf)
+            print("CACHE CHILD", self, key, conf)
         return conf
-
 
     # This should be split if field has children or not ...
     def getconf3(self, key, field, **kwargs):
@@ -509,16 +494,13 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         else:
             raise TypeError(f"Cast must be callable, got: {type(cast)}")
 
-
-
         # Helper to create a children in case of ...
         # def create_children():
-
 
         # Create a child if requested ...
         child_kwargs = {}
         if children_class:
-            
+
             child_kwargs = dict(
                 default=default,
                 value=value,
@@ -527,22 +509,21 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                 # child_loaders=child_loaders,
                 # children_class=children_class,
             )
-            
 
         # Try each loaders
         # TOFIX: Skip loader step when values are provided ? Nope, we may want to
         # override a specif value on a full config ...
-        found=False
+        found = False
         out = NOT_SET
         for loader in loaders:
             # print (f"LOOK OF {key} in", loader)
-            
+
             try:
                 # print (f"  > LOADER: try search in {loader} key: {key}")
                 out = cast(loader.getitem(self, key, **child_kwargs))
                 if out is not NOT_SET:
                     break
-                
+
             except (KeyError, TypeError) as err:
                 # print (f"{self}: Loader {key} {loader.__class__.__name__} failed with error: {type(err)}{err}")
                 continue
@@ -553,7 +534,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
         # Create a child if requested ...
         if children_class:
-            
+
             child_kwargs = dict(
                 default=default,
                 value=value,
@@ -562,15 +543,14 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                 # child_loaders=child_loaders,
                 # children_class=children_class,
             )
-            
-            
+
             _default = {}
             try:
                 _default = out.get(key, {})
             except AttributeError:
                 pass
-            
-            print ("CREATE NEW CHILD WIRH", key, child_kwargs)
+
+            print("CREATE NEW CHILD WIRH", key, child_kwargs)
             out = children_class(
                 key=key,
                 parent=self,
@@ -581,7 +561,6 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             )
 
             return out
-
 
             # if out is not NOT_SET:
             #     # Create a child if requested ...
@@ -652,12 +631,11 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     # def _iterate_declared_values(self):
     #     return self.declared_fields
 
-
-# class Configuration(ConfigurationCtrl, metaclass=DeclarativeValuesMetaclass):
-#     """
-#     Encapsulates settings than can be loaded from different
-#     sources.
-#     """
+    # class Configuration(ConfigurationCtrl, metaclass=DeclarativeValuesMetaclass):
+    #     """
+    #     Encapsulates settings than can be loaded from different
+    #     sources.
+    #     """
 
     def __iter__(self):
         yield from self.declared_fields.items()

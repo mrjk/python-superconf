@@ -2,8 +2,9 @@ import os
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
-from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 from classyconf.parsers import EnvFileParser
+
+from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 
 
 class NotSet(str):
@@ -67,7 +68,6 @@ class AbstractConfigurationLoader:
     def reset(self):
         pass
 
-
     # New API
     def contains(self, config, item):
         return self.__contains__(item)
@@ -76,7 +76,6 @@ class AbstractConfigurationLoader:
     def getitem(self, config, item):
         return self.__getitem__(item)
         # raise NotImplementedError()  # pragma: no cover
-
 
 
 class CommandLine(AbstractConfigurationLoader):
@@ -375,7 +374,6 @@ class _Value(AbstractConfigurationLoader):
     def __getitem__(self, item):
         return self.values_mapping[item]
 
-
     # New API
     # def contains(self, config, item):
 
@@ -388,7 +386,7 @@ class _Value(AbstractConfigurationLoader):
         return value
 
         if value is not NOT_SET:
-            
+
             # assert False, value
             self.values_mapping = value
 
@@ -396,7 +394,6 @@ class _Value(AbstractConfigurationLoader):
         #     return NOT_SET
         return self.__getitem__(item)
         raise NotImplementedError()  # pragma: no cover
-
 
 
 class _Value22(AbstractConfigurationLoader):
@@ -415,7 +412,6 @@ class _Value22(AbstractConfigurationLoader):
     def __getitem__(self, item):
         return self.values_mapping[item]
 
-
     # New API
     # def contains(self, config, item):
 
@@ -428,7 +424,7 @@ class _Value22(AbstractConfigurationLoader):
         return value
 
         if value is not NOT_SET:
-            
+
             # assert False, value
             self.values_mapping = value
 
@@ -436,4 +432,3 @@ class _Value22(AbstractConfigurationLoader):
         #     return NOT_SET
         return self.__getitem__(item)
         raise NotImplementedError()  # pragma: no cover
-
