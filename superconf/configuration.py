@@ -96,7 +96,7 @@ class Field:
 
     def __get__(self, conf_instance, owner):
         if conf_instance:
-            return conf_instance.get_field_value(field=self)
+            return conf_instance.get_field_value(key=self.key, field=self)
         return self
 
     def __repr__(self):
@@ -220,7 +220,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                     raise Exception("Extra fields detected ")
 
                 assert isinstance(field, Field), "Yeahhh"
-                # out = self.getconf3(key=key, field=field, value=val)
+                # out = self.create_child(key=key, field=field, value=val)
                 # self._extra_fields[key] = out
                 self._extra_fields[key] = field
 
@@ -397,7 +397,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         #     print ("RETURNING", self, key, out)
         #     return out
 
-        conf = self.getconf3(key, field, **kwargs)
+        conf = self.create_child(key, field, **kwargs)
         assert isinstance(
             conf, (type(None), dict, bool, int, str, Configuration)
         ), f"Got: {type(conf)}"
@@ -408,7 +408,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         return conf
 
     # This should be split if field has children or not ...
-    def getconf3(self, key, field, **kwargs):
+    def create_child(self, key, field, **kwargs):
         """
         :param item:    Name of the setting to lookup.
         :param default: Default value if none is provided. If left unset,
@@ -550,7 +550,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             except AttributeError:
                 pass
 
-            print("CREATE NEW CHILD WIRH", key, child_kwargs)
+            print("CREATE NEW CHILD for", self,"=" , key, child_kwargs)
             out = children_class(
                 key=key,
                 parent=self,
