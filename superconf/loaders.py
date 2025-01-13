@@ -18,6 +18,11 @@ class NotSet(str):
 
     pass
 
+    def __str__(self):
+        return "<NOT_SET>"
+
+    def __repr__(self):
+        return "<NOT_SET>"
 
 NOT_SET = NotSet()
 
@@ -383,7 +388,7 @@ class _Value(AbstractConfigurationLoader):
     def getitem(self, config, item, value=NOT_SET, **kwargs):
         # config._extra_fields[item] = config
         # assert False, "I'm never executed !!! TOFIX"
-        return value
+        # return value
 
         if value is not NOT_SET:
 
