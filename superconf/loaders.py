@@ -24,6 +24,7 @@ class NotSet(str):
     def __repr__(self):
         return "<NOT_SET>"
 
+
 NOT_SET = NotSet()
 
 

@@ -3,9 +3,8 @@ import inspect
 import logging
 from collections import OrderedDict
 from pprint import pprint
-from typing import Callable
 from types import SimpleNamespace
-
+from typing import Callable
 
 from classyconf.casts import Boolean, Identity, List, Option, Tuple, evaluate
 
@@ -110,14 +109,15 @@ class Field:
             return True
         return False
 
-
-    def resolve_value(self, 
-        conf_instance, 
-        value=NOT_SET, 
+    def resolve_value(
+        self,
+        conf_instance,
+        value=NOT_SET,
         default=NOT_SET,
         cast=NOT_SET,
         loaders=NOT_SET,
-        **kwargs):
+        **kwargs,
+    ):
         "Create a children"
 
         key = self.key
@@ -150,7 +150,7 @@ class Field:
             cast = self.cast
         if cast is NOT_SET:
             cast = conf_instance._cast
-            
+
         # Process loaders
         if loaders is NOT_SET:
             loaders = conf_instance._loaders
@@ -215,10 +215,12 @@ class Field:
 
         return result, meta
 
+
 class FieldBool(Field):
     "Boolean field"
 
     cast = as_boolean
+
 
 class FieldConf(Field):
     "Nested Config"
@@ -232,6 +234,7 @@ class FieldConf(Field):
 
         super(FieldConf, self).__init__(key, **kwargs)
         self.children_class = children_class
+
 
 # Compatibility with classyconf
 Value = Field
@@ -309,7 +312,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         # self._loaders = NOT_SET
         self._loaders = self.query_inst_cfg("loaders", override=kwargs)
         # self._cache = self.query_inst_cfg("cache", override=kwargs)
-        self._cache = True # TOFIX
+        self._cache = True  # TOFIX
 
         self._extra_fields_enabled = self.query_inst_cfg(
             "extra_fields",
@@ -329,13 +332,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                 "default", as_subkey=True, default=NOT_SET
             )
 
-
-
         # print ("\n\n===== CREATE NEW CONFIG", self.key, self, value)
         self.set_dyn_children(value)
         self.set_values(value)
-
-
 
     def set_dyn_children(self, value):
         "Set a value"
@@ -343,13 +342,13 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         # Create children method
         # Check for predefined Fields
         # If additional_items == True
-          # Check value
-            # For each keys, check if a type exists, or field
-          # Add to _extra_fields
+        # Check value
+        # For each keys, check if a type exists, or field
+        # Add to _extra_fields
 
-        # For each children, 
-            # If class of Configuration, create child
-            # If field, do noting
+        # For each children,
+        # If class of Configuration, create child
+        # If field, do noting
 
         declared_fields = self.declared_fields
         children_class = self._children_class
@@ -360,13 +359,15 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         if self._extra_fields_enabled is True and isinstance(child_values, dict):
 
             # Look for new keys in value
-            assert isinstance(child_values, dict), f"Got {self}: {type(child_values)}: {child_values}"
+            assert isinstance(
+                child_values, dict
+            ), f"Got {self}: {type(child_values)}: {child_values}"
             for key, val in child_values.items():
 
                 # Get best children_class
                 field = None
                 child_class = NOT_SET
-                
+
                 # Check if key have an existing field
                 if key in self.declared_fields:
                     field = self.declared_fields[key]
@@ -379,11 +380,10 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                 if not field:
                     # print ("REGISTER NEW FIELD", key, children_class)
                     field = FieldConf(
-                        key=key, 
+                        key=key,
                         children_class=child_class,
-                        )
+                    )
                     self._extra_fields[key] = field
-
 
     def set_values(self, value):
         "Set a value"
@@ -400,14 +400,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
                 # print ("AUTOMATIC CREATE CHILD CONTAINER", key, field, val)
                 conf = self.create_child(key, field, value=val)
-                assert isinstance(
-                    conf, (Configuration)
-                ), f"Got: {type(conf)}"
+                assert isinstance(conf, (Configuration)), f"Got: {type(conf)}"
                 # print ("SET CACHED VALUE", self, conf, key, field, val)
                 # self._cached_values[key] = conf
-
-
-
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
@@ -604,20 +599,16 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         #      - DEfault must be set
         #  - UNSET
 
-
         result, meta = field.resolve_value(
             self,
             value=value,
-            )
-        default=meta.default
-        value=meta.value
-
+        )
+        default = meta.default
+        value = meta.value
 
         # If not container, return HERE
         if not isinstance(field, FieldConf):
             return result
-            
-
 
         # Default children_class
         children_class = field.children_class
@@ -626,7 +617,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             # children_class = getattr(field, "children_class", NOT_SET)
 
         # out = children_class(key=key, value=value, parent=self)
-        out = children_class(key=key, value=value, default=default, parent=self, **kwargs)
+        out = children_class(
+            key=key, value=value, default=default, parent=self, **kwargs
+        )
 
         return out
 
