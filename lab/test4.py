@@ -35,7 +35,6 @@ class Resource(Configuration):
 
     class Meta:
         extra_fields = True
-    #     loaders=[Dict(RESOURCES1)]
 
     location = Field(default="MISSING LOCATION")
     owner = Field(default="MISSING OWNER")
@@ -61,7 +60,6 @@ class ResourcesCtl(ConfigurationDict):
     "Represent resources"
 
     class Meta:
-        # loaders = [ Dict(RESOURCES1) ]
         children_class = Resource
 
 
@@ -73,15 +71,10 @@ class AppConfig(Configuration):
         # default = {"resources": {"res1": {"owner": "bob", "location": "BLIHH"}}}
         cache = True
 
-    #     cache = False
-    #     children_class = Resources
-    # custom_field = "My VALUUUUuuueeeee"
-
     resources = FieldConf(
         children_class=ResourcesCtl,
         help="List of resources",
     )
-
 
     test_config = Field(
         default="Yeahhh"

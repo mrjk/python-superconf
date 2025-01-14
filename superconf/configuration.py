@@ -8,7 +8,7 @@ from typing import Callable
 
 from classyconf.casts import Boolean, Identity, List, Option, Tuple, evaluate
 
-from .exceptions import UnknownConfiguration
+import superconf.exceptions as exceptions
 from .loaders import NOT_SET, Dict, Environment, NotSet, _Value
 
 logger = logging.getLogger(__name__)
@@ -31,40 +31,40 @@ assert UNSET_ARG is not NOT_SET
 # assert UNSET_ARG == NOT_SET
 
 
-def getconf(item, default=NOT_SET, cast=None, loaders=None):
-    """
-    :param item:    Name of the setting to lookup.
-    :param default: Default value if none is provided. If left unset,
-                    loading a config that fails to provide this value
-                    will raise a UnknownConfiguration exception.
-    :param cast:    Callable to cast variable with. Defaults to type of
-                    default (if provided), identity if default is not
-                    provided or raises TypeError if provided cast is not
-                    callable.
-    :param loaders: A list of loader instances in the order they should be
-                    looked into. Defaults to `[Environment()]`
-    """
-    if callable(cast):
-        cast = cast
-    elif cast is None and (default is NOT_SET or default is None):
-        cast = as_is
-    elif isinstance(default, bool):
-        cast = as_boolean
-    elif cast is None:
-        cast = type(default)
-    else:
-        raise TypeError("Cast must be callable")
+# def getconf(item, default=NOT_SET, cast=None, loaders=None):
+#     """
+#     :param item:    Name of the setting to lookup.
+#     :param default: Default value if none is provided. If left unset,
+#                     loading a config that fails to provide this value
+#                     will raise a UnknownConfiguration exception.
+#     :param cast:    Callable to cast variable with. Defaults to type of
+#                     default (if provided), identity if default is not
+#                     provided or raises TypeError if provided cast is not
+#                     callable.
+#     :param loaders: A list of loader instances in the order they should be
+#                     looked into. Defaults to `[Environment()]`
+#     """
+#     if callable(cast):
+#         cast = cast
+#     elif cast is None and (default is NOT_SET or default is None):
+#         cast = as_is
+#     elif isinstance(default, bool):
+#         cast = as_boolean
+#     elif cast is None:
+#         cast = type(default)
+#     else:
+#         raise TypeError("Cast must be callable")
 
-    for loader in loaders:
-        try:
-            return cast(loader[item])
-        except KeyError:
-            continue
+#     for loader in loaders:
+#         try:
+#             return cast(loader[item])
+#         except KeyError:
+#             continue
 
-    if default is NOT_SET:
-        raise UnknownConfiguration("Configuration '{}' not found".format(item))
+#     if default is NOT_SET:
+#         raise UnknownConfiguration("Configuration '{}' not found".format(item))
 
-    return cast(default)
+#     return cast(default)
 
 
 class Field:
@@ -297,7 +297,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     class Meta:
         "Class to store class overrides"
 
-    def __init__(self, *, key=None, parent=None, value=None, meta=None, **kwargs):
+    def __init__(self, *, key=None, parent=None, value=NOT_SET, meta=None, **kwargs):
         self.key = key
         self._parent = parent
         self._value = value
@@ -388,9 +388,8 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
                 # Prevent unexpected childrens ...
                 if not field and self._extra_fields_enabled is False:
-                    assert (
-                        False
-                    ), f"Undeclared key '{key}' for {self}, or enable extra_fields=True"
+                    msg = f"Undeclared key '{key}' for {self}, or enable extra_fields=True"
+                    raise exceptions.UnknownExtraField(msg)
 
                 if child_class is NOT_SET:
                     # Get children class form container
@@ -431,17 +430,14 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                 conf = self.create_child(key, field, value=val)
                 assert isinstance(conf, (Configuration)), f"Got: {type(conf)}"
                 # print ("SET CACHED VALUE", self, conf, key, field, val)
-                # self._cached_values[key] = conf
+                self._cached_values[key] = conf
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
         out, query_from = self._query_inst_cfg(*args, **kwargs)
-        print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
+        # print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
         # pprint(query_from)
-        # try:
-        #     out = self._query_inst_cfg(*args, **kwargs)
-        # except Exception:
-        #     out = cast()
+
         if isinstance(out, (dict, list)):
             out = copy.copy(out)
 
@@ -501,7 +497,8 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             query_from.append("default_arg")
             return default, query_from
 
-        raise Exception(f"Missing config: {name} in {repr(self)}, tried: {query_from}")
+        msg = f"Setting '{name}' has not been declared before being used in '{repr(self)}', tried to query: {query_from}"
+        raise  exceptions.UnknownSetting(msg)
 
     def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
         "Query parent config"
@@ -510,7 +507,8 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         if not self._parent:
             if default is not UNSET_ARG:
                 return default
-            raise Exception(f"Missing config: {name} in {repr(self)}")
+            msg = f"Setting '{name}' has not been declared in hierarchy of '{repr(self)}'"
+            raise exceptions.UnknownSetting(msg)
 
         def fetch_closest_parent(name):
             # Fetch from closest parent
@@ -586,7 +584,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             if field is None:
                 if default is not UNSET_ARG:
                     return default
-                raise UnknownConfiguration("Configuration '{}' not found".format(key))
+                raise exceptions.UndeclaredField("Configuration '{}' not found".format(key))
             assert key == field.key, f"Got: {key} != {field.key}"
             key = field.key
 

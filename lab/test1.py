@@ -56,7 +56,7 @@ assert t1 == 42
 # We check unknown value retrieval here
 t1 = app.get_value("tutu", default="SUPER")
 assert t1 == "SUPER"
-with pytest.raises(superconf.exceptions.UnknownConfiguration):
+with pytest.raises(superconf.exceptions.UndeclaredField):
     # Raise exceptions on unset values without defaults
     app.get_value("toto")
 
