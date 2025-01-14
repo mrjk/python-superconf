@@ -124,26 +124,31 @@ class Field:
         assert key, f"Got: {type(key)} {key}"
 
         # Process defaults
-        if default is NOT_SET:
+        default_from = ["args"]
+        if default is NOT_SET and isinstance(conf_instance._default, dict):
             # Fetch default from container
+
+            # default2 = default
             try:
-                default = conf_instance._default.get(key)
-            except AttributeError:
+                default = conf_instance.query_inst_cfg(
+                    "default", override=kwargs, default=NOT_SET
+                )[key]
+                default_from.append("conf_instance_query")
+            except KeyError:
                 pass
+
         if default is NOT_SET:
             # Fetch default from field
             default = self.default
+            default_from.append("field_instance")
 
         # Process value
         if value is NOT_SET:
             # Fetch default from container
             try:
-                # value = conf_instance._value.get(key)
                 value = conf_instance._value[key]
             except (TypeError, KeyError):
                 pass
-            # except AttributeError:
-            #     pass
 
         # Process cast
         if cast is NOT_SET:
@@ -177,7 +182,6 @@ class Field:
         # Process things
         result = NOT_SET
         for loader in loaders:
-            # result = NOT_SET
             try:
                 # print (f"  > LOADER: try search in {loader} key: {key}")
                 result = loader.getitem(self, key, **kwargs)
@@ -209,8 +213,9 @@ class Field:
             cast=cast,
             default=default,
             loaders=loaders,
-            value=value,
+            value=result,
             results_from=results_from,
+            default_from=default_from,
         )
 
         return result, meta
@@ -283,6 +288,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     meta__custom_field = "My VALUUUUuuueeeee"
     meta__loaders = [Environment()]
     meta__cache = True  # Yes by default ...
+    meta__extra_fields = False
 
     # Optional fields
     # meta__default = NOT_SET # dict()
@@ -333,8 +339,13 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             )
 
         # print ("\n\n===== CREATE NEW CONFIG", self.key, self, value)
-        self.set_dyn_children(value)
-        self.set_values(value)
+        # child_values = value
+        child_values = self._value
+        if child_values is NOT_SET:
+            # print(f"REMAP CHILD VALUE {self}:{key}: {child_values}=>{self._default}")
+            child_values = self._default
+        self.set_dyn_children(child_values)
+        self.set_values(child_values)
 
     def set_dyn_children(self, value):
         "Set a value"
@@ -355,13 +366,14 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
         # Add extra fields
         child_values = value or dict()
-        # if self._extra_fields_enabled is True: # TORESTORE
-        if self._extra_fields_enabled is True and isinstance(child_values, dict):
+
+        if isinstance(child_values, dict):
 
             # Look for new keys in value
             assert isinstance(
                 child_values, dict
             ), f"Got {self}: {type(child_values)}: {child_values}"
+
             for key, val in child_values.items():
 
                 # Get best children_class
@@ -374,14 +386,31 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
                     # child_class = field.children_class
                     child_class = getattr(field, "children_class", NOT_SET)
 
+                # Prevent unexpected childrens ...
+                if not field and self._extra_fields_enabled is False:
+                    assert (
+                        False
+                    ), f"Undeclared key '{key}' for {self}, or enable extra_fields=True"
+
                 if child_class is NOT_SET:
+                    # Get children class form container
                     child_class = children_class
 
                 if not field:
-                    # print ("REGISTER NEW FIELD", key, children_class)
-                    field = FieldConf(
+                    # print("REGISTER DYN FIELD", key, children_class)
+
+                    xtra_kwargs = {}
+                    if not child_class:
+                        # No children_class, then it's just a field
+                        child_cls = Field
+                    else:
+                        child_cls = FieldConf
+                        xtra_kwargs = dict(children_class=child_class)
+
+                    # Create dynamic field
+                    field = child_cls(
                         key=key,
-                        children_class=child_class,
+                        **xtra_kwargs,
                     )
                     self._extra_fields[key] = field
 
@@ -406,7 +435,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
-        out = self._query_inst_cfg(*args, **kwargs)
+        out, query_from = self._query_inst_cfg(*args, **kwargs)
+        print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
+        # pprint(query_from)
         # try:
         #     out = self._query_inst_cfg(*args, **kwargs)
         # except Exception:
@@ -423,28 +454,31 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
         return out
 
-    @classmethod
-    def _query_cls_cfg(cls, *args, **kwargs):
-        "Temporary class method"
-        out = cls._query_inst_cfg(cls, *args, **kwargs)
-        if isinstance(out, (dict, list)):
-            out = copy.copy(out)
-        return out
+    # @classmethod
+    # def _query_cls_cfg(cls, *args, **kwargs):
+    #     "Temporary class method"
+    #     out = cls._query_inst_cfg(cls, *args, **kwargs)
+    #     if isinstance(out, (dict, list)):
+    #         out = copy.copy(out)
+    #     return out
 
     def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
         "Query instance settings, or fallback on class settings"
+        query_from = []
 
         # Fetch from dict override, if providedchildren_class
         if isinstance(override, dict):
             val = override.get(name, NOT_SET)
             if val is not NOT_SET:
-                return val
+                query_from.append(f"dict_override:{name}")
+                return val, query_from
 
         # Fetch from self._NAME
         # Good for initial setup, if write mode is required
         val = getattr(self, f"_{name}", NOT_SET)
         if val is not NOT_SET:
-            return val
+            query_from.append(f"self_attr:_{name}")
+            return val, query_from
 
         # Python class params
         # Good for class overrides
@@ -452,25 +486,22 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         if hasattr(cls, "Meta"):
             val = getattr(cls.Meta, name, NOT_SET)
             if val is not NOT_SET:
+                query_from.append(f"self_meta:Meta.{name}")
                 # print ("SELF CLASS Meta retrieval for: {cls}" , name, val)
-                return val
+                return val, query_from
 
         # Fetch from self.meta__NAME
         # Python class inherited params (good for defaults)
         val = getattr(self, f"meta__{name}", NOT_SET)
         if val is not NOT_SET:
-            return val
-
-        # Fetch from self.NAME
-        val = getattr(self, name, NOT_SET)
-        if val is not NOT_SET:
-            assert False, "Deprecated"
-            return val
+            query_from.append(f"self_attr:meta__{name}")
+            return val, query_from
 
         if default is not UNSET_ARG:
-            return default
+            query_from.append("default_arg")
+            return default, query_from
 
-        raise Exception(f"Missing config: {name} in {repr(self)}")
+        raise Exception(f"Missing config: {name} in {repr(self)}, tried: {query_from}")
 
     def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
         "Query parent config"
@@ -599,12 +630,18 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         #      - DEfault must be set
         #  - UNSET
 
+        # DElegate logic to field methods
         result, meta = field.resolve_value(
             self,
             value=value,
         )
+
+        # TOFIX: To be migrated into FieldConf
         default = meta.default
         value = meta.value
+
+        # print ("DUMP CHILD CREATE META", self, key)
+        # pprint (meta.__dict__)
 
         # If not container, return HERE
         if not isinstance(field, FieldConf):
@@ -616,7 +653,10 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             children_class = self._children_class
             # children_class = getattr(field, "children_class", NOT_SET)
 
-        # out = children_class(key=key, value=value, parent=self)
+        assert (
+            children_class
+        ), f"Got: {type(children_class)}: {children_class} for {self}:{key}"
+
         out = children_class(
             key=key, value=value, default=default, parent=self, **kwargs
         )
@@ -634,7 +674,6 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
         out = {}
         for key, obj in self.declared_fields.items():
-            # val = obj #.get_values(lvl=lvl-1)
             val = self.get_field_value(key)
             if isinstance(val, Configuration):
                 val = val.get_values(lvl=lvl - 1)
@@ -687,3 +726,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
     def __getitem__(self, value):
         return self.declared_fields[value].__get__(self, self.__class__)
+
+
+class ConfigurationDict(Configuration, metaclass=DeclarativeValuesMetaclass):
+    "Variadic configuration"
+
+    meta__extra_fields = True

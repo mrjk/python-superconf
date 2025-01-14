@@ -3,7 +3,7 @@ import pytest
 # This test explore the nested use cases
 
 from pprint import pprint
-from superconf.configuration import Configuration, Field, FieldConf, Environment
+from superconf.configuration import Configuration, ConfigurationDict, Field, FieldConf, Environment
 import superconf.exceptions
 from superconf.loaders import Dict
 
@@ -33,14 +33,15 @@ CONFIG1 = {
 class Resource(Configuration):
     "Represent resources"
 
-    # class Meta:
+    class Meta:
+        extra_fields = True
     #     loaders=[Dict(RESOURCES)]
 
     location = Field(default="MISSING LOCATION")
     owner = Field(default="MISSING OWNER")
 
 
-class ResourcesCtl(Configuration):
+class ResourcesCtl(ConfigurationDict):
     "Represent resources"
 
     class Meta:
@@ -88,7 +89,7 @@ pprint(o.__dict__)
 
 o = app["resources"].get_values()
 pprint(o)
-assert "laptop" in o
+assert "laptop" in o, f"Broke nested children: {o}"
 
 print("+++++++++++++++++++ RESOURCES.LPATOP")
 
