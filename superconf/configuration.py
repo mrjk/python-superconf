@@ -246,6 +246,22 @@ class Field:
         return result, meta
 
 
+
+class FieldConf(Field):
+    "Nested Config"
+
+    def __init__(
+        self,
+        children_class,
+        # children_class: NOT_SET = NOT_SET,
+        key: str = None,
+        **kwargs,
+    ):
+
+        super(FieldConf, self).__init__(key, **kwargs)
+        self.children_class = children_class
+
+
 class FieldBool(Field):
     "Boolean field"
 
@@ -265,14 +281,6 @@ class FieldFloat(Field):
     cast = float
 
 
-class FieldList(Field):
-    "List field"
-    cast = as_list
-
-class FieldTuple(Field):
-    "Tuple field"
-    cast = as_tuple
-
 class FieldOption(Field):
     "Option field"
     cast = as_option
@@ -291,19 +299,16 @@ class FieldOption(Field):
 
 
 
-class FieldConf(Field):
-    "Nested Config"
 
-    def __init__(
-        self,
-        children_class,
-        # children_class: NOT_SET = NOT_SET,
-        key: str = None,
-        **kwargs,
-    ):
+# Children items
+class FieldList(Field):
+    "List field"
+    cast = as_list
 
-        super(FieldConf, self).__init__(key, **kwargs)
-        self.children_class = children_class
+class FieldTuple(Field):
+    "Tuple field"
+    cast = as_tuple
+
 
 
 # Compatibility with classyconf
