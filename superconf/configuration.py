@@ -2,19 +2,27 @@ import copy
 import inspect
 import logging
 from collections import OrderedDict
+
+# from collections import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pprint import pprint
 from types import SimpleNamespace
 from typing import Callable
-# from collections import Mapping, Sequence
-from collections.abc import Mapping, Sequence
-
-from .casts import AsIdentity, AsDict, AsList, AsOption, AsTuple, AsBoolean, AsInt, evaluate
 
 import superconf.exceptions as exceptions
+
+from .casts import (
+    AsBoolean,
+    AsDict,
+    AsIdentity,
+    AsInt,
+    AsList,
+    AsOption,
+    AsTuple,
+    evaluate,
+)
+from .common import FAIL, NOT_SET, UNSET_ARG, NotSet
 from .loaders import Environment, _Value
-
-from .common import NOT_SET, NotSet, UNSET_ARG, FAIL
-
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +34,6 @@ as_dict = AsDict()
 as_tuple = AsTuple()
 as_option = AsOption
 as_is = AsIdentity()
-
 
 
 # def getconf(item, default=NOT_SET, cast=None, loaders=None):
@@ -222,15 +229,14 @@ class Field:
             results_from.append(f"casted:{cast}")
         # except ValueError as err:
         #     error = err
-        except (exceptions.InvalidCastConfiguration) as err:
+        except exceptions.InvalidCastConfiguration as err:
             error = err
 
         # Check for strict_cast mode:
         # print ("DEFAUUUB", conf_instance, conf_instance._strict_cast)
         if error is not None and conf_instance._strict_cast is True:
-            msg= f"Got error {conf_instance}.{key} {type(error)}: {error}, set strict_cast=False to disable this error"
+            msg = f"Got error {conf_instance}.{key} {type(error)}: {error}, set strict_cast=False to disable this error"
             raise exceptions.CastValueFailure(msg)
-
 
         meta = SimpleNamespace(
             cast=cast,
@@ -244,7 +250,6 @@ class Field:
         )
 
         return result, meta
-
 
 
 class FieldConf(Field):
@@ -267,6 +272,7 @@ class FieldBool(Field):
 
     cast = as_boolean
 
+
 class FieldString(Field):
     "String field"
     cast = str
@@ -275,6 +281,7 @@ class FieldString(Field):
 class FieldInt(Field):
     "Int field"
     cast = as_int
+
 
 class FieldFloat(Field):
     "Float field"
@@ -298,21 +305,20 @@ class FieldOption(Field):
         super(FieldOption, self).__init__(key, **kwargs)
 
 
-
-
 # Children items
 class FieldDict(Field):
     "Dict field"
     cast = as_dict
 
+
 class FieldList(Field):
     "List field"
     cast = as_list
 
+
 class FieldTuple(Field):
     "Tuple field"
     cast = as_tuple
-
 
 
 # Compatibility with classyconf
@@ -574,7 +580,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             return default, query_from
 
         msg = f"Setting '{name}' has not been declared before being used in '{repr(self)}', tried to query: {query_from}"
-        raise  exceptions.UnknownSetting(msg)
+        raise exceptions.UnknownSetting(msg)
 
     def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
         "Query parent config"
@@ -583,7 +589,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         if not self._parent:
             if default is not UNSET_ARG:
                 return default
-            msg = f"Setting '{name}' has not been declared in hierarchy of '{repr(self)}'"
+            msg = (
+                f"Setting '{name}' has not been declared in hierarchy of '{repr(self)}'"
+            )
             raise exceptions.UnknownSetting(msg)
 
         def fetch_closest_parent(name):
@@ -660,7 +668,9 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
             if field is None:
                 if default is not UNSET_ARG:
                     return default
-                raise exceptions.UndeclaredField("Configuration '{}' not found".format(key))
+                raise exceptions.UndeclaredField(
+                    "Configuration '{}' not found".format(key)
+                )
             assert key == field.key, f"Got: {key} != {field.key}"
             key = field.key
 

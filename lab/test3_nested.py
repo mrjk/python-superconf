@@ -1,11 +1,18 @@
+from pprint import pprint
+
 import pytest
 
-# This test explore the nested use cases
-
-from pprint import pprint
-from superconf.configuration import Configuration, ConfigurationDict, Field, FieldConf, Environment
 import superconf.exceptions
+from superconf.configuration import (
+    Configuration,
+    ConfigurationDict,
+    Environment,
+    Field,
+    FieldConf,
+)
 from superconf.loaders import Dict
+
+# This test explore the nested use cases
 
 
 # Resource list
@@ -26,15 +33,15 @@ RESOURCES2 = {
     },
 }
 
-CONFIG1 = {
-    "resources": RESOURCES | RESOURCES2
-}
+CONFIG1 = {"resources": RESOURCES | RESOURCES2}
+
 
 class Resource(Configuration):
     "Represent resources"
 
     class Meta:
         extra_fields = True
+
     #     loaders=[Dict(RESOURCES)]
 
     location = Field(default="MISSING LOCATION")
@@ -114,7 +121,6 @@ assert o.get("location", "MISSING KEY") == "home"
 
 
 print("+++++++++++++++++++ WIPPPP ++++++++++++++++++++++++")
-
 
 
 # assert False

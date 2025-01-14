@@ -1,12 +1,13 @@
+from pprint import pprint
+
 import pytest
+
+import superconf.exceptions
+from superconf.configuration import Configuration, Environment, Field, FieldConf
+from superconf.loaders import Dict
 
 # This test explore the default specificities of classyconf
 # We want to keep this API compatible
-
-from pprint import pprint
-from superconf.configuration import Configuration, Field, FieldConf, Environment
-import superconf.exceptions
-from superconf.loaders import Dict
 
 
 example_dict = {

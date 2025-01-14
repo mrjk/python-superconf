@@ -1,21 +1,35 @@
-import pytest
 import sys
-
-# This test explore the nested use cases, WITH defaults
-
 from pprint import pprint
-from superconf.configuration import Configuration, ConfigurationDict ,Environment
-from superconf.configuration import FieldBool, FieldDict, FieldString, Field, FieldConf, FieldList, FieldTuple, FieldOption, FieldFloat, FieldInt
+
+import pytest
+
 import superconf.exceptions
+from superconf.common import DEFAULT, FAIL, NOT_SET
+from superconf.configuration import (
+    Configuration,
+    ConfigurationDict,
+    Environment,
+    Field,
+    FieldBool,
+    FieldConf,
+    FieldDict,
+    FieldFloat,
+    FieldInt,
+    FieldList,
+    FieldOption,
+    FieldString,
+    FieldTuple,
+)
 from superconf.loaders import Dict
 
-from superconf.common import FAIL, DEFAULT, NOT_SET 
+# This test explore the nested use cases, WITH defaults
 
 
 # Test extra Fields
 # =============================
 
-print ("\n\n================ Boolean Fields ===========\n\n")
+print("\n\n================ Boolean Fields ===========\n\n")
+
 
 class AppBools(Configuration):
     "Tests types"
@@ -25,7 +39,7 @@ class AppBools(Configuration):
         strict_cast = True
 
         # TODO
-        allow_unset = True # Always the case actually
+        allow_unset = True  # Always the case actually
 
     # is_enabled = FieldBool() # Enabled, this should fail !
     is_online = FieldBool(default=False)
@@ -36,20 +50,17 @@ class AppBools(Configuration):
 
 app1 = AppBools()
 
-EXPECTED = {
-    'bool_test1': True, 
-    'bool_test2': False, 
-    'is_online': False}
+EXPECTED = {"bool_test1": True, "bool_test2": False, "is_online": False}
 
-pprint (app1.get_values())
+pprint(app1.get_values())
 assert app1.get_values() == EXPECTED
-
 
 
 # Test extra Fields Strings
 # =============================
 
-print ("\n\n================ String Fields ===========\n\n")
+print("\n\n================ String Fields ===========\n\n")
+
 
 class AppStrings(Configuration):
     "Tests types"
@@ -74,23 +85,25 @@ class AppStrings(Configuration):
 
 app1 = AppStrings()
 
-EXPECTED = {'string_test1': 'my_string',
- 'string_test2': 'False',
- 'string_test3': 'None',
- 'string_test4': '23',
- 'string_test5': '0',
- 'string_test6': "{'key': 'value'}",
- 'string_test7': "['item1', 'item2']"}
+EXPECTED = {
+    "string_test1": "my_string",
+    "string_test2": "False",
+    "string_test3": "None",
+    "string_test4": "23",
+    "string_test5": "0",
+    "string_test6": "{'key': 'value'}",
+    "string_test7": "['item1', 'item2']",
+}
 
-pprint (app1.get_values())
+pprint(app1.get_values())
 assert app1.get_values() == EXPECTED
-
 
 
 # Test extra Fields Strings
 # =============================
 
-print ("\n\n================ Int Fields ===========\n\n")
+print("\n\n================ Int Fields ===========\n\n")
+
 
 class AppInt(Configuration):
     "Tests types"
@@ -114,32 +127,32 @@ class AppInt(Configuration):
 
 app1 = AppInt()
 
-EXPECTED = {'int_test1': -1,
- 'int_test2': 1,
- 'int_test3': 0,
- 'int_test4': 4268,
- 'int_test5': 0,
- 'int_test6': 0,
- 'int_test7': 1,
- 'int_test8': NOT_SET,
+EXPECTED = {
+    "int_test1": -1,
+    "int_test2": 1,
+    "int_test3": 0,
+    "int_test4": 4268,
+    "int_test5": 0,
+    "int_test6": 0,
+    "int_test7": 1,
+    "int_test8": NOT_SET,
 }
 
-pprint (app1.get_values())
+pprint(app1.get_values())
 assert app1.get_values() == EXPECTED
-
-
 
 
 # Test extra Fields Strings
 # =============================
 
-print ("\n\n================ Option Fields ===========\n\n")
+print("\n\n================ Option Fields ===========\n\n")
 
 options1 = {
     "_default_": 56789,
     "yes": "do_this_yes",
     "no": "do_something_else",
 }
+
 
 class AppOption(Configuration):
     "Tests types"
@@ -150,7 +163,9 @@ class AppOption(Configuration):
 
     int_test1 = FieldOption(options1, default="yes")
     int_test2 = FieldOption(options1, default="no")
-    int_test3 = FieldOption(options1, default="I Dont'exist", default_option="_default_")
+    int_test3 = FieldOption(
+        options1, default="I Dont'exist", default_option="_default_"
+    )
 
     int_test4 = FieldOption(options1, default_option="_default_")
     int_test5 = FieldOption(options1, default="_default_")
@@ -162,25 +177,26 @@ class AppOption(Configuration):
     # int_test4 = FieldOption(options1, default="I Dont'exist")
 
 
-
 app1 = AppOption()
 
-EXPECTED = {'int_test1': 'do_this_yes',
- 'int_test2': 'do_something_else',
- 'int_test3': 56789,
- 'int_test4': 56789,
- 'int_test5': 56789}
+EXPECTED = {
+    "int_test1": "do_this_yes",
+    "int_test2": "do_something_else",
+    "int_test3": 56789,
+    "int_test4": 56789,
+    "int_test5": 56789,
+}
 
 
-pprint (app1.get_values())
+pprint(app1.get_values())
 assert app1.get_values() == EXPECTED
-
 
 
 # Test extra Fields List
 # =============================
 
-print ("\n\n================ List Fields ===========\n\n")
+print("\n\n================ List Fields ===========\n\n")
+
 
 class AppList(Configuration):
     "Tests types"
@@ -200,25 +216,26 @@ class AppList(Configuration):
 
 app1 = AppList()
 
-EXPECTED = {'list_test1': [],
- 'list_test2': ['item1', 'item2', 'item3'],
- 'list_test3': [],
- 'list_test4': [],
- 'list_test5': ['item26'],
- 'list_test6': ['item27', 'item28', 'item29'],
- 'list_test7': [],
- }
+EXPECTED = {
+    "list_test1": [],
+    "list_test2": ["item1", "item2", "item3"],
+    "list_test3": [],
+    "list_test4": [],
+    "list_test5": ["item26"],
+    "list_test6": ["item27", "item28", "item29"],
+    "list_test7": [],
+}
 
 
-pprint (app1.get_values())
+pprint(app1.get_values())
 assert app1.get_values() == EXPECTED
-
 
 
 # Test extra Fields List
 # =============================
 
-print ("\n\n================ Tuple Fields ===========\n\n")
+print("\n\n================ Tuple Fields ===========\n\n")
+
 
 class AppTuple(Configuration):
     "Tests types"
@@ -238,25 +255,26 @@ class AppTuple(Configuration):
 
 app1 = AppTuple()
 
-EXPECTED = {'list_test1': (),
- 'list_test2': ('item1', 'item2', 'item3'),
- 'list_test3': (),
- 'list_test4': (),
- 'list_test5': ('item26',),
- 'list_test6': ('item27', 'item28', 'item29'),
-  'list_test7': (),
- }
+EXPECTED = {
+    "list_test1": (),
+    "list_test2": ("item1", "item2", "item3"),
+    "list_test3": (),
+    "list_test4": (),
+    "list_test5": ("item26",),
+    "list_test6": ("item27", "item28", "item29"),
+    "list_test7": (),
+}
 
 
-pprint (app1.get_values())
+pprint(app1.get_values())
 assert app1.get_values() == EXPECTED
-
 
 
 # Test extra Fields Dict
 # =============================
 
-print ("\n\n================ Dict Fields ===========\n\n")
+print("\n\n================ Dict Fields ===========\n\n")
+
 
 class AppDict(Configuration):
     "Tests types"
@@ -276,15 +294,14 @@ class AppDict(Configuration):
 app1 = AppDict()
 
 EXPECTED = {
-    'field_test1': {},
-    'field_test2': {'item1': 'val1', 'item2': 'val2', 'item3': 'val3'},
-    'list_test3': {}}
+    "field_test1": {},
+    "field_test2": {"item1": "val1", "item2": "val2", "item3": "val3"},
+    "list_test3": {},
+}
 
 
-pprint (app1.get_values())
+pprint(app1.get_values())
 assert app1.get_values() == EXPECTED
 
 
-
 print("All tests O WIPK")
-

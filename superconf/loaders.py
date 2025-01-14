@@ -4,9 +4,9 @@ from glob import glob
 
 from classyconf.parsers import EnvFileParser
 
+from .common import NOT_SET
 from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 
-from .common import NOT_SET
 
 class EnvPrefix:
     """

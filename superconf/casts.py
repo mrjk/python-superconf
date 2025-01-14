@@ -1,8 +1,9 @@
 import ast
-
-from .exceptions import InvalidCastConfiguration
-from .common import NOT_SET, UNSET_ARG, FAIL
 from collections.abc import Mapping, Sequence
+
+from .common import FAIL, NOT_SET, UNSET_ARG
+from .exceptions import InvalidCastConfiguration
+
 
 class AbstractCast(object):
     def __call__(self, value):
@@ -39,6 +40,7 @@ class AsBoolean(AbstractCast):
                 "Error casting value {!r} to boolean".format(value)
             )
 
+
 class AsInt(AbstractCast):
     "Return an INT"
 
@@ -52,11 +54,11 @@ class AsInt(AbstractCast):
                 "Error casting value {!r} to int".format(value)
             )
 
+
 class AsList(AbstractCast):
     def __init__(self, delimiter=",", quotes="\"'"):
         self.delimiter = delimiter
         self.quotes = quotes
-
 
     def cast(self, sequence):
         return list(sequence)
@@ -64,16 +66,15 @@ class AsList(AbstractCast):
     def __call__(self, value):
         return self._parse(value)
 
-
     def _parse(self, value):
-        
+
         if not value:
             # print ("PARSE AS EMPTY", value)
             return self.cast([])
         elif isinstance(value, str):
             # print ("PARSE AS STRING", value)
             return self._parse_string(value)
-        
+
         elif isinstance(value, Sequence):
             # print ("PARSE AS LIST", value)
             return self.cast(value)
@@ -122,7 +123,6 @@ class AsTuple(AsList):
         return tuple(sequence)
 
 
-
 class AsDict(AbstractCast):
 
     def __init__(self, delimiter=",", quotes="\"'"):
@@ -135,9 +135,8 @@ class AsDict(AbstractCast):
     def __call__(self, value):
         return self._parse(value)
 
-
     def _parse(self, value):
-        
+
         if not value:
             # print ("PARSE AS EMPTY", value)
             return self.cast({})
@@ -145,7 +144,7 @@ class AsDict(AbstractCast):
             assert False, "String  parsing is not implemeted yet"
             # print ("PARSE AS STRING", value)
             return self._parse_string(value)
-        
+
         elif isinstance(value, Mapping):
             # print ("PARSE AS LIST", value)
             return self.cast(value)
@@ -178,10 +177,14 @@ class AsOption(AbstractCast):
             default_option = self.default_option
             if default_option is FAIL:
                 raise InvalidCastConfiguration("Invalid option {!r}".format(value))
-            
+
             # Look for default
             if not default_option in self.options:
-                raise InvalidCastConfiguration("Invalid default option {!r}: does not exists: {}".format(value, default_option))
+                raise InvalidCastConfiguration(
+                    "Invalid default option {!r}: does not exists: {}".format(
+                        value, default_option
+                    )
+                )
 
             # if isinstance(default, str):
             return self.options[default_option]

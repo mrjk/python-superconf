@@ -1,12 +1,20 @@
-import pytest
 import sys
+from pprint import pprint
+
+import pytest
+
+import superconf.exceptions
+from superconf.configuration import (
+    NOT_SET,
+    Configuration,
+    ConfigurationDict,
+    Environment,
+    Field,
+    FieldConf,
+)
+from superconf.loaders import Dict
 
 # This test explore the nested use cases, WITHOUT defaults
-
-from pprint import pprint
-from superconf.configuration import NOT_SET, Configuration, ConfigurationDict, Field, FieldConf, Environment
-import superconf.exceptions
-from superconf.loaders import Dict
 
 
 # Resource list
@@ -22,13 +30,11 @@ RESOURCES1 = {
 RESOURCES2 = {
     "phone": {},
     "camera": None,
-
 }
 
-CONFIG_MERGED = {
-    "resources": RESOURCES1 | RESOURCES2
-}
+CONFIG_MERGED = {"resources": RESOURCES1 | RESOURCES2}
 RESOURCES_COUNT = len(CONFIG_MERGED["resources"])
+
 
 class Resource(Configuration):
     "Represent resources"
@@ -54,8 +60,6 @@ class Resource(Configuration):
     owner = Field()
 
 
-
-
 class ResourcesCtl(ConfigurationDict):
     "Represent resources"
 
@@ -66,7 +70,6 @@ class ResourcesCtl(ConfigurationDict):
 class AppConfig(Configuration):
     "Main app config"
 
-
     class Meta:
         # default = {"resources": {"res1": {"owner": "bob", "location": "BLIHH"}}}
         cache = True
@@ -76,9 +79,7 @@ class AppConfig(Configuration):
         help="List of resources",
     )
 
-    test_config = Field(
-        default="Yeahhh"
-    )
+    test_config = Field(default="Yeahhh")
     test_config2 = Field()
 
 
@@ -111,7 +112,6 @@ assert isinstance(o_resources, ResourcesCtl)
 assert len(o_resources.get_values()) == RESOURCES_COUNT
 
 
-
 # Resources testing
 # =============================
 
@@ -134,7 +134,7 @@ assert o_wifi.get_values() != RESOURCES1["wifi-ap"]
 o_phone = o_resources["phone"]
 # pprint (o_phone.__dict__)
 
-pprint (o_phone["location"])
+pprint(o_phone["location"])
 assert o_phone["location"] == "MISSING LOCATION2"
 assert o_phone["owner"] == "MISSING OWNER"
 

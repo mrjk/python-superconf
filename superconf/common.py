@@ -1,9 +1,4 @@
-
-
-
 # from .loaders import NOT_SET
-
-
 
 
 class NotSet(str):
@@ -28,11 +23,13 @@ class UnSetArg(NotSet):
     def repr(self):
         return "<UNSET_ARG>"
 
+
 class Failure(NotSet):
     "Represent a failure"
 
     def repr(self):
         return "<FAILURE>"
+
 
 class Default(NotSet):
     "Represent a default"
@@ -48,4 +45,3 @@ DEFAULT = Default()
 assert UNSET_ARG is not NOT_SET
 # assert UNSET_ARG is not NOT_SET
 # assert UNSET_ARG == NOT_SET
-
