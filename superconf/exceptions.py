@@ -14,6 +14,9 @@ class InvalidPath(ConfigurationException):
     pass
 
 
+class InvalidCastConfiguration(ConfigurationException):
+    "Raised when an invalid cast configuration is found"
+
 class UndeclaredField(ConfigurationException):
     "Raised when querrying unexisting field"
     pass
