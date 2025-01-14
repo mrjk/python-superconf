@@ -6,7 +6,7 @@ from pprint import pprint
 from types import SimpleNamespace
 from typing import Callable
 
-from classyconf.casts import Boolean, Identity, List, Option, Tuple, evaluate
+from .casts import Boolean, Identity, List, Option, Tuple, evaluate
 
 import superconf.exceptions as exceptions
 from .loaders import NOT_SET, Dict, Environment, NotSet, _Value
