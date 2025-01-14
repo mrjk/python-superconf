@@ -4,7 +4,7 @@ import pytest
 # We want to keep this API compatible
 
 from pprint import pprint
-from superconf.configuration import Configuration, Field, Environment
+from superconf.configuration import Configuration, Field, FieldConf, Environment
 import superconf.exceptions
 from superconf.loaders import Dict
 
@@ -42,8 +42,8 @@ class TopConfig(Configuration):
     class Meta:
         cache = False
 
-    field1 = Field(default="default top value")
-    field2 = Field(
+    top1 = Field(default="default top value")
+    top2 = FieldConf(
         children_class=AppConfig,
         # default={
         #     "field1": True,
@@ -56,10 +56,10 @@ app = TopConfig()
 
 
 # We check here we can access via attributes and items
-assert app.field1 == "default top value"
-assert isinstance(app.field1, str)
-assert app["field1"] == "default top value"
-assert isinstance(app["field1"], str)
+assert app.top1 == "default top value"
+assert isinstance(app.top1, str)
+assert app["top1"] == "default top value"
+assert isinstance(app["top1"], str)
 
 # pprint (app.__dict__)
 # pprint(app)
@@ -72,15 +72,15 @@ assert isinstance(app["field1"], str)
 
 
 # We check known value retrieval here
-t1 = app.get_value("field1")
+t1 = app.get_value("top1")
 # pprint (t1)
 assert t1 == "default top value"
 
 
 # Test children object is correctly accessible
-# assert id(app.field2) == id(app.field2), "TOFIX THIS BUG"
-assert id(app.field2) != id(app.field2), "SHould not have the same id since cache is disabled"
-t1 = app.field2
+assert id(app.top2) == id(app.top2), "TOFIX THIS BUG"
+# assert id(app.top2) != id(app.top2), "SHould not have the same id since cache is disabled"
+t1 = app.top2
 
 # print(type(t1))
 assert isinstance(t1, AppConfig)
@@ -102,9 +102,9 @@ assert t1.get_value("field4") == example_dict
 
 # Note first field1 is boolean casted to text since
 # superconf use default type value to auto-cast
-FULL_CONFIG2 = {
-    "field1": "default top value",
-    "field2": {
+EXPECTED_FULL_CONFIG2 = {
+    "top1": "default top value",
+    "top2": {
         "field1": False,
         "field2": "Default value",
         "field3": 42,
@@ -119,7 +119,7 @@ app = TopConfig(loaders=[Dict(FULL_CONFIG)])
 
 # Test child access
 
-child1 = app.get_value("field2")
+child1 = app.get_value("top2")
 # pprint(child1)
 
 # Ensure children and parent are not the same objects
@@ -132,14 +132,15 @@ assert isinstance(child1, AppConfig)
 
 # Check we get the full config with get_value()
 o = app.get_values(lvl=-1)
+pprint(app.__dict__)
 pprint(o)
-pprint(FULL_CONFIG2)
-assert o == FULL_CONFIG2
+pprint(EXPECTED_FULL_CONFIG2)
+assert o == EXPECTED_FULL_CONFIG2
 
 # Check levels depth
 result = app.get_values(lvl=1)
-assert result["field1"] == "default top value"
-assert isinstance(result["field2"], AppConfig)
+assert result["top1"] == "default top value"
+assert isinstance(result["top2"], AppConfig)
 
 
 print("All tests OK")

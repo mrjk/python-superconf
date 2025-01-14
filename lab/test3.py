@@ -3,7 +3,7 @@ import pytest
 # This test explore the nested use cases
 
 from pprint import pprint
-from superconf.configuration import Configuration, Field, Environment
+from superconf.configuration import Configuration, Field, FieldConf, Environment
 import superconf.exceptions
 from superconf.loaders import Dict
 
@@ -61,7 +61,7 @@ class AppConfig(Configuration):
     #     children_class = Resources
     # custom_field = "My VALUUUUuuueeeee"
 
-    resources = Field(
+    resources = FieldConf(
         children_class=ResourcesCtl,
     )
 

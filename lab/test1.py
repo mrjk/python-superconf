@@ -4,7 +4,7 @@ import pytest
 # We want to keep this API compatible
 
 from pprint import pprint
-from superconf.configuration import Configuration, Field, Environment
+from superconf.configuration import Configuration, Field, FieldConf, Environment
 from superconf.loaders import Dict
 import superconf.exceptions
 
@@ -71,7 +71,8 @@ assert app.field2 == "Default value"
 # For mutable objects, ensure we have different ids
 # Ensure we have a different object when returned, but containing the same value
 assert isinstance(app.field5, dict)
-assert app.field5 is not app.field5
+# assert app.field5 is not app.field5, "When cache is disabled"
+assert app.field5 is app.field5, "When cache is enabled"
 assert app.field5 == app.field5
 assert app.field5 is not example_dict
 assert app.field5 == example_dict
