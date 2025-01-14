@@ -9,7 +9,10 @@ from typing import Callable
 from .casts import Boolean, Identity, List, Option, Tuple, evaluate
 
 import superconf.exceptions as exceptions
-from .loaders import NOT_SET, Dict, Environment, NotSet, _Value
+from .loaders import Dict, Environment, _Value
+
+from .common import NOT_SET, NotSet, UNSET_ARG, FAIL
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +23,6 @@ as_tuple = Tuple()
 as_option = Option
 as_is = Identity()
 
-
-class UnSetArg(NotSet):
-    "Only forinternal methods"
-
-
-UNSET_ARG = UnSetArg()
-assert UNSET_ARG is not NOT_SET
-# assert UNSET_ARG is not NOT_SET
-# assert UNSET_ARG == NOT_SET
 
 
 # def getconf(item, default=NOT_SET, cast=None, loaders=None):
@@ -68,6 +62,9 @@ assert UNSET_ARG is not NOT_SET
 
 
 class Field:
+
+    cast = None
+
     def __init__(
         self,
         key: str = None,
@@ -91,7 +88,7 @@ class Field:
         self.key = key
         self.help = help
         self.default = default
-        self.cast = cast
+        self.cast = cast or self.cast
 
     def __get__(self, conf_instance, owner):
         if conf_instance:
@@ -151,10 +148,15 @@ class Field:
                 pass
 
         # Process cast
+        cast_from = []
         if cast is NOT_SET:
             cast = self.cast
+            cast_from.append(f"field_attr:{self}.cast")
         if cast is NOT_SET:
             cast = conf_instance._cast
+            cast_from.append(f"conf_attr:{conf_instance}._cast")
+        print ("FOUND CAST FOR KEY", self, key, cast)
+        pprint (self.__dict__)
 
         # Process loaders
         if loaders is NOT_SET:
@@ -165,23 +167,34 @@ class Field:
         # Determine cast method
         if callable(cast):
             cast = cast
+            cast_from.append(f"cast_is_callable")
         elif cast is None and (default is NOT_SET or default is None):
             cast = as_is
+            cast_from.append(f"cast_is_none_and_no_defaults")
         elif isinstance(default, bool):
             cast = as_boolean
+            cast_from.append(f"cast_as_boolean")
         elif cast is None:
             cast = type(default)
+            cast_from.append(f"cast_is_none")
         elif cast is NOT_SET:
             if default is NOT_SET or default is None:
+                cast_from.append(f"cast_notset_type_default")
                 cast = type(default)
             else:
+                cast_from.append(f"cast_notset_type_as_is")
                 cast = as_is
         else:
             raise TypeError(f"Cast must be callable, got: {type(cast)}")
 
+        print ("FOUND CAST2 FOR KEY", key, cast, cast_from)
+
+
         # Process things
         result = NOT_SET
+        loader_from = []
         for loader in loaders:
+            loader_from.append(str(loader))
             try:
                 # print (f"  > LOADER: try search in {loader} key: {key}")
                 result = loader.getitem(self, key, **kwargs)
@@ -202,18 +215,30 @@ class Field:
         if result is NOT_SET:
             result = default
             results_from.append("from_default")
-        if result is NOT_SET:
-            try:
-                result = cast(result)
-                results_from.append("casted")
-            except ValueError:
-                pass
+
+        # Try to cast value
+        error = None
+        try:
+            result = cast(result)
+            results_from.append(f"casted:{cast}")
+        # except ValueError as err:
+        #     error = err
+        except (exceptions.InvalidCastConfiguration) as err:
+            error = err
+
+        # Check for strict_cast mode:
+        if error is not None and conf_instance._strict_cast is True:
+            msg= f"Got error {conf_instance}.{key} {type(error)}: {error}, set strict_cast=False to disable this error"
+            raise exceptions.CastValueFailure(msg)
+
 
         meta = SimpleNamespace(
             cast=cast,
             default=default,
             loaders=loaders,
             value=result,
+            cast_from=cast_from,
+            loader_from=loader_from,
             results_from=results_from,
             default_from=default_from,
         )
@@ -225,6 +250,45 @@ class FieldBool(Field):
     "Boolean field"
 
     cast = as_boolean
+
+class FieldString(Field):
+    "String field"
+    cast = str
+
+
+class FieldInt(Field):
+    "Int field"
+    cast = int
+
+class FieldFloat(Field):
+    "Float field"
+    cast = float
+
+
+class FieldList(Field):
+    "List field"
+    cast = as_list
+
+class FieldTuple(Field):
+    "Tuple field"
+    cast = as_tuple
+
+class FieldOption(Field):
+    "Option field"
+    cast = as_option
+
+    def __init__(
+        self,
+        options,
+        default_option=FAIL,
+        key: str = None,
+        **kwargs,
+    ):
+
+        assert isinstance(options, dict), f"Expected a dict, got: {options}"
+        self.cast = Option(options, default_option=default_option)
+        super(FieldOption, self).__init__(key, **kwargs)
+
 
 
 class FieldConf(Field):
@@ -289,6 +353,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     meta__loaders = [Environment()]
     meta__cache = True  # Yes by default ...
     meta__extra_fields = False
+    meta__strict_cast = False
 
     # Optional fields
     # meta__default = NOT_SET # dict()
@@ -331,6 +396,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         )
 
         self._cast = self.query_inst_cfg("cast", override=kwargs, default=None)
+        self._strict_cast = self.query_inst_cfg("strict_cast", override=kwargs)
 
         self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
         if self._default is NOT_SET:
@@ -435,7 +501,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
         out, query_from = self._query_inst_cfg(*args, **kwargs)
-        # print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
+        print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
         # pprint(query_from)
 
         if isinstance(out, (dict, list)):
@@ -638,8 +704,8 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         default = meta.default
         value = meta.value
 
-        # print ("DUMP CHILD CREATE META", self, key)
-        # pprint (meta.__dict__)
+        print ("DUMP CHILD CREATE META", self, key)
+        pprint (meta.__dict__)
 
         # If not container, return HERE
         if not isinstance(field, FieldConf):

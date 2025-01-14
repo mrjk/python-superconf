@@ -6,27 +6,7 @@ from classyconf.parsers import EnvFileParser
 
 from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 
-
-class NotSet(str):
-    """
-    A special type that behaves as a replacement for None.
-    We have to put a new default value to know if a variable has been set by
-    the user explicitly. This is useful for the ``CommandLine`` loader, when
-    CLI parsers force you to set a default value, and thus, break the discovery
-    chain.
-    """
-
-    pass
-
-    def __str__(self):
-        return "<NOT_SET>"
-
-    def __repr__(self):
-        return "<NOT_SET>"
-
-
-NOT_SET = NotSet()
-
+from .common import NOT_SET
 
 class EnvPrefix:
     """

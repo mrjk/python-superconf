@@ -216,5 +216,5 @@ assert res1.get_values() == EXPECTED
 
 
 
-print("All tests O WIPK")
+print("All tests OK")
 

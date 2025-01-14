@@ -1,6 +1,11 @@
 import ast
 
 from .exceptions import InvalidCastConfiguration
+from .common import NOT_SET, UNSET_ARG, FAIL
+
+
+# UNSET_ARG = UnSetArg()
+# FAIL = UnSetArg()
 
 
 class AbstractCast(object):
@@ -30,6 +35,7 @@ class Boolean(AbstractCast):
             self.values.update(values)
 
     def __call__(self, value):
+        # print (f"\n\n === PRINT CAST {value}===  \n")
         try:
             return self.values[str(value).lower()]
         except KeyError:
@@ -99,14 +105,30 @@ class Option(AbstractCast):
         }))
     """
 
-    def __init__(self, options):
+    def __init__(self, options, default_option=FAIL):
         self.options = options
+        self.default_option = default_option
 
     def __call__(self, value):
         try:
             return self.options[value]
         except KeyError:
-            raise InvalidCastConfiguration("Invalid option {!r}".format(value))
+
+            # Raise error if no default
+            default_option = self.default_option
+            if default_option is FAIL:
+                raise InvalidCastConfiguration("Invalid option {!r}".format(value))
+            
+            # Look for default
+            if not default_option in self.options:
+                raise InvalidCastConfiguration("Invalid default option {!r}: does not exists: {}".format(value, default_option))
+
+            # if isinstance(default, str):
+            return self.options[default_option]
+            # if ret is NOT_SET:
+            #     raise InvalidCastConfiguration("Invalid default option {!r}".format(value))
+
+            # return ret
 
 
 class Identity(AbstractCast):
