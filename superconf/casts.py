@@ -2,18 +2,14 @@ import ast
 
 from .exceptions import InvalidCastConfiguration
 from .common import NOT_SET, UNSET_ARG, FAIL
-
-
-# UNSET_ARG = UnSetArg()
-# FAIL = UnSetArg()
-
+from collections.abc import Mapping, Sequence
 
 class AbstractCast(object):
     def __call__(self, value):
         raise NotImplementedError()  # pragma: no cover
 
 
-class Boolean(AbstractCast):
+class AsBoolean(AbstractCast):
     default_values = {
         "1": True,
         "true": True,
@@ -43,13 +39,50 @@ class Boolean(AbstractCast):
                 "Error casting value {!r} to boolean".format(value)
             )
 
+class AsInt(AbstractCast):
+    "Return an INT"
 
-class List(AbstractCast):
+    def __call__(self, value):
+        try:
+            return int(value)
+        except ValueError:
+            # TOFIX: Raise or report unset ?
+            return NOT_SET
+            raise InvalidCastConfiguration(
+                "Error casting value {!r} to int".format(value)
+            )
+
+class AsList(AbstractCast):
     def __init__(self, delimiter=",", quotes="\"'"):
         self.delimiter = delimiter
         self.quotes = quotes
 
-    def _parse(self, string):
+
+    def cast(self, sequence):
+        return list(sequence)
+
+    def __call__(self, value):
+        return self._parse(value)
+
+
+    def _parse(self, value):
+        
+        if not value:
+            # print ("PARSE AS EMPTY", value)
+            return self.cast([])
+        elif isinstance(value, str):
+            # print ("PARSE AS STRING", value)
+            return self._parse_string(value)
+        
+        elif isinstance(value, Sequence):
+            # print ("PARSE AS LIST", value)
+            return self.cast(value)
+        elif isinstance(value, Mapping):
+            assert False, f"TOFIX: Unsupported type dict, {value}"
+
+        assert False
+
+    def _parse_string(self, string):
         elements = []
         element = []
         quote = ""
@@ -83,19 +116,46 @@ class List(AbstractCast):
 
         return self.cast(e.strip() for e in elements)
 
+
+class AsTuple(AsList):
     def cast(self, sequence):
-        return list(sequence)
+        return tuple(sequence)
+
+
+
+class AsDict(AbstractCast):
+
+    def __init__(self, delimiter=",", quotes="\"'"):
+        self.delimiter = delimiter
+        self.quotes = quotes
+
+    def cast(self, sequence):
+        return dict(sequence)
 
     def __call__(self, value):
         return self._parse(value)
 
 
-class Tuple(List):
-    def cast(self, sequence):
-        return tuple(sequence)
+    def _parse(self, value):
+        
+        if not value:
+            # print ("PARSE AS EMPTY", value)
+            return self.cast({})
+        elif isinstance(value, str):
+            assert False, "String  parsing is not implemeted yet"
+            # print ("PARSE AS STRING", value)
+            return self._parse_string(value)
+        
+        elif isinstance(value, Mapping):
+            # print ("PARSE AS LIST", value)
+            return self.cast(value)
+        elif isinstance(value, Sequence):
+            assert False, f"TOFIX: Unsupported type list, {value}"
+
+        assert False
 
 
-class Option(AbstractCast):
+class AsOption(AbstractCast):
     """
     Example::
         _INSTALLED_APPS = ("foo", "bar")
@@ -131,7 +191,7 @@ class Option(AbstractCast):
             # return ret
 
 
-class Identity(AbstractCast):
+class AsIdentity(AbstractCast):
     """
     This is basically the no-op cast
     """

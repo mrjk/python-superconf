@@ -5,7 +5,7 @@ import sys
 
 from pprint import pprint
 from superconf.configuration import Configuration, ConfigurationDict ,Environment
-from superconf.configuration import FieldBool, FieldString, Field, FieldConf, FieldList, FieldTuple, FieldOption, FieldFloat, FieldInt
+from superconf.configuration import FieldBool, FieldDict, FieldString, Field, FieldConf, FieldList, FieldTuple, FieldOption, FieldFloat, FieldInt
 import superconf.exceptions
 from superconf.loaders import Dict
 
@@ -41,7 +41,7 @@ EXPECTED = {
     'bool_test2': False, 
     'is_online': False}
 
-# pprint (app1.get_values())
+pprint (app1.get_values())
 assert app1.get_values() == EXPECTED
 
 
@@ -82,7 +82,7 @@ EXPECTED = {'string_test1': 'my_string',
  'string_test6': "{'key': 'value'}",
  'string_test7': "['item1', 'item2']"}
 
-# pprint (app1.get_values())
+pprint (app1.get_values())
 assert app1.get_values() == EXPECTED
 
 
@@ -106,6 +106,7 @@ class AppInt(Configuration):
     int_test5 = FieldInt(default=0)
     int_test6 = FieldInt(default=False)
     int_test7 = FieldInt(default=True)
+    int_test8 = FieldInt()
 
     # int_test6 = FieldInt(default={"key": "value"})
     # int_test7 = FieldInt(default=["item1", "item2"])
@@ -119,7 +120,8 @@ EXPECTED = {'int_test1': -1,
  'int_test4': 4268,
  'int_test5': 0,
  'int_test6': 0,
- 'int_test7': 1
+ 'int_test7': 1,
+ 'int_test8': NOT_SET,
 }
 
 pprint (app1.get_values())
@@ -149,6 +151,10 @@ class AppOption(Configuration):
     int_test1 = FieldOption(options1, default="yes")
     int_test2 = FieldOption(options1, default="no")
     int_test3 = FieldOption(options1, default="I Dont'exist", default_option="_default_")
+
+    int_test4 = FieldOption(options1, default_option="_default_")
+    int_test5 = FieldOption(options1, default="_default_")
+
     # int_test4 = FieldOption(options1, default="failure") # Fail on strict mode
 
     # This should fail !
@@ -161,7 +167,10 @@ app1 = AppOption()
 
 EXPECTED = {'int_test1': 'do_this_yes',
  'int_test2': 'do_something_else',
- 'int_test3': 56789}
+ 'int_test3': 56789,
+ 'int_test4': 56789,
+ 'int_test5': 56789}
+
 
 pprint (app1.get_values())
 assert app1.get_values() == EXPECTED
@@ -173,38 +182,107 @@ assert app1.get_values() == EXPECTED
 
 print ("\n\n================ List Fields ===========\n\n")
 
-# class AppList(Configuration):
-#     "Tests types"
+class AppList(Configuration):
+    "Tests types"
 
-#     class Meta:
-#         # Will fail on undefined casted values if true, alow NOT_SET
-#         strict_cast = True
+    class Meta:
+        # Will fail on undefined casted values if true, alow NOT_SET
+        strict_cast = True
 
-#     list_test1 = FieldList(default=[])
-#     list_test2 = FieldList(default=["item1", "item2"])
-#     # list_test3 = FieldList(default=0)
-#     # # list_test4 = FieldList(default=4268)
-#     # # list_test5 = FieldList(default=0)
-#     # list_test6 = FieldList(default=False)
-#     # list_test7 = FieldList(default=True)
-
-#     # int_test6 = FieldInt(default={"key": "value"})
-#     # int_test7 = FieldInt(default=["item1", "item2"])
+    list_test1 = FieldList(default=[])
+    list_test2 = FieldList(default=["item1", "item2", "item3"])
+    list_test3 = FieldList(default=0)
+    list_test4 = FieldList(default=None)
+    list_test5 = FieldList(default="item26")
+    list_test6 = FieldList(default="item27,item28,item29")
+    list_test7 = FieldList()
 
 
-# app1 = AppList()
+app1 = AppList()
 
-# EXPECTED = {'int_test1': -1,
-#  'int_test2': 1,
-#  'int_test3': 0,
-#  'int_test4': 4268,
-#  'int_test5': 0,
-#  'int_test6': 0,
-#  'int_test7': 1
-# }
+EXPECTED = {'list_test1': [],
+ 'list_test2': ['item1', 'item2', 'item3'],
+ 'list_test3': [],
+ 'list_test4': [],
+ 'list_test5': ['item26'],
+ 'list_test6': ['item27', 'item28', 'item29'],
+ 'list_test7': [],
+ }
 
-# pprint (app1.get_values())
-# assert app1.get_values() == EXPECTED
+
+pprint (app1.get_values())
+assert app1.get_values() == EXPECTED
+
+
+
+# Test extra Fields List
+# =============================
+
+print ("\n\n================ Tuple Fields ===========\n\n")
+
+class AppTuple(Configuration):
+    "Tests types"
+
+    class Meta:
+        # Will fail on undefined casted values if true, alow NOT_SET
+        strict_cast = True
+
+    list_test1 = FieldTuple(default=[])
+    list_test2 = FieldTuple(default=["item1", "item2", "item3"])
+    list_test3 = FieldTuple(default=0)
+    list_test4 = FieldTuple(default=None)
+    list_test5 = FieldTuple(default="item26")
+    list_test6 = FieldTuple(default="item27,item28,item29")
+    list_test7 = FieldTuple()
+
+
+app1 = AppTuple()
+
+EXPECTED = {'list_test1': (),
+ 'list_test2': ('item1', 'item2', 'item3'),
+ 'list_test3': (),
+ 'list_test4': (),
+ 'list_test5': ('item26',),
+ 'list_test6': ('item27', 'item28', 'item29'),
+  'list_test7': (),
+ }
+
+
+pprint (app1.get_values())
+assert app1.get_values() == EXPECTED
+
+
+
+# Test extra Fields Dict
+# =============================
+
+print ("\n\n================ Dict Fields ===========\n\n")
+
+class AppDict(Configuration):
+    "Tests types"
+
+    class Meta:
+        # Will fail on undefined casted values if true, alow NOT_SET
+        strict_cast = True
+
+    field_test1 = FieldDict(default={})
+    field_test2 = FieldDict(default={"item1": "val1", "item2": "val2", "item3": "val3"})
+    list_test3 = FieldDict()
+    # list_test4 = FieldTuple(default=None)
+    # list_test5 = FieldTuple(default="item26")
+    # list_test6 = FieldTuple(default="item27,item28,item29")
+
+
+app1 = AppDict()
+
+EXPECTED = {
+    'field_test1': {},
+    'field_test2': {'item1': 'val1', 'item2': 'val2', 'item3': 'val3'},
+    'list_test3': {}}
+
+
+pprint (app1.get_values())
+assert app1.get_values() == EXPECTED
 
 
 

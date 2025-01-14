@@ -5,11 +5,13 @@ from collections import OrderedDict
 from pprint import pprint
 from types import SimpleNamespace
 from typing import Callable
+# from collections import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
-from .casts import Boolean, Identity, List, Option, Tuple, evaluate
+from .casts import AsIdentity, AsDict, AsList, AsOption, AsTuple, AsBoolean, AsInt, evaluate
 
 import superconf.exceptions as exceptions
-from .loaders import Dict, Environment, _Value
+from .loaders import Environment, _Value
 
 from .common import NOT_SET, NotSet, UNSET_ARG, FAIL
 
@@ -17,11 +19,13 @@ from .common import NOT_SET, NotSet, UNSET_ARG, FAIL
 logger = logging.getLogger(__name__)
 
 # Shortcuts for standard casts
-as_boolean = Boolean()
-as_list = List()
-as_tuple = Tuple()
-as_option = Option
-as_is = Identity()
+as_boolean = AsBoolean()
+as_int = AsInt()
+as_list = AsList()
+as_dict = AsDict()
+as_tuple = AsTuple()
+as_option = AsOption
+as_is = AsIdentity()
 
 
 
@@ -155,8 +159,6 @@ class Field:
         if cast is NOT_SET:
             cast = conf_instance._cast
             cast_from.append(f"conf_attr:{conf_instance}._cast")
-        print ("FOUND CAST FOR KEY", self, key, cast)
-        pprint (self.__dict__)
 
         # Process loaders
         if loaders is NOT_SET:
@@ -186,9 +188,6 @@ class Field:
                 cast = as_is
         else:
             raise TypeError(f"Cast must be callable, got: {type(cast)}")
-
-        print ("FOUND CAST2 FOR KEY", key, cast, cast_from)
-
 
         # Process things
         result = NOT_SET
@@ -227,6 +226,7 @@ class Field:
             error = err
 
         # Check for strict_cast mode:
+        # print ("DEFAUUUB", conf_instance, conf_instance._strict_cast)
         if error is not None and conf_instance._strict_cast is True:
             msg= f"Got error {conf_instance}.{key} {type(error)}: {error}, set strict_cast=False to disable this error"
             raise exceptions.CastValueFailure(msg)
@@ -274,7 +274,7 @@ class FieldString(Field):
 
 class FieldInt(Field):
     "Int field"
-    cast = int
+    cast = as_int
 
 class FieldFloat(Field):
     "Float field"
@@ -294,13 +294,17 @@ class FieldOption(Field):
     ):
 
         assert isinstance(options, dict), f"Expected a dict, got: {options}"
-        self.cast = Option(options, default_option=default_option)
+        self.cast = AsOption(options, default_option=default_option)
         super(FieldOption, self).__init__(key, **kwargs)
 
 
 
 
 # Children items
+class FieldDict(Field):
+    "Dict field"
+    cast = as_dict
+
 class FieldList(Field):
     "List field"
     cast = as_list
@@ -507,7 +511,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
         out, query_from = self._query_inst_cfg(*args, **kwargs)
-        print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
+        # print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
         # pprint(query_from)
 
         if isinstance(out, (dict, list)):
@@ -669,7 +673,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
         conf = self.create_child(key, field, **kwargs)
         assert isinstance(
-            conf, (type(None), dict, bool, int, str, Configuration)
+            conf, (type(None), bool, int, str, Sequence, Mapping, Configuration)
         ), f"Got: {type(conf)}"
 
         if self._cache:
@@ -710,8 +714,8 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         default = meta.default
         value = meta.value
 
-        print ("DUMP CHILD CREATE META", self, key)
-        pprint (meta.__dict__)
+        # print ("DUMP CHILD CREATE META", self, key)
+        # pprint (meta.__dict__)
 
         # If not container, return HERE
         if not isinstance(field, FieldConf):
