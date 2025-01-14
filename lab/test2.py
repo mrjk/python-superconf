@@ -44,7 +44,7 @@ class TopConfig(Configuration):
 
     top1 = Field(default="default top value")
     top2 = FieldConf(
-        children_class=AppConfig,
+        AppConfig,
         # default={
         #     "field1": True,
         #     "field2": "Parent override",

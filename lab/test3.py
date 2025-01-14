@@ -63,7 +63,7 @@ class AppConfig(Configuration):
     # custom_field = "My VALUUUUuuueeeee"
 
     resources = FieldConf(
-        children_class=ResourcesCtl,
+        ResourcesCtl,
     )
 
 

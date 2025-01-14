@@ -296,8 +296,9 @@ class FieldConf(Field):
 
     def __init__(
         self,
+        children_class,
+        # children_class: NOT_SET = NOT_SET,
         key: str = None,
-        children_class: NOT_SET = NOT_SET,
         **kwargs,
     ):
 

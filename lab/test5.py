@@ -156,7 +156,7 @@ class AppConfig(Configuration):
         cache = True
 
     resources = FieldConf(
-        children_class=ResourcesCtl,
+        ResourcesCtl,
         # default = {"res33": {"owner": "bob", "location": "BLIHH"}},
         default = {"res33": NOT_SET},
         help="List of resources",

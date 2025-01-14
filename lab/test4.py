@@ -72,7 +72,7 @@ class AppConfig(Configuration):
         cache = True
 
     resources = FieldConf(
-        children_class=ResourcesCtl,
+        ResourcesCtl,
         help="List of resources",
     )
 
