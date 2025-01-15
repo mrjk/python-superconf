@@ -18,39 +18,9 @@ from .fields import Field, FieldConf
 logger = logging.getLogger(__name__)
 
 
-class DeclarativeValuesMetaclass(type):
-    """
-    Collect Value objects declared on the base classes
-    """
-
-    def __new__(self, class_name, bases, attrs):
-        # Collect values from current class and all bases.
-        values = OrderedDict()
-
-        # Walk through the MRO and add values from base class.
-        for base in reversed(bases):
-            if hasattr(base, "_declared_values"):
-                values.update(base._declared_values)
-
-        for key, value in attrs.items():
-            if isinstance(value, Field):
-                if value.key and key != value.key:
-                    raise AttributeError(
-                        "Don't explicitly set keys when declaring values"
-                    )
-                value.key = key
-                values.update({key: value})
-
-        attrs["_declared_values"] = values
-
-        return super(DeclarativeValuesMetaclass, self).__new__(
-            self, class_name, bases, attrs
-        )
-
-    @classmethod
-    def __prepare__(metacls, name, bases, **kwds):
-        # Remember the order that values are defined.
-        return OrderedDict()
+# ====================================
+# Configuration Child
+# ====================================
 
 
 class _ConfigurationBase():
@@ -186,6 +156,9 @@ class _ConfigurationBase():
         return out
 
 
+# ====================================
+# Configuration Container
+# ====================================
 
 
 class _Configuration(_ConfigurationBase):
@@ -562,7 +535,116 @@ class ConfigurationDict(_Configuration):
         # yield from self._declared_values.items()
 
 
+# ====================================
+# Configuration Child (Dict)
+# ====================================
+
+class DeclarativeValuesMetaclass(type):
+    """
+    Collect Value objects declared on the base classes
+    """
+
+    def __new__(self, class_name, bases, attrs):
+        # Collect values from current class and all bases.
+        values = OrderedDict()
+
+        # Walk through the MRO and add values from base class.
+        for base in reversed(bases):
+            if hasattr(base, "_declared_values"):
+                values.update(base._declared_values)
+
+        for key, value in attrs.items():
+            if isinstance(value, Field):
+                if value.key and key != value.key:
+                    raise AttributeError(
+                        "Don't explicitly set keys when declaring values"
+                    )
+                value.key = key
+                values.update({key: value})
+
+        attrs["_declared_values"] = values
+
+        return super(DeclarativeValuesMetaclass, self).__new__(
+            self, class_name, bases, attrs
+        )
+
+    @classmethod
+    def __prepare__(metacls, name, bases, **kwds):
+        # Remember the order that values are defined.
+        return OrderedDict()
+
+
+
 class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     "Variadic configuration"
 
     meta__extra_fields = False
+
+
+# ====================================
+# Configuration Container (List)
+# ====================================
+
+
+
+class ConfigurationList(_Configuration):
+    "List container - WIP"
+
+    # _declared_values = {}
+    meta__loaders = [Environment()]
+    meta__cache = True  # Yes by default ...
+    meta__extra_fields = True
+    meta__strict_cast = False
+
+
+    def set_dyn_children(self, value):
+        "Set a value"
+
+        children_class = self._children_class
+        child_values = value or list()
+
+        if isinstance(child_values, list):
+
+            # Look for new keys in value
+            assert isinstance(
+                child_values, list
+            ), f"Got {self}: {type(child_values)}: {child_values}"
+
+            for key, val in enumerate(child_values):
+
+                # Get best children_class
+                # field = None
+                child_class = children_class
+
+                xtra_kwargs = {}
+                if not child_class:
+                    # No children_class, then it's just a field
+                    child_cls = Field
+                else:
+                    child_cls = FieldConf
+                    xtra_kwargs = dict(children_class=child_class)
+
+
+                # Create dynamic field
+                field = child_cls(
+                    key=key,
+                    **xtra_kwargs,
+                )
+                self._extra_fields[key] = field
+
+
+    def get_values(self, lvl=-1, **kwargs):
+        "Return all values of the container"
+
+        out = super(ConfigurationList, self).get_values(lvl=lvl, **kwargs)
+
+        if isinstance(out, Mapping):
+            out = list(out.values())
+        return out 
+
+
+
+    def __getitem__(self, value):
+        value = int(value)
+
+        return super(ConfigurationList, self).__getitem__(value)
