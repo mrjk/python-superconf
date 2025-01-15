@@ -108,20 +108,20 @@ config = Configuration(loaders=[
 All loaders in SuperConf share these common characteristics:
 
 1. **Consistent Interface**:
-   - `__contains__(item)`: Check if a configuration key exists
-   - `__getitem__(item)`: Retrieve a configuration value
-   - `check()`: Verify if the loader is usable
-   - `reset()`: Clear any cached values
+    - `__contains__(item)`: Check if a configuration key exists
+    - `__getitem__(item)`: Retrieve a configuration value
+    - `check()`: Verify if the loader is usable
+    - `reset()`: Clear any cached values
 
 2. **Error Handling**:
-   - Raises `KeyError` when a configuration key is not found
-   - Raises `InvalidConfigurationFile` for file-based loaders when the file is invalid
-   - Raises `InvalidPath` when file paths are incorrect
+    - Raises `KeyError` when a configuration key is not found
+    - Raises `InvalidConfigurationFile` for file-based loaders when the file is invalid
+    - Raises `InvalidPath` when file paths are incorrect
 
 3. **Type Casting**:
-   - Raw values are returned as strings
-   - Type casting is handled at the configuration field level
-   - Boolean values are automatically detected and converted
+    - Raw values are returned as strings
+    - Type casting is handled at the configuration field level
+    - Boolean values are automatically detected and converted
 
 ## Creating Custom Loaders
 
