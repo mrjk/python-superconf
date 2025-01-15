@@ -22,6 +22,11 @@ jupyterlab = "^4.3.4"
 pytest-regressions = "^2.6.0"
 pytest-clarity = "^1.0.1"
 
+
+[tool.poetry.group.docs.dependencies]
+mkdocs-material = "^9.5.49"
+mkdocstrings = "^0.27.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
