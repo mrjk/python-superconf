@@ -407,7 +407,6 @@ class _Configuration(_ConfigurationBase):
                     except AttributeError:
                         val = NOT_SET
                 if value and isinstance(value, Sequence):
-                    print("BUG HERE ON KEY", self, key, value)
                     try:
                         val = value[key]
                     except IndexError:
