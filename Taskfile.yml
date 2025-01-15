@@ -3,28 +3,22 @@
 version: '3'
 
 
+includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+
+
 tasks:
 
-  default:
+  list:
+    desc: "Show available commands"
+    aliases:
+      - default
     silent: True
     cmds:
       - task --list-all
 
-  # Generate
-  # =============
-
-  gen_doc_class_graph:
-    desc: generate superconf class diagrams
-    cmds:
-      - >
-        pyreverse -my -A -o png -p superconf -d docs/images/ 
-        superconf/configuration.py
-        superconf/fields.py
-        superconf/loaders.py
-        superconf/casts.py
-      - >
-        echo "Image generated in: docs/images/"
-  
   # Fix
   # =============
 
@@ -61,7 +55,7 @@ tasks:
   test_lab:
     dest: Test examples
     cmds:
-      - python lab/test[0-9]*.py
+      - bash lab/run_lab.sh
 
   test_regressions:
     desc: Test for regressions

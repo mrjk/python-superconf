@@ -1,0 +1,52 @@
+# https://taskfile.dev
+
+version: '3'
+
+
+tasks:
+
+  list:
+    desc: "Show available commands"
+    aliases:
+      - default
+    silent: True
+    cmds:
+      - task --list-all
+
+
+
+
+  # Generate
+  # =============
+
+  gen_class_graph:
+    desc: generate superconf class diagrams
+    cmds:
+      # - for:
+      #     - ../superconf/configuration.py
+      #     - ../superconf/fields.py
+      #     - ../superconf/loaders.py
+      #     - ../superconf/casts.py
+      #   cmd: pyreverse -my -A -o svg -p superconf -d content/images/ {{.ITEM}} 
+      - mkdir -p content/images
+      - for:
+          - configuration
+          - fields
+          - loaders
+          - casts
+        cmd: |
+          mkdir -p content/images/schema_{{.ITEM}}
+          pyreverse -my -A -o svg -p superconf -d content/images/schema_{{.ITEM}} ../superconf/{{.ITEM}}.py 
+      - cmd: pyreverse -my -A -o svg -p superconf -d content/images/ ../superconf/
+      - >
+        echo "Image generated in: content/images/"
+  
+  # Mkdocs
+  # =============
+
+  serve:
+    desc: serve mkdoc website locally
+    cmds:
+      - task: gen_class_graph
+      - mkdocs serve
+
