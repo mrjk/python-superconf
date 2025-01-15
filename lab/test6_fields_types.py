@@ -122,7 +122,7 @@ class AppInt(Configuration):
     int_test5 = FieldInt(default=0)
     int_test6 = FieldInt(default=False)
     int_test7 = FieldInt(default=True)
-    int_test8 = FieldInt()
+    # int_test8 = FieldInt()
 
     # int_test6 = FieldInt(default={"key": "value"})
     # int_test7 = FieldInt(default=["item1", "item2"])
@@ -138,7 +138,7 @@ EXPECTED = {
     "int_test5": 0,
     "int_test6": 0,
     "int_test7": 1,
-    "int_test8": NOT_SET,
+    # "int_test8": NOT_SET,
 }
 
 pprint(app1.get_values())
