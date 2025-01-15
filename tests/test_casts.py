@@ -1,7 +1,14 @@
 import pytest
 from superconf.casts import (
-    AsBoolean, AsInt, AsList, AsTuple, AsDict, AsOption, AsIdentity,
-    InvalidCastConfiguration, NOT_SET
+    AsBoolean,
+    AsInt,
+    AsList,
+    AsTuple,
+    AsDict,
+    AsOption,
+    AsIdentity,
+    InvalidCastConfiguration,
+    NOT_SET,
 )
 
 
@@ -57,8 +64,8 @@ class TestAsList:
 
     def test_quoted_strings(self):
         cast = AsList()
-        assert cast('"a,b",c') == ['"a,b"', 'c']
-        assert cast("'x,y',z") == ["'x,y'", 'z']
+        assert cast('"a,b",c') == ['"a,b"', "c"]
+        assert cast("'x,y',z") == ["'x,y'", "z"]
 
     def test_sequence_input(self):
         cast = AsList()

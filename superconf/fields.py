@@ -43,7 +43,7 @@ class Field:
         key: str = None,
         *,
         help: str = "",
-        default = NOT_SET,
+        default=NOT_SET,
         cast: Callable = None,
     ):
         """
