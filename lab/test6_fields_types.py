@@ -9,6 +9,9 @@ from superconf.configuration import (
     Configuration,
     ConfigurationDict,
     Environment,
+)
+from superconf.fields import (
+
     Field,
     FieldBool,
     FieldConf,
