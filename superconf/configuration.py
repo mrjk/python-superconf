@@ -10,10 +10,10 @@ from types import SimpleNamespace
 from typing import Callable
 
 import superconf.exceptions as exceptions
-from .common import FAIL, NOT_SET, UNSET_ARG, NotSet
-from .loaders import Environment
 
+from .common import FAIL, NOT_SET, UNSET_ARG, NotSet
 from .fields import Field, FieldConf
+from .loaders import Environment
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +23,11 @@ logger = logging.getLogger(__name__)
 # ====================================
 
 
-class _ConfigurationBase():
+class _ConfigurationBase:
     "Generic configuration"
-
-
 
     class Meta:
         "Class to store class overrides"
-
 
     def __init__(self, key=None, value=NOT_SET, parent=None):
         self.key = key
@@ -38,7 +35,6 @@ class _ConfigurationBase():
         self._value = value
 
         self._cache = True  # TOFIX
-
 
     # Instance config management
     # ----------------------------
@@ -165,11 +161,9 @@ class _Configuration(_ConfigurationBase):
 
     _declared_values = {}
 
-
     def __init__(self, *, key=None, value=NOT_SET, parent=None, meta=None, **kwargs):
 
         super(_Configuration, self).__init__(key=key, value=value, parent=parent)
-
 
         # As this can be updated during runtime ...
         # self._declared_values = self._declared_values
@@ -218,8 +212,6 @@ class _Configuration(_ConfigurationBase):
         self.set_dyn_children(child_values)
         self.set_values(child_values)
 
-
-
     # Generic API
     # ----------------------------
 
@@ -234,7 +226,6 @@ class _Configuration(_ConfigurationBase):
         "Temporary property to access to self._default"
         return self._cast
 
-
     # Field compatibility layer !
     # This basically respect default python behavior , when this is a children...
     def __get__(self, conf_instance, owner):
@@ -242,12 +233,8 @@ class _Configuration(_ConfigurationBase):
         #     return conf_instance.get_field_value(field=self)
         return self
 
-
-
     def __getitem__(self, value):
         return self.declared_fields[value].__get__(self, self.__class__)
-
-
 
     # def __repr__(self):
     #     return "{}(loaders=[{}])".format(
@@ -272,24 +259,18 @@ class _Configuration(_ConfigurationBase):
     #             values.append("{}=NOT_SET - {}".format(v.key, help))
     #     return "\n".join(values)
 
-
     # Value management
     # ----------------------------
-
 
     def get_value(self, key, lvl=-1, **kwargs):
         assert isinstance(key, str)
         return self.get_field_value(key, **kwargs)
-
-
 
     def reset(self):
         """Anytime you want to pick up new values call this function."""
         for loader in self._loaders:
             loader.reset()
         self._cached_values = {}
-
-
 
     def get_field_value(self, key=None, field=None, default=UNSET_ARG, **kwargs):
 
@@ -327,8 +308,6 @@ class _Configuration(_ConfigurationBase):
             # print("CACHE CHILD", self, key, conf)
         return conf
 
-
-
     def get_values(self, lvl=-1, **kwargs):
         "Return all values of the container"
 
@@ -344,8 +323,6 @@ class _Configuration(_ConfigurationBase):
             out[key] = val
 
         return out
-
-
 
     # This should be split if field has children or not ...
     def create_child(self, key, field, value=NOT_SET, **kwargs):
@@ -403,7 +380,6 @@ class _Configuration(_ConfigurationBase):
 
         return out
 
-
     @property
     def declared_fields(self):
         out = {}
@@ -431,7 +407,7 @@ class _Configuration(_ConfigurationBase):
                     except AttributeError:
                         val = NOT_SET
                 if value and isinstance(value, Sequence):
-                    print ("BUG HERE ON KEY", self, key, value)
+                    print("BUG HERE ON KEY", self, key, value)
                     try:
                         val = value[key]
                     except IndexError:
@@ -445,8 +421,6 @@ class _Configuration(_ConfigurationBase):
                 self._cached_values[key] = conf
 
 
-
-
 class ConfigurationDict(_Configuration):
 
     # class ConfigurationCtrl:
@@ -458,11 +432,9 @@ class ConfigurationDict(_Configuration):
     meta__extra_fields = True
     meta__strict_cast = False
 
-
     # Optional fields
     # meta__default = NOT_SET # dict()
     # meta__extra_fields = NOT_SET # dict()
-
 
     def set_dyn_children(self, value):
         "Set a value"
@@ -539,6 +511,7 @@ class ConfigurationDict(_Configuration):
 # Configuration Child (Dict)
 # ====================================
 
+
 class DeclarativeValuesMetaclass(type):
     """
     Collect Value objects declared on the base classes
@@ -574,7 +547,6 @@ class DeclarativeValuesMetaclass(type):
         return OrderedDict()
 
 
-
 class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     "Variadic configuration"
 
@@ -586,16 +558,14 @@ class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 # ====================================
 
 
-
 class ConfigurationList(_Configuration):
-    "List container - WIP"
+    "List container"
 
     # _declared_values = {}
     meta__loaders = [Environment()]
     meta__cache = True  # Yes by default ...
     meta__extra_fields = True
     meta__strict_cast = False
-
 
     def set_dyn_children(self, value):
         "Set a value"
@@ -624,14 +594,12 @@ class ConfigurationList(_Configuration):
                     child_cls = FieldConf
                     xtra_kwargs = dict(children_class=child_class)
 
-
                 # Create dynamic field
                 field = child_cls(
                     key=key,
                     **xtra_kwargs,
                 )
                 self._extra_fields[key] = field
-
 
     def get_values(self, lvl=-1, **kwargs):
         "Return all values of the container"
@@ -640,9 +608,7 @@ class ConfigurationList(_Configuration):
 
         if isinstance(out, Mapping):
             out = list(out.values())
-        return out 
-
-
+        return out
 
     def __getitem__(self, value):
         value = int(value)

@@ -13,7 +13,12 @@ tasks:
   gen_doc_class_graph:
     desc: generate superconf class diagrams
     cmds:
-      - pyreverse -my -A -o png -p superconf -d docs/images/ superconf/configuration.py
+      - >
+        pyreverse -my -A -o png -p superconf -d docs/images/ 
+        superconf/configuration.py
+        superconf/fields.py
+        superconf/loaders.py
+        superconf/casts.py
       - >
         echo "Image generated in: docs/images/"
   

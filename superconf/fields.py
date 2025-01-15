@@ -10,8 +10,7 @@ from types import SimpleNamespace
 from typing import Callable
 
 import superconf.exceptions as exceptions
-from .common import FAIL, NOT_SET, UNSET_ARG, NotSet
-from .loaders import _Value
+
 from .casts import (
     AsBoolean,
     AsDict,
@@ -22,6 +21,8 @@ from .casts import (
     AsTuple,
     evaluate,
 )
+from .common import FAIL, NOT_SET, UNSET_ARG, NotSet
+from .loaders import _Value
 
 # Shortcuts for standard casts
 as_boolean = AsBoolean()
@@ -31,7 +32,6 @@ as_dict = AsDict()
 as_tuple = AsTuple()
 as_option = AsOption
 as_is = AsIdentity()
-
 
 
 class Field:
@@ -91,7 +91,7 @@ class Field:
         "Create a children"
 
         key = self.key
-        assert isinstance(key, (str,int)), f"Got: {type(key)} {key}"
+        assert isinstance(key, (str, int)), f"Got: {type(key)} {key}"
 
         # Process defaults
         default_from = ["args"]
@@ -117,9 +117,9 @@ class Field:
             # Fetch default from container
             try:
                 value = conf_instance._value[key]
-            except (TypeError, KeyError): # For dict
+            except (TypeError, KeyError):  # For dict
                 pass
-            except (IndexError): # For list
+            except IndexError:  # For list
                 pass
 
         # Process cast
@@ -166,7 +166,7 @@ class Field:
         for loader in loaders:
             loader_from.append(str(loader))
             try:
-                print (f"  > LOADER: try search in {loader} key: {key}")
+                print(f"  > LOADER: try search in {loader} key: {key}")
                 result = loader.getitem(self, key, **kwargs)
 
             except (KeyError, TypeError) as err:
