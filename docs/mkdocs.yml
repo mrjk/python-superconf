@@ -72,6 +72,9 @@ nav:
     - Loaders: docs/loaders.md
     - Cast: docs/cast.md
   - Reference:
-    - API: reference/api.md
+    - Configuration: reference/configuration.md
+    - Fields: reference/fields.md
+    - Loaders: reference/loaders.md
+    - Cast: reference/cast.md
   - Info:
     - Alternatives: infos/alternatives.md

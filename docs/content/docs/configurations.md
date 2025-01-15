@@ -7,6 +7,7 @@ SuperConf provides three main configuration classes that serve different purpose
 The base `Configuration` class is the primary class for defining structured configuration objects. It inherits from `ConfigurationDict` and uses the `DeclarativeValuesMetaclass` for handling field declarations.
 
 Key features:
+
 - Declarative style configuration definition
 - Field-based configuration with type checking
 - Environment variable support through built-in loaders
@@ -35,6 +36,7 @@ print(db_config.port)  # 5432
 `ConfigurationDict` is a dictionary-like configuration container that allows dynamic key-value pairs. It's useful when you need to store configurations with arbitrary keys.
 
 Key features:
+
 - Dictionary-like interface
 - Dynamic field creation
 - Support for nested configurations
@@ -71,6 +73,7 @@ print(config.services['api'].timeout)   # 30 (default)
 `ConfigurationList` is a list-like configuration container for managing ordered sequences of configuration items.
 
 Key features:
+
 - List-like interface
 - Integer-indexed access
 - Support for homogeneous configuration items

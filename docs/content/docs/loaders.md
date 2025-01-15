@@ -19,6 +19,7 @@ config = Configuration(loaders=[Environment(keyfmt=EnvPrefix("MYAPP_"))])
 ```
 
 Environment variables will be automatically converted to uppercase. With a prefix:
+
 - Configuration key: `database_url`
 - Environment variable: `MYAPP_DATABASE_URL`
 
