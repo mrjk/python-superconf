@@ -360,7 +360,14 @@ class DeclarativeValuesMetaclass(type):
         return OrderedDict()
 
 
-class Configuration(metaclass=DeclarativeValuesMetaclass):
+class _Configuration():
+    "Generic configuration"
+
+class ConfigurationList(_Configuration):
+    "List container - WIP"
+
+
+class ConfigurationDict(_Configuration):
 
     # class ConfigurationCtrl:
     "Controller"
@@ -368,8 +375,10 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
     meta__custom_field = "My VALUUUUuuueeeee"
     meta__loaders = [Environment()]
     meta__cache = True  # Yes by default ...
-    meta__extra_fields = False
+    meta__extra_fields = True
     meta__strict_cast = False
+
+    _declared_values = {}
 
     # Optional fields
     # meta__default = NOT_SET # dict()
@@ -510,7 +519,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
                 # print ("AUTOMATIC CREATE CHILD CONTAINER", key, field, val)
                 conf = self.create_child(key, field, value=val)
-                assert isinstance(conf, (Configuration)), f"Got: {type(conf)}"
+                assert isinstance(conf, (ConfigurationDict)), f"Got: {type(conf)}"
                 # print ("SET CACHED VALUE", self, conf, key, field, val)
                 self._cached_values[key] = conf
 
@@ -683,7 +692,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
 
         conf = self.create_child(key, field, **kwargs)
         assert isinstance(
-            conf, (type(None), bool, int, str, Sequence, Mapping, Configuration)
+            conf, (type(None), bool, int, str, Sequence, Mapping, ConfigurationDict)
         ), f"Got: {type(conf)}"
 
         if self._cache:
@@ -759,7 +768,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         out = {}
         for key, obj in self.declared_fields.items():
             val = self.get_field_value(key)
-            if isinstance(val, Configuration):
+            if isinstance(val, ConfigurationDict):
                 val = val.get_values(lvl=lvl - 1)
 
             out[key] = val
@@ -812,7 +821,7 @@ class Configuration(metaclass=DeclarativeValuesMetaclass):
         return self.declared_fields[value].__get__(self, self.__class__)
 
 
-class ConfigurationDict(Configuration, metaclass=DeclarativeValuesMetaclass):
+class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     "Variadic configuration"
 
-    meta__extra_fields = True
+    meta__extra_fields = False
