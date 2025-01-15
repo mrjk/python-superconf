@@ -5,7 +5,10 @@ version: '3'
 
 tasks:
 
-
+  default:
+    silent: True
+    cmds:
+      - task --list-all
 
   # Generate
   # =============
@@ -45,7 +48,7 @@ tasks:
     desc: Test everything
     cmds:
       #- task: test_pytest
-      - task: test_examples
+      - task: test_lab
       #- task: test_regressions
       - task: test_recap
       - task: test_lint
@@ -55,14 +58,10 @@ tasks:
     cmds:
       - pytest tests
 
-  test_examples:
+  test_lab:
     dest: Test examples
     cmds:
-      - python examples/example_104.py --debug true
-      - python examples/example_105.py --debug true
-      - python examples/example_106.py --debug true
-      - python examples/example_107.py --debug true
-      - python examples/example_108.py --debug true
+      - python lab/test[0-9]*.py
 
   test_regressions:
     desc: Test for regressions
