@@ -7,28 +7,30 @@ from .exceptions import InvalidCastConfiguration
 
 class AbstractCast(object):
     """Base class for all cast operations.
-    
+
     This abstract class defines the interface that all cast implementations must follow.
     Subclasses must implement the __call__ method to perform the actual casting operation.
     """
+
     def __call__(self, value):
         raise NotImplementedError()  # pragma: no cover
 
 
 class AsBoolean(AbstractCast):
     """Cast a value to a boolean using predefined string mappings.
-    
+
     Converts various string representations to boolean values using a configurable
     mapping dictionary. By default, supports common boolean string representations
     like 'true', 'yes', 'on', '1' for True and their counterparts for False.
-    
+
     Args:
         values (dict, optional): A dictionary mapping strings to boolean values.
             If provided, updates the default mapping dictionary.
-            
+
     Raises:
         InvalidCastConfiguration: If the input value cannot be cast to a boolean.
     """
+
     default_values = {
         "1": True,
         "true": True,
@@ -61,12 +63,13 @@ class AsBoolean(AbstractCast):
 
 class AsInt(AbstractCast):
     """Cast a value to an integer.
-    
+
     Attempts to convert the input value to an integer using Python's built-in int() function.
-    
+
     Raises:
         InvalidCastConfiguration: If the value cannot be converted to an integer.
     """
+
     "Return an INT"
 
     def __call__(self, value):
@@ -82,22 +85,23 @@ class AsInt(AbstractCast):
 
 class AsList(AbstractCast):
     """Cast a value to a list with support for delimited strings.
-    
+
     Converts various input types to a list:
     - Empty values become empty lists
     - Strings are split by delimiter, with support for quoted elements
     - Sequences are converted directly to lists
-    
+
     Args:
         delimiter (str, optional): The character used to split strings. Defaults to ','.
         quotes (str, optional): String containing valid quote characters. Defaults to '"\''.
-        
+
     Examples:
         >>> cast = AsList()
         >>> cast('a,b,c')  # Returns: ['a', 'b', 'c']
         >>> cast('"a,b",c')  # Returns: ['a,b', 'c']
         >>> cast(['a', 'b'])  # Returns: ['a', 'b']
     """
+
     def __init__(self, delimiter=",", quotes="\"'"):
         self.delimiter = delimiter
         self.quotes = quotes
@@ -162,29 +166,30 @@ class AsList(AbstractCast):
 
 class AsTuple(AsList):
     """Cast a value to a tuple.
-    
+
     Inherits from AsList but converts the final result to a tuple instead of a list.
     Accepts the same arguments and follows the same parsing rules as AsList.
-    
+
     Args:
         delimiter (str, optional): The character used to split strings. Defaults to ','.
         quotes (str, optional): String containing valid quote characters. Defaults to '"\''.
     """
+
     def cast(self, sequence):
         return tuple(sequence)
 
 
 class AsDict(AbstractCast):
     """Cast a value to a dictionary.
-    
+
     Currently supports:
     - Empty values become empty dictionaries
     - Mapping objects are converted directly to dictionaries
-    
+
     Args:
         delimiter (str, optional): Reserved for future string parsing. Defaults to ','.
         quotes (str, optional): Reserved for future string parsing. Defaults to '"\''.
-        
+
     Note:
         String parsing is not yet implemented.
     """
@@ -220,19 +225,19 @@ class AsDict(AbstractCast):
 
 class AsOption(AbstractCast):
     """Cast a value by selecting from predefined options.
-    
+
     Maps input values to predefined options using a dictionary mapping.
     Optionally supports a default option when the input doesn't match any defined option.
-    
+
     Args:
         options (dict): A dictionary mapping input values to their corresponding options.
         default_option (any, optional): The key to use when the input value isn't found.
             If FAIL (default), raises an exception for invalid inputs.
-            
+
     Raises:
         InvalidCastConfiguration: If the input value is not in options and no valid
             default_option is provided.
-            
+
     Example:
         >>> cast = AsOption({'dev': ['debug'], 'prod': ['optimize']}, 'dev')
         >>> cast('prod')  # Returns: ['optimize']
@@ -271,7 +276,7 @@ class AsOption(AbstractCast):
 
 class AsIdentity(AbstractCast):
     """Return the input value unchanged.
-    
+
     A no-operation cast that simply returns the input value without modification.
     Useful as a default cast or when you need to maintain the original type.
     """

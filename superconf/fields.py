@@ -36,11 +36,11 @@ as_is = AsIdentity()
 
 class Field:
     """Base class for configuration fields.
-    
+
     A Field represents a single configuration value with optional type casting,
     default values, and help text. Fields are used as descriptors in configuration
     classes to define the structure and behavior of configuration values.
-    
+
     Attributes:
         cast: The casting function to use for converting raw values. If None,
             will be determined based on the default value's type.
@@ -276,10 +276,10 @@ class Field:
 
 class FieldConf(Field):
     """A field that represents a nested configuration.
-    
+
     This field type allows for hierarchical configuration structures by containing
     another configuration class as its value.
-    
+
     Attributes:
         children_class: The configuration class to use for nested values.
     """
@@ -303,61 +303,66 @@ class FieldConf(Field):
 
 class FieldBool(Field):
     """A field that stores and validates boolean values.
-    
+
     Uses the AsBoolean cast to convert various string representations
     to boolean values (e.g., 'yes'/'no', 'true'/'false', '1'/'0').
-    
+
     Attributes:
         cast: Set to AsBoolean() for automatic type conversion.
     """
+
     cast = as_boolean
 
 
 class FieldString(Field):
     """A field that stores string values.
-    
+
     Ensures values are stored as strings, converting other types
     if necessary using Python's built-in str() function.
-    
+
     Attributes:
         cast: Set to str for automatic type conversion.
     """
+
     cast = str
 
 
 class FieldInt(Field):
     """A field that stores integer values.
-    
+
     Uses the AsInt cast to convert string representations to integers,
     raising an error if the conversion fails.
-    
+
     Attributes:
         cast: Set to AsInt() for automatic type conversion.
     """
+
     cast = as_int
 
 
 class FieldFloat(Field):
     """A field that stores floating-point values.
-    
+
     Uses Python's built-in float() function to convert values,
     raising an error if the conversion fails.
-    
+
     Attributes:
         cast: Set to float for automatic type conversion.
     """
+
     cast = float
 
 
 class FieldOption(Field):
     """A field that validates values against a predefined set of options.
-    
+
     This field ensures that values are one of a predefined set of options,
     optionally providing a default if an invalid option is given.
-    
+
     Attributes:
         cast: Set to AsOption for option validation and conversion.
     """
+
     cast = as_option
 
     def __init__(
@@ -386,41 +391,44 @@ class FieldOption(Field):
 
 class FieldDict(Field):
     """A field that stores dictionary values.
-    
+
     Uses the AsDict cast to ensure values are proper dictionaries,
     with support for converting mapping objects.
-    
+
     Attributes:
         cast: Set to AsDict() for automatic type conversion.
     """
+
     cast = as_dict
 
 
 class FieldList(Field):
     """A field that stores list values.
-    
+
     Uses the AsList cast to convert various inputs to lists, including:
     - Comma-separated strings
     - Other sequence types
     - Empty values to empty lists
-    
+
     Attributes:
         cast: Set to AsList() for automatic type conversion.
     """
+
     cast = as_list
 
 
 class FieldTuple(Field):
     """A field that stores tuple values.
-    
+
     Uses the AsTuple cast to convert various inputs to tuples, including:
     - Comma-separated strings
     - Other sequence types
     - Empty values to empty tuples
-    
+
     Attributes:
         cast: Set to AsTuple() for automatic type conversion.
     """
+
     cast = as_tuple
 
 
