@@ -35,6 +35,16 @@ as_is = AsIdentity()
 
 
 class Field:
+    """Base class for configuration fields.
+    
+    A Field represents a single configuration value with optional type casting,
+    default values, and help text. Fields are used as descriptors in configuration
+    classes to define the structure and behavior of configuration values.
+    
+    Attributes:
+        cast: The casting function to use for converting raw values. If None,
+            will be determined based on the default value's type.
+    """
 
     cast = None
 
@@ -46,17 +56,19 @@ class Field:
         default=NOT_SET,
         cast: Callable = None,
     ):
-        """
-        :param key:     Name of the value used in file or environment
-                        variable. Set automatically by the metaclass.
-        :param default: Default value if none is provided. If left unset,
-                        loading a config that fails to provide this value
-                        will raise a UnknownConfiguration exception.
-        :param cast:    Callable to cast variable with. Defaults to type of
-                        default (if provided), identity if default is not
-                        provided or raises TypeError if provided cast is not
-                        callable.
-        :param help:    Plain-text description of the value.
+        """Initialize a new Field instance.
+
+        Args:
+            key: Name of the value used in file or environment variable.
+                Set automatically by the metaclass.
+            help: Plain-text description of the value.
+            default: Default value if none is provided. If left unset,
+                loading a config that fails to provide this value
+                will raise a UnknownConfiguration exception.
+            cast: Callable to cast variable with. Defaults to type of
+                default (if provided), identity if default is not
+                provided or raises TypeError if provided cast is not
+                callable.
         """
         self.key = key
         self.help = help
@@ -64,16 +76,37 @@ class Field:
         self.cast = cast or self.cast
 
     def __get__(self, conf_instance, owner):
+        """Descriptor get method to retrieve the field's value.
+
+        Args:
+            conf_instance: The configuration instance this field belongs to.
+            owner: The class that owns this descriptor.
+
+        Returns:
+            The field's value if accessed through an instance,
+            or the field itself if accessed through the class.
+        """
         if conf_instance:
             return conf_instance.get_field_value(key=self.key, field=self)
         return self
 
     def __repr__(self):
+        """Return a string representation of the field.
+
+        Returns:
+            A string showing the field's class name, key, and help text.
+        """
         return '{}(key="{}", help="{}")'.format(
             self.__class__.__name__, self.key, self.help
         )
 
     def is_container(self):
+        """Check if this field is a container type.
+
+        Returns:
+            bool: True if this field has a children_class attribute,
+            indicating it can contain nested configuration values.
+        """
         children_class = getattr(self, "children_class", None)
         if children_class is not None:
             return True
@@ -88,6 +121,31 @@ class Field:
         loaders=NOT_SET,
         **kwargs,
     ):
+        """Resolve the final value for this field.
+
+        This method handles the complex logic of determining the field's value by:
+        1. Checking for explicitly provided values
+        2. Looking up values through loaders
+        3. Falling back to defaults
+        4. Applying type casting
+
+        Args:
+            conf_instance: The configuration instance this field belongs to.
+            value: Explicitly provided value, takes precedence if set.
+            default: Override for the field's default value.
+            cast: Override for the field's cast function.
+            loaders: List of loader objects to use for value lookup.
+            **kwargs: Additional keyword arguments passed to loaders.
+
+        Returns:
+            tuple: A tuple containing:
+                - The resolved and cast value
+                - A SimpleNamespace containing metadata about the resolution process
+
+        Raises:
+            CastValueFailure: If strict casting is enabled and the value
+                cannot be cast to the desired type.
+        """
         "Create a children"
 
         key = self.key
@@ -217,43 +275,89 @@ class Field:
 
 
 class FieldConf(Field):
-    "Nested Config"
+    """A field that represents a nested configuration.
+    
+    This field type allows for hierarchical configuration structures by containing
+    another configuration class as its value.
+    
+    Attributes:
+        children_class: The configuration class to use for nested values.
+    """
 
     def __init__(
         self,
         children_class,
-        # children_class: NOT_SET = NOT_SET,
         key: str = None,
         **kwargs,
     ):
+        """Initialize a nested configuration field.
 
+        Args:
+            children_class: The configuration class to use for nested values.
+            key: Name of the value used in file or environment variable.
+            **kwargs: Additional arguments passed to the parent Field class.
+        """
         super(FieldConf, self).__init__(key, **kwargs)
         self.children_class = children_class
 
 
 class FieldBool(Field):
-    "Boolean field"
-
+    """A field that stores and validates boolean values.
+    
+    Uses the AsBoolean cast to convert various string representations
+    to boolean values (e.g., 'yes'/'no', 'true'/'false', '1'/'0').
+    
+    Attributes:
+        cast: Set to AsBoolean() for automatic type conversion.
+    """
     cast = as_boolean
 
 
 class FieldString(Field):
-    "String field"
+    """A field that stores string values.
+    
+    Ensures values are stored as strings, converting other types
+    if necessary using Python's built-in str() function.
+    
+    Attributes:
+        cast: Set to str for automatic type conversion.
+    """
     cast = str
 
 
 class FieldInt(Field):
-    "Int field"
+    """A field that stores integer values.
+    
+    Uses the AsInt cast to convert string representations to integers,
+    raising an error if the conversion fails.
+    
+    Attributes:
+        cast: Set to AsInt() for automatic type conversion.
+    """
     cast = as_int
 
 
 class FieldFloat(Field):
-    "Float field"
+    """A field that stores floating-point values.
+    
+    Uses Python's built-in float() function to convert values,
+    raising an error if the conversion fails.
+    
+    Attributes:
+        cast: Set to float for automatic type conversion.
+    """
     cast = float
 
 
 class FieldOption(Field):
-    "Option field"
+    """A field that validates values against a predefined set of options.
+    
+    This field ensures that values are one of a predefined set of options,
+    optionally providing a default if an invalid option is given.
+    
+    Attributes:
+        cast: Set to AsOption for option validation and conversion.
+    """
     cast = as_option
 
     def __init__(
@@ -263,27 +367,62 @@ class FieldOption(Field):
         key: str = None,
         **kwargs,
     ):
+        """Initialize an option field.
 
+        Args:
+            options: Dictionary mapping valid input values to their corresponding options.
+            default_option: The option to use when an invalid value is provided.
+                If set to FAIL, raises an error for invalid values.
+            key: Name of the value used in file or environment variable.
+            **kwargs: Additional arguments passed to the parent Field class.
+
+        Raises:
+            AssertionError: If options is not a dictionary.
+        """
         assert isinstance(options, dict), f"Expected a dict, got: {options}"
         self.cast = AsOption(options, default_option=default_option)
         super(FieldOption, self).__init__(key, **kwargs)
 
 
-# Children items
 class FieldDict(Field):
-    "Dict field"
+    """A field that stores dictionary values.
+    
+    Uses the AsDict cast to ensure values are proper dictionaries,
+    with support for converting mapping objects.
+    
+    Attributes:
+        cast: Set to AsDict() for automatic type conversion.
+    """
     cast = as_dict
 
 
 class FieldList(Field):
-    "List field"
+    """A field that stores list values.
+    
+    Uses the AsList cast to convert various inputs to lists, including:
+    - Comma-separated strings
+    - Other sequence types
+    - Empty values to empty lists
+    
+    Attributes:
+        cast: Set to AsList() for automatic type conversion.
+    """
     cast = as_list
 
 
 class FieldTuple(Field):
-    "Tuple field"
+    """A field that stores tuple values.
+    
+    Uses the AsTuple cast to convert various inputs to tuples, including:
+    - Comma-separated strings
+    - Other sequence types
+    - Empty values to empty tuples
+    
+    Attributes:
+        cast: Set to AsTuple() for automatic type conversion.
+    """
     cast = as_tuple
 
 
 # Compatibility with classyconf
-Value = Field
+Value = Field  # Alias for backward compatibility

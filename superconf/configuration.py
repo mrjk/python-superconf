@@ -24,23 +24,43 @@ logger = logging.getLogger(__name__)
 
 
 class _ConfigurationBase:
-    "Generic configuration"
+    """Base class for configuration objects providing core configuration query functionality.
+
+    This class implements the basic configuration query mechanisms used by all configuration
+    classes. It supports querying configuration values from various sources including
+    instance attributes, class Meta attributes, and parent configurations.
+    """
 
     class Meta:
-        "Class to store class overrides"
+        """Class to store class-level configuration overrides."""
 
     def __init__(self, key=None, value=NOT_SET, parent=None):
+        """Initialize a configuration base instance.
+
+        Args:
+            key: The configuration key name
+            value: The configuration value (defaults to NOT_SET)
+            parent: Parent configuration object if this is a child config
+        """
         self.key = key
         self._parent = parent
         self._value = value
-
         self._cache = True  # TOFIX
 
     # Instance config management
     # ----------------------------
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
-        "Temporary wrapper"
+        """Query instance configuration with optional type casting.
+
+        Args:
+            *args: Variable length argument list passed to _query_inst_cfg
+            cast: Optional type to cast the result to
+            **kwargs: Arbitrary keyword arguments passed to _query_inst_cfg
+
+        Returns:
+            The configuration value, optionally cast to the specified type
+        """
         out, query_from = self._query_inst_cfg(*args, **kwargs)
         # print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
         # pprint(query_from)
@@ -66,10 +86,30 @@ class _ConfigurationBase:
     #     return out
 
     def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
-        "Query instance settings, or fallback on class settings"
+        """Internal method to query instance configuration from various sources.
+
+        Searches for configuration values in the following order:
+        1. Dictionary override if provided
+        2. Instance attribute with _name prefix
+        3. Class Meta attribute
+        4. Instance attribute with meta__ prefix
+        5. Default value if provided
+
+        Args:
+            name: Configuration setting name to query
+            override: Optional dictionary of override values
+            parents: Whether to check parent configurations
+            default: Default value if setting is not found
+
+        Returns:
+            Tuple of (value, query_sources) where query_sources is a list of searched locations
+
+        Raises:
+            UnknownSetting: If the setting is not found and no default is provided
+        """
         query_from = []
 
-        # Fetch from dict override, if providedchildren_class
+        # Fetch from dict override, if provided
         if isinstance(override, dict):
             val = override.get(name, NOT_SET)
             if val is not NOT_SET:
@@ -108,8 +148,20 @@ class _ConfigurationBase:
         raise exceptions.UnknownSetting(msg)
 
     def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
-        "Query parent config"
+        """Query configuration from parent object.
 
+        Args:
+            name: Configuration setting name to query
+            as_subkey: If True and parent value is dict, get self.key from it
+            cast: Optional type to cast the result to
+            default: Default value if setting is not found
+
+        Returns:
+            The configuration value from the parent, optionally cast to specified type
+
+        Raises:
+            UnknownSetting: If no parent exists and no default is provided
+        """
         # Fast exit or raise exception
         if not self._parent:
             if default is not UNSET_ARG:
@@ -158,10 +210,24 @@ class _ConfigurationBase:
 
 
 class _Configuration(_ConfigurationBase):
+    """Base configuration container class that manages configuration fields and values.
+
+    This class extends _ConfigurationBase to provide field management, value caching,
+    and dynamic child configuration creation capabilities.
+    """
 
     _declared_values = {}
 
     def __init__(self, *, key=None, value=NOT_SET, parent=None, meta=None, **kwargs):
+        """Initialize a configuration container.
+
+        Args:
+            key: Configuration key name
+            value: Initial configuration value
+            parent: Parent configuration object
+            meta: Optional meta configuration
+            **kwargs: Additional configuration options
+        """
 
         super(_Configuration, self).__init__(key=key, value=value, parent=parent)
 
@@ -263,16 +329,43 @@ class _Configuration(_ConfigurationBase):
     # ----------------------------
 
     def get_value(self, key, lvl=-1, **kwargs):
+        """Get configuration value for a given key.
+
+        Args:
+            key: Configuration key to retrieve
+            lvl: Recursion level for nested configurations
+            **kwargs: Additional arguments passed to get_field_value
+
+        Returns:
+            Configuration value for the specified key
+        """
         assert isinstance(key, str)
         return self.get_field_value(key, **kwargs)
 
     def reset(self):
-        """Anytime you want to pick up new values call this function."""
+        """Reset all loaders and clear cached values.
+
+        This should be called when configuration values need to be reloaded.
+        """
         for loader in self._loaders:
             loader.reset()
         self._cached_values = {}
 
     def get_field_value(self, key=None, field=None, default=UNSET_ARG, **kwargs):
+        """Get value for a configuration field.
+
+        Args:
+            key: Configuration key name
+            field: Configuration field object
+            default: Default value if not found
+            **kwargs: Additional arguments for child creation
+
+        Returns:
+            Configuration value for the specified field
+
+        Raises:
+            UndeclaredField: If field is not found and no default provided
+        """
 
         # Parse input
         if field is None and key is None:
@@ -421,6 +514,11 @@ class _Configuration(_ConfigurationBase):
 
 
 class ConfigurationDict(_Configuration):
+    """Dictionary-based configuration container.
+
+    Provides a dictionary interface to configuration values and supports
+    dynamic field creation based on input values.
+    """
 
     # class ConfigurationCtrl:
     "Controller"
@@ -436,7 +534,14 @@ class ConfigurationDict(_Configuration):
     # meta__extra_fields = NOT_SET # dict()
 
     def set_dyn_children(self, value):
-        "Set a value"
+        """Set up dynamic children based on input value.
+
+        Creates fields dynamically for dictionary values that don't have
+        corresponding declared fields.
+
+        Args:
+            value: Dictionary of configuration values
+        """
 
         # Create children method
         # Check for predefined Fields
@@ -547,7 +652,11 @@ class DeclarativeValuesMetaclass(type):
 
 
 class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
-    "Variadic configuration"
+    """Main configuration class supporting declarative field definitions.
+
+    This class allows fields to be declared as class attributes and provides
+    a clean interface for defining configuration schemas.
+    """
 
     meta__extra_fields = False
 
@@ -558,7 +667,11 @@ class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
 
 class ConfigurationList(_Configuration):
-    "List container"
+    """List-based configuration container.
+
+    Provides a list interface to configuration values and supports
+    dynamic field creation for list elements.
+    """
 
     # _declared_values = {}
     meta__loaders = [Environment()]
@@ -567,7 +680,13 @@ class ConfigurationList(_Configuration):
     meta__strict_cast = False
 
     def set_dyn_children(self, value):
-        "Set a value"
+        """Set up dynamic children based on input value.
+
+        Creates fields dynamically for list elements.
+
+        Args:
+            value: List of configuration values
+        """
 
         children_class = self._children_class
         child_values = value or list()
@@ -601,8 +720,15 @@ class ConfigurationList(_Configuration):
                 self._extra_fields[key] = field
 
     def get_values(self, lvl=-1, **kwargs):
-        "Return all values of the container"
+        """Get all configuration values as a list.
 
+        Args:
+            lvl: Recursion level for nested configurations
+            **kwargs: Additional arguments passed to parent method
+
+        Returns:
+            List of configuration values
+        """
         out = super(ConfigurationList, self).get_values(lvl=lvl, **kwargs)
 
         if isinstance(out, Mapping):
