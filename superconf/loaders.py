@@ -18,6 +18,7 @@ class EnvPrefix:
         self.prefix = prefix
 
     def __call__(self, value):
+        value = str(value)
         return "{}{}".format(self.prefix, value.upper())
 
     def __repr__(self):

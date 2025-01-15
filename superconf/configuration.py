@@ -129,7 +129,7 @@ class Field:
         "Create a children"
 
         key = self.key
-        assert key, f"Got: {type(key)} {key}"
+        assert isinstance(key, (str,int)), f"Got: {type(key)} {key}"
 
         # Process defaults
         default_from = ["args"]
@@ -155,7 +155,9 @@ class Field:
             # Fetch default from container
             try:
                 value = conf_instance._value[key]
-            except (TypeError, KeyError):
+            except (TypeError, KeyError): # For dict
+                pass
+            except (IndexError): # For list
                 pass
 
         # Process cast
@@ -202,7 +204,7 @@ class Field:
         for loader in loaders:
             loader_from.append(str(loader))
             try:
-                # print (f"  > LOADER: try search in {loader} key: {key}")
+                print (f"  > LOADER: try search in {loader} key: {key}")
                 result = loader.getitem(self, key, **kwargs)
 
             except (KeyError, TypeError) as err:
@@ -360,168 +362,25 @@ class DeclarativeValuesMetaclass(type):
         return OrderedDict()
 
 
-class _Configuration():
+class _ConfigurationBase():
     "Generic configuration"
 
-class ConfigurationList(_Configuration):
-    "List container - WIP"
 
-
-class ConfigurationDict(_Configuration):
-
-    # class ConfigurationCtrl:
-    "Controller"
-
-    meta__custom_field = "My VALUUUUuuueeeee"
-    meta__loaders = [Environment()]
-    meta__cache = True  # Yes by default ...
-    meta__extra_fields = True
-    meta__strict_cast = False
-
-    _declared_values = {}
-
-    # Optional fields
-    # meta__default = NOT_SET # dict()
-    # meta__extra_fields = NOT_SET # dict()
 
     class Meta:
         "Class to store class overrides"
 
-    def __init__(self, *, key=None, parent=None, value=NOT_SET, meta=None, **kwargs):
+
+    def __init__(self, key=None, value=NOT_SET, parent=None):
         self.key = key
         self._parent = parent
         self._value = value
 
-        # As this can be updated during runtime ...
-        self._declared_values = self._declared_values
-        self._cached_values = {}
-
-        kwargs.update(
-            dict(
-                key=key,
-                # loaders=loaders,
-                # cache=cache,
-                parent=parent,
-            )
-        )
-
-        # self._loaders = NOT_SET
-        self._loaders = self.query_inst_cfg("loaders", override=kwargs)
-        # self._cache = self.query_inst_cfg("cache", override=kwargs)
         self._cache = True  # TOFIX
 
-        self._extra_fields_enabled = self.query_inst_cfg(
-            "extra_fields",
-            override=kwargs,
-            default=True,  # TOFIX, should be set to false by default
-        )
-        self._extra_fields = {}
-        self._children_class = self.query_inst_cfg(
-            "children_class", override=kwargs, default=NOT_SET
-        )
 
-        self._cast = self.query_inst_cfg("cast", override=kwargs, default=None)
-        self._strict_cast = self.query_inst_cfg("strict_cast", override=kwargs)
-
-        self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
-        if self._default is NOT_SET:
-            self._default = self.query_parent_cfg(
-                "default", as_subkey=True, default=NOT_SET
-            )
-
-        # print ("\n\n===== CREATE NEW CONFIG", self.key, self, value)
-        # child_values = value
-        child_values = self._value
-        if child_values is NOT_SET:
-            # print(f"REMAP CHILD VALUE {self}:{key}: {child_values}=>{self._default}")
-            child_values = self._default
-        self.set_dyn_children(child_values)
-        self.set_values(child_values)
-
-    def set_dyn_children(self, value):
-        "Set a value"
-
-        # Create children method
-        # Check for predefined Fields
-        # If additional_items == True
-        # Check value
-        # For each keys, check if a type exists, or field
-        # Add to _extra_fields
-
-        # For each children,
-        # If class of Configuration, create child
-        # If field, do noting
-
-        declared_fields = self.declared_fields
-        children_class = self._children_class
-
-        # Add extra fields
-        child_values = value or dict()
-
-        if isinstance(child_values, dict):
-
-            # Look for new keys in value
-            assert isinstance(
-                child_values, dict
-            ), f"Got {self}: {type(child_values)}: {child_values}"
-
-            for key, val in child_values.items():
-
-                # Get best children_class
-                field = None
-                child_class = NOT_SET
-
-                # Check if key have an existing field
-                if key in self.declared_fields:
-                    field = self.declared_fields[key]
-                    # child_class = field.children_class
-                    child_class = getattr(field, "children_class", NOT_SET)
-
-                # Prevent unexpected childrens ...
-                if not field and self._extra_fields_enabled is False:
-                    msg = f"Undeclared key '{key}' for {self}, or enable extra_fields=True"
-                    raise exceptions.UnknownExtraField(msg)
-
-                if child_class is NOT_SET:
-                    # Get children class form container
-                    child_class = children_class
-
-                if not field:
-                    # print("REGISTER DYN FIELD", key, children_class)
-
-                    xtra_kwargs = {}
-                    if not child_class:
-                        # No children_class, then it's just a field
-                        child_cls = Field
-                    else:
-                        child_cls = FieldConf
-                        xtra_kwargs = dict(children_class=child_class)
-
-                    # Create dynamic field
-                    field = child_cls(
-                        key=key,
-                        **xtra_kwargs,
-                    )
-                    self._extra_fields[key] = field
-
-    def set_values(self, value):
-        "Set a value"
-
-        # Instanciate containers fields - Automatic
-        for key, field in self.declared_fields.items():
-
-            if field.is_container():
-                # Create child then
-                try:
-                    val = value.get(key, NOT_SET)
-                except AttributeError:
-                    val = NOT_SET
-
-                # print ("AUTOMATIC CREATE CHILD CONTAINER", key, field, val)
-                conf = self.create_child(key, field, value=val)
-                assert isinstance(conf, (ConfigurationDict)), f"Got: {type(conf)}"
-                # print ("SET CACHED VALUE", self, conf, key, field, val)
-                self._cached_values[key] = conf
+    # Instance config management
+    # ----------------------------
 
     def query_inst_cfg(self, *args, cast=None, **kwargs):
         "Temporary wrapper"
@@ -635,6 +494,71 @@ class ConfigurationDict(_Configuration):
             ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
         return out
 
+
+
+
+class _Configuration(_ConfigurationBase):
+
+    _declared_values = {}
+
+
+    def __init__(self, *, key=None, value=NOT_SET, parent=None, meta=None, **kwargs):
+
+        super(_Configuration, self).__init__(key=key, value=value, parent=parent)
+
+
+        # As this can be updated during runtime ...
+        # self._declared_values = self._declared_values
+        # self._declared_values = dict()
+        self._cached_values = {}
+
+        kwargs.update(
+            dict(
+                key=key,
+                # loaders=loaders,
+                # cache=cache,
+                parent=parent,
+            )
+        )
+
+        # self._loaders = NOT_SET
+        self._loaders = self.query_inst_cfg("loaders", override=kwargs)
+        # self._cache = self.query_inst_cfg("cache", override=kwargs)
+        self._cache = True  # TOFIX
+
+        self._extra_fields_enabled = self.query_inst_cfg(
+            "extra_fields",
+            override=kwargs,
+            default=True,  # TOFIX, should be set to false by default
+        )
+        self._extra_fields = {}
+        self._children_class = self.query_inst_cfg(
+            "children_class", override=kwargs, default=NOT_SET
+        )
+
+        self._cast = self.query_inst_cfg("cast", override=kwargs, default=None)
+        self._strict_cast = self.query_inst_cfg("strict_cast", override=kwargs)
+
+        self._default = self.query_inst_cfg("default", override=kwargs, default=NOT_SET)
+        if self._default is NOT_SET:
+            self._default = self.query_parent_cfg(
+                "default", as_subkey=True, default=NOT_SET
+            )
+
+        # print ("\n\n===== CREATE NEW CONFIG", self.key, self, value)
+        # child_values = value
+        child_values = self._value
+        if child_values is NOT_SET:
+            # print(f"REMAP CHILD VALUE {self}:{key}: {child_values}=>{self._default}")
+            child_values = self._default
+        self.set_dyn_children(child_values)
+        self.set_values(child_values)
+
+
+
+    # Generic API
+    # ----------------------------
+
     # Field compat API
     @property
     def default(self):
@@ -646,23 +570,62 @@ class ConfigurationDict(_Configuration):
         "Temporary property to access to self._default"
         return self._cast
 
-    @property
-    def declared_fields(self):
-        out = {}
-        if self._extra_fields:
-            # Add extra fields
-            out.update(self._extra_fields)
-
-        # Always use explicit fields
-        out.update(self._declared_values)
-        return out
 
     # Field compatibility layer !
-    # This basically respect default python behavior ...
+    # This basically respect default python behavior , when this is a children...
     def __get__(self, conf_instance, owner):
         # if conf_instance:
         #     return conf_instance.get_field_value(field=self)
         return self
+
+
+
+    def __getitem__(self, value):
+        return self.declared_fields[value].__get__(self, self.__class__)
+
+
+
+    # def __repr__(self):
+    #     return "{}(loaders=[{}])".format(
+    #         self.__class__.__name__,
+    #         ", ".join([str(loader) for loader in self._loaders]),
+    #     )
+
+    # def __str__(self):
+    #     values = []
+    #     for _, v in self:
+    #         if v.default is NOT_SET and not v.help:
+    #             help = "No default value provided"
+    #         elif not v.help:
+    #             help = "Default value is {}.".format(repr(v.default))
+    #         else:
+    #             help = v.help
+    #         try:
+    #             values.append(
+    #                 "{}={} - {}".format(v.key, repr(getattr(self, v.key)), help)
+    #             )
+    #         except UnknownConfiguration:
+    #             values.append("{}=NOT_SET - {}".format(v.key, help))
+    #     return "\n".join(values)
+
+
+    # Value management
+    # ----------------------------
+
+
+    def get_value(self, key, lvl=-1, **kwargs):
+        assert isinstance(key, str)
+        return self.get_field_value(key, **kwargs)
+
+
+
+    def reset(self):
+        """Anytime you want to pick up new values call this function."""
+        for loader in self._loaders:
+            loader.reset()
+        self._cached_values = {}
+
+
 
     def get_field_value(self, key=None, field=None, default=UNSET_ARG, **kwargs):
 
@@ -699,6 +662,26 @@ class ConfigurationDict(_Configuration):
             self._cached_values[key] = conf
             # print("CACHE CHILD", self, key, conf)
         return conf
+
+
+
+    def get_values(self, lvl=-1, **kwargs):
+        "Return all values of the container"
+
+        if lvl == 0:
+            return self
+
+        out = {}
+        for key, obj in self.declared_fields.items():
+            val = self.get_field_value(key)
+            if isinstance(val, ConfigurationDict):
+                val = val.get_values(lvl=lvl - 1)
+
+            out[key] = val
+
+        return out
+
+
 
     # This should be split if field has children or not ...
     def create_child(self, key, field, value=NOT_SET, **kwargs):
@@ -756,69 +739,136 @@ class ConfigurationDict(_Configuration):
 
         return out
 
-    def get_value(self, key, lvl=-1, **kwargs):
-        assert isinstance(key, str)
-        return self.get_field_value(key, **kwargs)
 
-    def get_values(self, lvl=-1, **kwargs):
-
-        if lvl == 0:
-            return self
-
+    @property
+    def declared_fields(self):
         out = {}
-        for key, obj in self.declared_fields.items():
-            val = self.get_field_value(key)
-            if isinstance(val, ConfigurationDict):
-                val = val.get_values(lvl=lvl - 1)
+        if self._extra_fields:
+            # Add extra fields
+            out.update(self._extra_fields)
 
-            out[key] = val
-
+        # Always use explicit fields
+        out.update(self._declared_values)
         return out
 
-    def reset(self):
-        """Anytime you want to pick up new values call this function."""
-        for loader in self._loaders:
-            loader.reset()
-        self._cached_values = {}
+    def set_values(self, value):
+        "Set a value"
 
-    # def _iterate_declared_values(self):
-    #     return self.declared_fields
+        # Instanciate containers fields - Automatic
+        for key, field in self.declared_fields.items():
 
-    # class Configuration(ConfigurationCtrl, metaclass=DeclarativeValuesMetaclass):
-    #     """
-    #     Encapsulates settings than can be loaded from different
-    #     sources.
-    #     """
+            if field.is_container():
+
+                # Create child then
+                val = NOT_SET
+                if value and isinstance(value, Mapping):
+                    try:
+                        val = value.get(key, NOT_SET)
+                    except AttributeError:
+                        val = NOT_SET
+                if value and isinstance(value, Sequence):
+                    print ("BUG HERE ON KEY", self, key, value)
+                    try:
+                        val = value[key]
+                    except IndexError:
+                        val = NOT_SET
+
+                # print ("AUTOMATIC CREATE CHILD CONTAINER", key, field, val)
+                conf = self.create_child(key, field, value=val)
+                assert isinstance(conf, (_Configuration)), f"Got: {type(conf)}"
+                # assert isinstance(conf, (ConfigurationDict)), f"Got: {type(conf)}"
+                # print ("SET CACHED VALUE", self, conf, key, field, val)
+                self._cached_values[key] = conf
+
+
+
+
+class ConfigurationDict(_Configuration):
+
+    # class ConfigurationCtrl:
+    "Controller"
+
+    # meta__custom_field = "My VALUUUUuuueeeee"
+    meta__loaders = [Environment()]
+    meta__cache = True  # Yes by default ...
+    meta__extra_fields = True
+    meta__strict_cast = False
+
+
+    # Optional fields
+    # meta__default = NOT_SET # dict()
+    # meta__extra_fields = NOT_SET # dict()
+
+
+    def set_dyn_children(self, value):
+        "Set a value"
+
+        # Create children method
+        # Check for predefined Fields
+        # If additional_items == True
+        # Check value
+        # For each keys, check if a type exists, or field
+        # Add to _extra_fields
+
+        # For each children,
+        # If class of Configuration, create child
+        # If field, do noting
+
+        declared_fields = self.declared_fields
+        children_class = self._children_class
+
+        # Add extra fields
+        child_values = value or dict()
+
+        if isinstance(child_values, dict):
+
+            # Look for new keys in value
+            assert isinstance(
+                child_values, dict
+            ), f"Got {self}: {type(child_values)}: {child_values}"
+
+            for key, val in child_values.items():
+
+                # Get best children_class
+                field = None
+                child_class = NOT_SET
+
+                # Check if key have an existing field
+                if key in self.declared_fields:
+                    field = self.declared_fields[key]
+                    # child_class = field.children_class
+                    child_class = getattr(field, "children_class", NOT_SET)
+
+                # Prevent unexpected childrens ...
+                if not field and self._extra_fields_enabled is False:
+                    msg = f"Undeclared key '{key}' for {self}, or enable extra_fields=True"
+                    raise exceptions.UnknownExtraField(msg)
+
+                if child_class is NOT_SET:
+                    # Get children class form container
+                    child_class = children_class
+
+                if not field:
+                    # print("REGISTER DYN FIELD", key, children_class)
+
+                    xtra_kwargs = {}
+                    if not child_class:
+                        # No children_class, then it's just a field
+                        child_cls = Field
+                    else:
+                        child_cls = FieldConf
+                        xtra_kwargs = dict(children_class=child_class)
+
+                    # Create dynamic field
+                    field = child_cls(
+                        key=key,
+                        **xtra_kwargs,
+                    )
+                    self._extra_fields[key] = field
 
     def __iter__(self):
         yield from self.declared_fields.items()
         # yield from self._declared_values.items()
-
-    # def __repr__(self):
-    #     return "{}(loaders=[{}])".format(
-    #         self.__class__.__name__,
-    #         ", ".join([str(loader) for loader in self._loaders]),
-    #     )
-
-    # def __str__(self):
-    #     values = []
-    #     for _, v in self:
-    #         if v.default is NOT_SET and not v.help:
-    #             help = "No default value provided"
-    #         elif not v.help:
-    #             help = "Default value is {}.".format(repr(v.default))
-    #         else:
-    #             help = v.help
-    #         try:
-    #             values.append(
-    #                 "{}={} - {}".format(v.key, repr(getattr(self, v.key)), help)
-    #             )
-    #         except UnknownConfiguration:
-    #             values.append("{}=NOT_SET - {}".format(v.key, help))
-    #     return "\n".join(values)
-
-    def __getitem__(self, value):
-        return self.declared_fields[value].__get__(self, self.__class__)
 
 
 class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
