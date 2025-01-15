@@ -72,6 +72,7 @@ nav:
     - Loaders: docs/loaders.md
     - Cast: docs/cast.md
   - Reference:
+    - Overview: reference/diagram.md
     - Configuration: reference/configuration.md
     - Fields: reference/fields.md
     - Loaders: reference/loaders.md
