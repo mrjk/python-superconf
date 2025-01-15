@@ -2,9 +2,21 @@
 
 version: '3'
 
+
 tasks:
 
 
+
+  # Generate
+  # =============
+
+  gen_doc_class_graph:
+    desc: generate superconf class diagrams
+    cmds:
+      - pyreverse -my -A -o png -p superconf -d docs/images/ superconf/configuration.py
+      - >
+        echo "Image generated in: docs/images/"
+  
   # Fix
   # =============
 
