@@ -49,7 +49,7 @@ class AsInt(AbstractCast):
             return int(value)
         except ValueError:
             # TOFIX: Raise or report unset ?
-            return NOT_SET
+            # return NOT_SET
             raise InvalidCastConfiguration(
                 "Error casting value {!r} to int".format(value)
             )
