@@ -1,19 +1,27 @@
+"Main configuratio  class"
+
+
+# pylint: disable=unused-argument, too-few-public-methods, too-many-instance-attributes, use-dict-literal
+
 import copy
-import inspect
 import logging
 from collections import OrderedDict
 
 # from collections import Mapping, Sequence
 from collections.abc import Mapping, Sequence
-from pprint import pprint
-from types import SimpleNamespace
-from typing import Callable
 
-import superconf.exceptions as exceptions
+from superconf import exceptions
 
-from .common import FAIL, NOT_SET, UNSET_ARG, NotSet
+from .common import NOT_SET, UNSET_ARG
 from .fields import Field, FieldConf
 from .loaders import Environment
+
+# from pprint import pprint
+
+
+# from types import SimpleNamespace
+# from typing import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +69,7 @@ class _ConfigurationBase:
         Returns:
             The configuration value, optionally cast to the specified type
         """
-        out, query_from = self._query_inst_cfg(*args, **kwargs)
+        out, _ = self._query_inst_cfg(*args, **kwargs)
         # print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
         # pprint(query_from)
 
@@ -74,7 +82,7 @@ class _ConfigurationBase:
                 out = cast()
             assert isinstance(
                 out, cast
-            ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
+            ), f"Wrong type for config {self}, expected {cast}, got: {type(out)} {out}"
         return out
 
     # @classmethod
@@ -85,7 +93,7 @@ class _ConfigurationBase:
     #         out = copy.copy(out)
     #     return out
 
-    def _query_inst_cfg(self, name, override=None, parents=False, default=UNSET_ARG):
+    def _query_inst_cfg(self, name, override=None, default=UNSET_ARG):
         """Internal method to query instance configuration from various sources.
 
         Searches for configuration values in the following order:
@@ -144,7 +152,10 @@ class _ConfigurationBase:
             query_from.append("default_arg")
             return default, query_from
 
-        msg = f"Setting '{name}' has not been declared before being used in '{repr(self)}', tried to query: {query_from}"
+        msg = (
+            f"Setting '{name}' has not been declared before being used"
+            f" in '{repr(self)}', tried to query: {query_from}"
+        )
         raise exceptions.UnknownSetting(msg)
 
     def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
@@ -173,7 +184,7 @@ class _ConfigurationBase:
 
         def fetch_closest_parent(name):
             # Fetch from closest parent
-            val = self._parent._query_inst_cfg(name, default=NOT_SET)
+            val = self._parent.query_inst_cfg(name, default=NOT_SET)
             if val is NOT_SET:
                 return val
 
@@ -229,7 +240,8 @@ class _Configuration(_ConfigurationBase):
             **kwargs: Additional configuration options
         """
 
-        super(_Configuration, self).__init__(key=key, value=value, parent=parent)
+        # super(_Configuration, self).__init__(key=key, value=value, parent=parent)
+        super().__init__(key=key, value=value, parent=parent)
 
         # As this can be updated during runtime ...
         # self._declared_values = self._declared_values
@@ -277,6 +289,9 @@ class _Configuration(_ConfigurationBase):
             child_values = self._default
         self.set_dyn_children(child_values)
         self.set_values(child_values)
+
+    def set_dyn_children(self, value):
+        "Placeholder"
 
     # Generic API
     # ----------------------------
@@ -378,9 +393,7 @@ class _Configuration(_ConfigurationBase):
             if field is None:
                 if default is not UNSET_ARG:
                     return default
-                raise exceptions.UndeclaredField(
-                    "Configuration '{}' not found".format(key)
-                )
+                raise exceptions.UndeclaredField(f"Configuration '{key}' not found")
             assert key == field.key, f"Got: {key} != {field.key}"
             key = field.key
 
@@ -408,7 +421,7 @@ class _Configuration(_ConfigurationBase):
             return self
 
         out = {}
-        for key, obj in self.declared_fields.items():
+        for key, _ in self.declared_fields.items():
             val = self.get_field_value(key)
             if isinstance(val, ConfigurationDict):
                 val = val.get_values(lvl=lvl - 1)
@@ -475,6 +488,7 @@ class _Configuration(_ConfigurationBase):
 
     @property
     def declared_fields(self):
+        "Return declared fields"
         out = {}
         if self._extra_fields:
             # Add extra fields
@@ -520,9 +534,6 @@ class ConfigurationDict(_Configuration):
     dynamic field creation based on input values.
     """
 
-    # class ConfigurationCtrl:
-    "Controller"
-
     # meta__custom_field = "My VALUUUUuuueeeee"
     meta__loaders = [Environment()]
     meta__cache = True  # Yes by default ...
@@ -554,7 +565,7 @@ class ConfigurationDict(_Configuration):
         # If class of Configuration, create child
         # If field, do noting
 
-        declared_fields = self.declared_fields
+        # declared_fields = self.declared_fields
         children_class = self._children_class
 
         # Add extra fields
@@ -567,7 +578,7 @@ class ConfigurationDict(_Configuration):
                 child_values, dict
             ), f"Got {self}: {type(child_values)}: {child_values}"
 
-            for key, val in child_values.items():
+            for key, _ in child_values.items():
 
                 # Get best children_class
                 field = None
@@ -621,7 +632,7 @@ class DeclarativeValuesMetaclass(type):
     Collect Value objects declared on the base classes
     """
 
-    def __new__(self, class_name, bases, attrs):
+    def __new__(mcs, class_name, bases, attrs):
         # Collect values from current class and all bases.
         values = OrderedDict()
 
@@ -641,12 +652,12 @@ class DeclarativeValuesMetaclass(type):
 
         attrs["_declared_values"] = values
 
-        return super(DeclarativeValuesMetaclass, self).__new__(
-            self, class_name, bases, attrs
+        return super(DeclarativeValuesMetaclass, mcs).__new__(
+            mcs, class_name, bases, attrs
         )
 
     @classmethod
-    def __prepare__(metacls, name, bases, **kwds):
+    def __prepare__(mcs, name, bases, **kwds):
         # Remember the order that values are defined.
         return OrderedDict()
 
@@ -689,7 +700,7 @@ class ConfigurationList(_Configuration):
         """
 
         children_class = self._children_class
-        child_values = value or list()
+        child_values = value or []
 
         if isinstance(child_values, list):
 
@@ -698,7 +709,7 @@ class ConfigurationList(_Configuration):
                 child_values, list
             ), f"Got {self}: {type(child_values)}: {child_values}"
 
-            for key, val in enumerate(child_values):
+            for key, _ in enumerate(child_values):
 
                 # Get best children_class
                 # field = None
@@ -729,7 +740,7 @@ class ConfigurationList(_Configuration):
         Returns:
             List of configuration values
         """
-        out = super(ConfigurationList, self).get_values(lvl=lvl, **kwargs)
+        out = super().get_values(lvl=lvl, **kwargs)
 
         if isinstance(out, Mapping):
             out = list(out.values())
@@ -738,4 +749,4 @@ class ConfigurationList(_Configuration):
     def __getitem__(self, value):
         value = int(value)
 
-        return super(ConfigurationList, self).__getitem__(value)
+        return super().__getitem__(value)
