@@ -1,27 +1,19 @@
-import copy
-import inspect
-import logging
-from collections import OrderedDict
+"Fields management"
 
-# from collections import Mapping, Sequence
-from collections.abc import Mapping, Sequence
-from pprint import pprint
+# pylint: disable=protected-access
+
+# TOFIX:
+# pylint: disable=invalid-name
+
+
+# from pprint import pprint
 from types import SimpleNamespace
 from typing import Callable
 
-import superconf.exceptions as exceptions
+from superconf import exceptions
 
-from .casts import (
-    AsBoolean,
-    AsDict,
-    AsIdentity,
-    AsInt,
-    AsList,
-    AsOption,
-    AsTuple,
-    evaluate,
-)
-from .common import FAIL, NOT_SET, UNSET_ARG, NotSet
+from .casts import AsBoolean, AsDict, AsIdentity, AsInt, AsList, AsOption, AsTuple
+from .common import FAIL, NOT_SET
 from .loaders import _Value
 
 # Shortcuts for standard casts
@@ -48,6 +40,7 @@ class Field:
 
     cast = None
 
+    # pylint: disable=redefined-builtin
     def __init__(
         self,
         key: str = None,
@@ -96,9 +89,7 @@ class Field:
         Returns:
             A string showing the field's class name, key, and help text.
         """
-        return '{}(key="{}", help="{}")'.format(
-            self.__class__.__name__, self.key, self.help
-        )
+        return f'{self.__class__.__name__}(key="{self.key}", help="{self.help}")'
 
     def is_container(self):
         """Check if this field is a container type.
@@ -112,6 +103,7 @@ class Field:
             return True
         return False
 
+    # pylint: disable=too-many-locals, too-many-branches, too-many-arguments, too-many-statements, too-many-positional-arguments
     def resolve_value(
         self,
         conf_instance,
@@ -146,8 +138,6 @@ class Field:
             CastValueFailure: If strict casting is enabled and the value
                 cannot be cast to the desired type.
         """
-        "Create a children"
-
         key = self.key
         assert isinstance(key, (str, int)), f"Got: {type(key)} {key}"
 
@@ -197,23 +187,23 @@ class Field:
 
         # Determine cast method
         if callable(cast):
-            cast = cast
-            cast_from.append(f"cast_is_callable")
+            # cast = cast
+            cast_from.append("cast_is_callable")
         elif cast is None and (default is NOT_SET or default is None):
             cast = as_is
-            cast_from.append(f"cast_is_none_and_no_defaults")
+            cast_from.append("cast_is_none_and_no_defaults")
         elif isinstance(default, bool):
             cast = as_boolean
-            cast_from.append(f"cast_as_boolean")
+            cast_from.append("cast_as_boolean")
         elif cast is None:
             cast = type(default)
-            cast_from.append(f"cast_is_none")
+            cast_from.append("cast_is_none")
         elif cast is NOT_SET:
             if default is NOT_SET or default is None:
-                cast_from.append(f"cast_notset_type_default")
+                cast_from.append("cast_notset_type_default")
                 cast = type(default)
             else:
-                cast_from.append(f"cast_notset_type_as_is")
+                cast_from.append("cast_notset_type_as_is")
                 cast = as_is
         else:
             raise TypeError(f"Cast must be callable, got: {type(cast)}")
@@ -227,8 +217,9 @@ class Field:
                 # print(f"  > LOADER: try search in {loader} key: {key}")
                 result = loader.getitem(self, key, **kwargs)
 
-            except (KeyError, TypeError) as err:
-                # print (f"{self}: Loader {key} {loader.__class__.__name__} failed with error: {type(err)}{err}")
+            except (KeyError, TypeError):
+                # print (f"{self}: Loader {key} {loader.__class__.__name__}
+                # failed with error: {type(err)}{err}")
                 continue
 
             if result is not NOT_SET:
@@ -257,7 +248,10 @@ class Field:
         # Check for strict_cast mode:
         # print ("DEFAUUUB", conf_instance, conf_instance._strict_cast)
         if error is not None and conf_instance._strict_cast is True:
-            msg = f"Got error {conf_instance}.{key} {type(error)}: {error}, set strict_cast=False to disable this error"
+            msg = (
+                f"Got error {conf_instance}.{key} {type(error)}: {error}, "
+                "set strict_cast=False to disable this error"
+            )
             raise exceptions.CastValueFailure(msg)
 
         meta = SimpleNamespace(
@@ -297,7 +291,7 @@ class FieldConf(Field):
             key: Name of the value used in file or environment variable.
             **kwargs: Additional arguments passed to the parent Field class.
         """
-        super(FieldConf, self).__init__(key, **kwargs)
+        super().__init__(key, **kwargs)
         self.children_class = children_class
 
 
@@ -386,7 +380,7 @@ class FieldOption(Field):
         """
         assert isinstance(options, dict), f"Expected a dict, got: {options}"
         self.cast = AsOption(options, default_option=default_option)
-        super(FieldOption, self).__init__(key, **kwargs)
+        super().__init__(key, **kwargs)
 
 
 class FieldDict(Field):
