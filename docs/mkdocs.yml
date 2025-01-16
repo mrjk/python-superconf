@@ -1,7 +1,7 @@
 site_name: SuperConf
 site_description: A Python configuration library with superpowers
-repo_url: https://github.com/mrjk/python-superconf2
-repo_name: mrjk/python-superconf2
+repo_url: https://github.com/mrjk/python-superconf
+repo_name: mrjk/python-superconf
 
 docs_dir: content/
 
