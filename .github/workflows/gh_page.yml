@@ -47,7 +47,7 @@ jobs:
       - name: Setup a local virtual environment (if no poetry.toml file)
         run: |
           poetry config cache-dir "${{ github.workspace }}/.cache/poetry" --local
-          poetry config virtualenvs.virtualenvs.path "${{ github.workspace }}/.cache/poetry" --local
+          poetry config virtualenvs.path "${{ github.workspace }}/.cache/poetry" --local
           poetry config virtualenvs.create true --local
           poetry config virtualenvs.in-project true --local
           poetry env info
