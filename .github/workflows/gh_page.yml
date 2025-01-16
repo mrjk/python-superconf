@@ -56,4 +56,5 @@ jobs:
 
       # Install docs dependencies
       - run: poetry install --only docs
+      - run: poetry run pyreverse --help
       - run: poetry run task docs:publish
