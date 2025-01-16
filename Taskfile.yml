@@ -18,6 +18,20 @@ tasks:
     cmds:
       - task --list-all
 
+  # Publish and release
+  # =============
+
+  publish_pypi_test:
+    desc: Publish package on test.pypi.org
+    cmds:
+      - poetry publish -r testpypi --build -n
+
+  publish_pypi:
+    desc: Publaish package on pypi.org
+    cmds:
+      - poetry publish -r pypi --build -n
+
+
   # Fix
   # =============
 
