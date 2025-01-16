@@ -6,13 +6,20 @@ authors = ["mrjk <mrjk.78@gmail.com>"]
 license = "GPLv3"
 readme = "README.md"
 
+[tool.poetry.scripts]
+superconf = "superconf.main:hello"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+# Dependencies groups
+# ========================
+
 [tool.poetry.dependencies]
 python = "^3.9"
 pyaml = "^24.12.1"
-
-
-[tool.poetry.scripts]
-superconf = "superconf.main:hello"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
@@ -23,16 +30,19 @@ pytest-regressions = "^2.6.0"
 pytest-clarity = "^1.0.1"
 pylint = "^3.3.3"
 
-
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.49"
 mkdocstrings = {extras = ["python"], version = "^0.27.0"}
 pylint = "^3.3.3"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
+# Poetry bumpversion
+# ========================
+[tool.poetry_bumpversion.file."your_package/__init__.py"]
+
+
+# Pytest config
+# ========================
 [tool.pytest.ini_options]
 pythonpath = [
   "."
