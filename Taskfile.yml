@@ -8,7 +8,6 @@ includes:
     taskfile: ./docs/Taskfile.yml
     dir: ./docs
 
-
 tasks:
 
   list:
