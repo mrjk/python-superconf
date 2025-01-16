@@ -29,7 +29,9 @@ jobs:
 
       # Prepare project dependencies
       - name: Add .cache/bin to PATH
-        run: echo "${{ github.workspace }}/.cache/bin" >> $GITHUB_PATH
+        run: |
+          echo "${{ github.workspace }}/.cache/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/.cache/poetry/bin" >> $GITHUB_PATH
 
       - name: Install go-task
         run: |
@@ -40,6 +42,15 @@ jobs:
         uses: abatilo/actions-poetry@v3
         with:
           poetry-version: "1.8.5"
+
+      - name: Setup a local virtual environment (if no poetry.toml file)
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+          poetry config virtualenvs.virtualenvs.path "${{ github.workspace }}/.cache/poetry" --local
+          poetry env info
+          poetry config --list
+
 
       # Install docs dependencies
       - run: poetry install --only docs
