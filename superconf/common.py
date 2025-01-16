@@ -1,4 +1,4 @@
-# from .loaders import NOT_SET
+"Common code"
 
 
 class NotSet(str):
@@ -11,6 +11,7 @@ class NotSet(str):
     """
 
     def repr(self):
+        "Return string representation"
         return "<NOT_SET>"
 
     __str__ = repr

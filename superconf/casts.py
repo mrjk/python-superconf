@@ -1,11 +1,15 @@
+"Support value casting"
+
+# pylint: disable=too-few-public-methods
+
 import ast
 from collections.abc import Mapping, Sequence
 
-from .common import FAIL, NOT_SET, UNSET_ARG
+from .common import FAIL  # , NOT_SET, UNSET_ARG
 from .exceptions import InvalidCastConfiguration
 
 
-class AbstractCast(object):
+class AbstractCast:
     """Base class for all cast operations.
 
     This abstract class defines the interface that all cast implementations must follow.
@@ -55,10 +59,10 @@ class AsBoolean(AbstractCast):
         # print (f"\n\n === PRINT CAST {value}===  \n")
         try:
             return self.values[str(value).lower()]
-        except KeyError:
+        except KeyError as err:
             raise InvalidCastConfiguration(
-                "Error casting value {!r} to boolean".format(value)
-            )
+                f"Error casting value {value} to boolean"
+            ) from err
 
 
 class AsInt(AbstractCast):
@@ -70,17 +74,15 @@ class AsInt(AbstractCast):
         InvalidCastConfiguration: If the value cannot be converted to an integer.
     """
 
-    "Return an INT"
-
     def __call__(self, value):
         try:
             return int(value)
-        except ValueError:
+        except ValueError as err:
             # TOFIX: Raise or report unset ?
             # return NOT_SET
             raise InvalidCastConfiguration(
-                "Error casting value {!r} to int".format(value)
-            )
+                f"Error casting value {value} to int"
+            ) from err
 
 
 class AsList(AbstractCast):
@@ -107,6 +109,7 @@ class AsList(AbstractCast):
         self.quotes = quotes
 
     def cast(self, sequence):
+        "Cast to correct type"
         return list(sequence)
 
     def __call__(self, value):
@@ -117,14 +120,15 @@ class AsList(AbstractCast):
         if not value:
             # print ("PARSE AS EMPTY", value)
             return self.cast([])
-        elif isinstance(value, str):
+
+        if isinstance(value, str):
             # print ("PARSE AS STRING", value)
             return self._parse_string(value)
 
-        elif isinstance(value, Sequence):
+        if isinstance(value, Sequence):
             # print ("PARSE AS LIST", value)
             return self.cast(value)
-        elif isinstance(value, Mapping):
+        if isinstance(value, Mapping):
             assert False, f"TOFIX: Unsupported type dict, {value}"
 
         assert False
@@ -199,25 +203,28 @@ class AsDict(AbstractCast):
         self.quotes = quotes
 
     def cast(self, sequence):
+        "Cast value"
         return dict(sequence)
 
     def __call__(self, value):
         return self._parse(value)
 
     def _parse(self, value):
+        "Internal helper to parse values"
 
         if not value:
             # print ("PARSE AS EMPTY", value)
             return self.cast({})
-        elif isinstance(value, str):
+
+        if isinstance(value, str):
             assert False, "String  parsing is not implemeted yet"
             # print ("PARSE AS STRING", value)
-            return self._parse_string(value)
+            # return self._parse_string(value)
 
-        elif isinstance(value, Mapping):
+        if isinstance(value, Mapping):
             # print ("PARSE AS LIST", value)
             return self.cast(value)
-        elif isinstance(value, Sequence):
+        if isinstance(value, Sequence):
             assert False, f"TOFIX: Unsupported type list, {value}"
 
         assert False
@@ -251,20 +258,18 @@ class AsOption(AbstractCast):
     def __call__(self, value):
         try:
             return self.options[value]
-        except KeyError:
+        except KeyError as err:
 
             # Raise error if no default
             default_option = self.default_option
             if default_option is FAIL:
-                raise InvalidCastConfiguration("Invalid option {!r}".format(value))
+                raise InvalidCastConfiguration(f"Invalid option {value}") from err
 
             # Look for default
             if not default_option in self.options:
                 raise InvalidCastConfiguration(
-                    "Invalid default option {!r}: does not exists: {}".format(
-                        value, default_option
-                    )
-                )
+                    f"Invalid default option {value}: does not exists: {default_option}"
+                ) from err
 
             # if isinstance(default, str):
             return self.options[default_option]
