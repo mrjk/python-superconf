@@ -25,7 +25,11 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install poetry
+
+      - name: Run image
+        uses: abatilo/actions-poetry@v3
+        with:
+          poetry-version: "1.8.5"
       - run: poetry install --only docs
       - working-directory: ./docs
-        run: mkdocs gh-deploy --force
+        run: poetry run mkdocs gh-deploy --force
