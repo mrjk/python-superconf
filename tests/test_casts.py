@@ -8,8 +8,9 @@ from superconf.casts import (
     AsOption,
     AsIdentity,
     InvalidCastConfiguration,
-    NOT_SET,
 )
+
+# from superconf.common import NOT_SET
 
 
 class TestAsBoolean:
