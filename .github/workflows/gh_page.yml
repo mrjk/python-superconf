@@ -10,6 +10,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Prepare the environment
       - uses: actions/checkout@v4
       - name: Configure Git Credentials
         run: |
@@ -26,10 +27,20 @@ jobs:
           restore-keys: |
             mkdocs-material-
 
+      # Prepare project dependencies
+      - name: Add .cache/bin to PATH
+        run: echo "${{ github.workspace }}/.cache/bin" >> $GITHUB_PATH
+
+      - name: Install go-task
+        run: |
+          mkdir -p .cache/bin
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b .cache/bin
+
       - name: Run image
         uses: abatilo/actions-poetry@v3
         with:
           poetry-version: "1.8.5"
+
+      # Install docs dependencies
       - run: poetry install --only docs
-      - working-directory: ./docs
-        run: poetry run mkdocs gh-deploy --force
+      - run: poetry run task docs:publish
