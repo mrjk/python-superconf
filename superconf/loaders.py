@@ -1,3 +1,8 @@
+"Loaders library"
+
+# pylint: disable=unnecessary-dunder-call, unused-argument
+
+
 import os
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
@@ -38,13 +43,13 @@ class EnvPrefix:
             str: The environment variable name with the prefix applied and converted to uppercase.
         """
         value = str(value)
-        return "{}{}".format(self.prefix, value.upper())
+        return f"{self.prefix}{value.upper()}"
 
     def __repr__(self):
-        return '{}("{}")'.format(self.__class__.__name__, self.prefix)
+        return f'{self.__class__.__name__}("{self.prefix}")'
 
 
-def get_args(parser):
+def _get_args(parser):
     """
     Convert arguments extracted from an ArgumentParser to a dictionary.
 
@@ -55,7 +60,7 @@ def get_args(parser):
         dict: Dictionary containing the parsed CLI arguments, excluding those with NOT_SET values.
     """
     args = vars(parser.parse_args()).items()
-    return {key: val for key, val in args if not isinstance(val, NotSet)}
+    return {key: val for key, val in args if not isinstance(val, type(NOT_SET))}
 
 
 class AbstractConfigurationLoader:
@@ -89,8 +94,8 @@ class AbstractConfigurationLoader:
 
     def reset(self):
         """Reset the loader's internal state."""
-        pass
 
+    # pylint: disable=unused-argument
     def contains(self, config, item):
         """
         Check if a configuration key exists in this loader.
@@ -137,7 +142,7 @@ class CommandLine(AbstractConfigurationLoader):
     """
 
     # noinspection PyShadowingNames
-    def __init__(self, parser, get_args=get_args):
+    def __init__(self, parser, get_args=_get_args):
         """
         :param parser: An `argparse` parser instance to extract variables from.
         :param function get_args: A function to extract args from the parser.
@@ -147,7 +152,7 @@ class CommandLine(AbstractConfigurationLoader):
         self.configs = get_args(self.parser)
 
     def __repr__(self):
-        return "{}(parser={})".format(self.__class__.__name__, self.parser)
+        return f"{self.__class__.__name__}(parser={self.parser})"
 
     def __contains__(self, item):
         """Check if a configuration key exists in the parsed arguments."""
@@ -183,7 +188,7 @@ class IniFile(AbstractConfigurationLoader):
         self._initialized = False
 
     def __repr__(self):
-        return '{}("{}")'.format(self.__class__.__name__, self.filename)
+        return f'{self.__class__.__name__}("{self.filename}")'
 
     def _parse(self):
         """
@@ -196,15 +201,15 @@ class IniFile(AbstractConfigurationLoader):
         if self._initialized:
             return
 
-        with open(self.filename) as inifile:
+        with open(self.filename, encoding="utf-8") as inifile:
             try:
                 self.parser.read_file(inifile)
-            except (UnicodeDecodeError, MissingSectionHeaderError):
-                raise InvalidConfigurationFile()
+            except (UnicodeDecodeError, MissingSectionHeaderError) as err:
+                raise InvalidConfigurationFile() from err
 
         if not self.parser.has_section(self.section):
             raise MissingSettingsSection(
-                "Missing [{}] section in {}".format(self.section, self.filename)
+                f"Missing [{self.section}] section in {self.filename}"
             )
 
         self._initialized = True
@@ -244,12 +249,12 @@ class IniFile(AbstractConfigurationLoader):
             KeyError: If the key doesn't exist in the section.
         """
         if not self.check():
-            raise KeyError("{!r}".format(item))
+            raise KeyError(f"{item}")
 
         try:
             return self.parser.get(self.section, self.keyfmt(item))
-        except NoOptionError:
-            raise KeyError("{!r}".format(item))
+        except NoOptionError as err:
+            raise KeyError(f"{item}") from err
 
     def reset(self):
         """Reset the parser's initialization state."""
@@ -282,7 +287,7 @@ class Environment(AbstractConfigurationLoader):
         self.keyfmt = keyfmt
 
     def __repr__(self):
-        return "{}(keyfmt={})".format(self.__class__.__name__, self.keyfmt)
+        return f"{self.__class__.__name__}(keyfmt={self.keyfmt})"
 
     def __contains__(self, item):
         """Check if an environment variable exists for the given key."""
@@ -329,7 +334,7 @@ class EnvFile(AbstractConfigurationLoader):
         self.configs = None
 
     def __repr__(self):
-        return '{}("{}")'.format(self.__class__.__name__, self.filename)
+        return f'{self.__class__.__name__}("{self.filename}")'
 
     def _parse(self):
         """
@@ -342,7 +347,7 @@ class EnvFile(AbstractConfigurationLoader):
             return
 
         self.configs = {}
-        with open(self.filename) as envfile:
+        with open(self.filename, encoding="utf-8") as envfile:
             self.configs.update(EnvFileParser(envfile).parse_config())
 
     def check(self):
@@ -383,7 +388,7 @@ class EnvFile(AbstractConfigurationLoader):
             KeyError: If the key doesn't exist in the file.
         """
         if not self.check():
-            raise KeyError("{!r}".format(item))
+            raise KeyError(f"{item}")
 
         return self.configs[self.keyfmt(item)]
 
@@ -466,7 +471,7 @@ class RecursiveSearch(AbstractConfigurationLoader):
             list: List of matching filenames.
         """
         filenames = []
-        if type(patterns) is str:
+        if isinstance(patterns, str):
             patterns = (patterns,)
 
         for pattern in patterns:
@@ -549,8 +554,11 @@ class RecursiveSearch(AbstractConfigurationLoader):
                 return config_file[item]
             except KeyError:
                 continue
-        else:
-            raise KeyError("{!r}".format(item))
+
+        raise KeyError(f"{item}")
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(root_path={self.root_path})"
 
     def reset(self):
         """Reset the discovered configuration files cache."""
@@ -576,7 +584,7 @@ class Dict(AbstractConfigurationLoader):
         self.values_mapping = values_mapping
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.values_mapping)
+        return f"{self.__class__.__name__}({self.values_mapping})"
 
     def __contains__(self, item):
         """Check if a configuration key exists in the dictionary."""
@@ -613,7 +621,7 @@ class _Value(AbstractConfigurationLoader):
         self.values_mapping = values_mapping
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.values_mapping)
+        return f"{self.__class__.__name__}({self.values_mapping})"
 
     def __contains__(self, item):
         """Check if the value exists for the given key."""
@@ -656,7 +664,7 @@ class _Value22(AbstractConfigurationLoader):
         self.values_mapping = values_mapping
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.values_mapping)
+        return f"{self.__class__.__name__}({self.values_mapping})"
 
     def __contains__(self, item):
         """Check if the value exists for the given key."""

@@ -1,17 +1,20 @@
+"Superconf Exceptions"
+
+
 class ConfigurationException(Exception):
-    pass
+    "General error"
 
 
 class InvalidConfigurationFile(ConfigurationException):
-    pass
+    "Invalid configuration File"
 
 
 class MissingSettingsSection(InvalidConfigurationFile):
-    pass
+    "Missing section setting"
 
 
 class InvalidPath(ConfigurationException):
-    pass
+    "Configuration Exception"
 
 
 class InvalidCastConfiguration(ConfigurationException):
@@ -24,14 +27,11 @@ class CastValueFailure(ConfigurationException):
 
 class UndeclaredField(ConfigurationException):
     "Raised when querrying unexisting field"
-    pass
 
 
 class UnknownExtraField(ConfigurationException):
-    "Raised when trying to set value of undefined field. Enable extra_fields=True to disable this error"
-    pass
+    "Raised when trying to set value of undefined field. Enable extra_fields=True to disable"
 
 
 class UnknownSetting(ConfigurationException):
     "Raised when an unexpected field is met. Enable extra_fields=True to disable this error"
-    pass
