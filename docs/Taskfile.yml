@@ -13,9 +13,6 @@ tasks:
     cmds:
       - task --list-all
 
-
-
-
   # Generate
   # =============
 
@@ -43,4 +40,11 @@ tasks:
     cmds:
       - task: gen_class_graph
       - mkdocs serve
+
+  publish:
+    desc: update gh_page branch with new documentation
+    cmds:
+      - task: gen_class_graph
+      - poetry run mkdocs gh-deploy --force
+
 
