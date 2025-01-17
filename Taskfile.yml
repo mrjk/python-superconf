@@ -67,9 +67,9 @@ tasks:
     desc: Test everything
     cmds:
       # - task: test_pytest
-      - task: test_lab
       # - task: test_regressions
       - task: test_recap
+      - task: test_lab
       - task: test_lint
 
   test_pytest:
