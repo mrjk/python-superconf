@@ -30,6 +30,7 @@ pytest-regressions = "^2.6.0"
 pytest-clarity = "^1.0.1"
 pylint = "^3.3.3"
 yamllint = "^1.35.1"
+pymarkdownlnt = "^0.9.26"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.49"
