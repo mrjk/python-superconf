@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "superconf"
-version = "0.1.0"
+version = "0.1.1a0"
 description = "Super config for python"
 authors = ["mrjk <mrjk.78@gmail.com>"]
 license = "GPLv3"
