@@ -1,3 +1,7 @@
+"Parser library"
+
+# pylint: disable=too-few-public-methods
+
 from typing import Iterator, Tuple, Union
 
 STATE_INITIAL = "initial"
@@ -14,6 +18,7 @@ QUOTES = set("'\"")
 
 
 class BufferedStreamReader:
+    "Undocumented class"
     BUFFER_SIZE = 1024
 
     def __init__(self, stream):
@@ -22,6 +27,8 @@ class BufferedStreamReader:
         self.position = 0
 
     def read_char(self):
+        "Read character"
+
         if self._is_buffer_depleted():
             self._fill_buffer()
             if not self.buffer:
@@ -40,6 +47,8 @@ class BufferedStreamReader:
 
 
 class EnvFileParser:
+    "Environment parser"
+
     def __init__(self, stream):
         self.state = STATE_INITIAL
         self._stream = BufferedStreamReader(stream)
@@ -50,6 +59,7 @@ class EnvFileParser:
         self._key_parsed = False
 
     def parse_config(self) -> Iterator[Tuple[str, str]]:
+        "Parse config"
         key = self._current_key
         value = self._current_value
 
