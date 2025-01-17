@@ -83,7 +83,6 @@ print(config.is_set('service_a.url'))  # False (required field not set)
 For cases where you need to handle configurations with unknown fields or dynamic structures, SuperConf provides the `FieldConf` field type with the `children_class` parameter.
 
 
-
 ```python
 from superconf.configuration import Configuration
 from superconf.fields import FieldString, FieldInt, FieldConf
@@ -119,8 +118,6 @@ print(config.services_as_list[0].timeout)  # 60
 print(config.services_as_list[1].timeout)   # 30 (default value)
 print(config.services_as_list[2].url)     # "https://cache.example.com"
 ```
-
-
 
 
 ## 5. Dynamic Field Configurations with custom classes

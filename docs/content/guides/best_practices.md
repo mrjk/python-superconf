@@ -1,5 +1,6 @@
+# Best practices
 
-## 4. Best Practices
+## Best Practices
 
 1. **Logical Grouping**: Group related configuration settings into their own configuration classes
 2. **Depth Control**: While you can nest configurations deeply, try to keep the structure as flat as possible for maintainability

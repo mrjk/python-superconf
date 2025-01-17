@@ -94,12 +94,14 @@ A: Yes, you can create custom field types by extending the `Field` class.
 ### Setup Development Environment
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/mrjk/python-superconf2.git
 cd python-superconf2
 ```
 
 2. Install development dependencies:
+
 ```bash
 poetry install
 ```
