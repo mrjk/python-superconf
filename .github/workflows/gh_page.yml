@@ -1,6 +1,6 @@
 ---
 
-name: documentation
+name: gen-documentation
 
 # yamllint disable-line rule:truthy
 on:
@@ -9,7 +9,7 @@ on:
       - master
       - main
       - develop
-      
+
 permissions:
   contents: write
 jobs:
@@ -50,7 +50,7 @@ jobs:
         run: |
           sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b .cache/bin
 
-      - name: Run image
+      - name: Install poetry
         uses: abatilo/actions-poetry@v3
         with:
           poetry-version: "1.8.5"
@@ -67,5 +67,5 @@ jobs:
 
       # Install docs dependencies
       - run: poetry install --only docs
-      - run: poetry run pyreverse --help
+      # - run: poetry run pyreverse --help
       - run: poetry run task docs:publish
