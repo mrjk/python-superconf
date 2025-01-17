@@ -70,7 +70,6 @@ print(config.port)   # 8080
 - Python 3.9 or higher
 - Dependencies:
   - pyaml >= 24.12.1
-  - classyconf >= 0.5.2
 
 ### FAQ
 

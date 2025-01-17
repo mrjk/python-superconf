@@ -7,10 +7,9 @@ import os
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
-from classyconf.parsers import EnvFileParser
-
 from .common import NOT_SET
 from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
+from .parsers import EnvFileParser
 
 
 class EnvPrefix:
