@@ -1,3 +1,4 @@
+---
 # https://taskfile.dev
 
 version: '3'
@@ -14,7 +15,7 @@ tasks:
     desc: "Show available commands"
     aliases:
       - default
-    silent: True
+    silent: true
     cmds:
       - task --list-all
 
@@ -24,12 +25,15 @@ tasks:
   publish_pypi_test:
     desc: Publish package on test.pypi.org
     cmds:
-      - poetry publish -r testpypi --build -n
+      - poetry build
+      - poetry publish -r testpypi
+
 
   publish_pypi:
-    desc: Publaish package on pypi.org
+    desc: Publish package on pypi.org
     cmds:
-      - poetry publish -r pypi --build -n
+      - poetry build
+      - poetry publish
 
 
   # Fix
@@ -47,6 +51,7 @@ tasks:
       - isort --profile black superconf
       - black --check superconf tests examples
       - pylint superconf || true
+      - yamllint .
 
   # Tests
   # =============
@@ -54,9 +59,9 @@ tasks:
   test:
     desc: Test everything
     cmds:
-      #- task: test_pytest
+      # - task: test_pytest
       - task: test_lab
-      #- task: test_regressions
+      # - task: test_regressions
       - task: test_recap
       - task: test_lint
 
@@ -74,13 +79,10 @@ tasks:
     desc: Test for regressions
     cmds:
       - pytest tests/test_50_*
-      #- pytest tests/test_50_regressions_node.py
-      #- pytest tests/test_50_regressions_store.py
 
   test_recap:
     desc: Report tests
     cmds:
       - pytest tests --tb no -vv -q
       - pytest --cov=superconf --cov-report term-missing  tests/
-
 

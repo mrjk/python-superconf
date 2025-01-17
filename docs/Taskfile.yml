@@ -1,7 +1,7 @@
+---
 # https://taskfile.dev
 
 version: '3'
-
 
 tasks:
 
@@ -9,7 +9,7 @@ tasks:
     desc: "Show available commands"
     aliases:
       - default
-    silent: True
+    silent: true
     cmds:
       - task --list-all
 
@@ -28,10 +28,13 @@ tasks:
           - casts
         cmd: |
           mkdir -p content/images/schema_{{.ITEM}}
-          pyreverse -my -A -o svg -p superconf -d content/images/schema_{{.ITEM}} ../superconf/{{.ITEM}}.py 
+          pyreverse -my -A -o svg \
+            -p superconf \
+            -d content/images/schema_{{.ITEM}} \
+            ../superconf/{{.ITEM}}.py
       - >
         echo "Image generated in: content/images/"
-  
+
   # Mkdocs
   # =============
 
@@ -46,5 +49,4 @@ tasks:
     cmds:
       - task: gen_class_graph
       - poetry run mkdocs gh-deploy --force
-
 
