@@ -30,9 +30,9 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 ## Code of Conduct
 
 This project and everyone participating in it is governed by the
-[SuperConf Code of Conduct](https://github.com/mrjk/superconf/blob/master/CODE_OF_CONDUCT.md).
+[SuperConf Code of Conduct](CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code. Please report unacceptable behavior
-to <contact@mrjk.com>.
+to `<mrjk _DOT_ 78 _AT_ gmail.com>`.
 
 
 ## I Have a Question
