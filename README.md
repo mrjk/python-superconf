@@ -1,8 +1,10 @@
 # SuperConf
 
-A powerful and flexible configuration management library for Python, inspired by [ClassyConf](https://classyconf.readthedocs.io/en/latest/). SuperConf provides a clean, type-safe, and intuitive way to handle configuration from multiple sources including environment variables, configuration files, and dictionaries.
+This project is in Beta.
 
-Inspired from cafram and [Cafram](https://classyconf.readthedocs.io/en/latest/)
+A powerful and flexible configuration management library for Python. SuperConf provides a clean, type-safe, and intuitive way to handle configuration from multiple sources including environment variables, configuration files, and dictionaries.
+
+Inspired from [Cafram](https://github.com/barbu-it/cafram), forked from [ClassyConf](https://classyconf.readthedocs.io/en/latest/).
 
 ## Features
 
@@ -20,11 +22,13 @@ Inspired from cafram and [Cafram](https://classyconf.readthedocs.io/en/latest/)
 ### Installation
 
 Install using pip:
+
 ```bash
 pip install superconf
 ```
 
 Or install from source:
+
 ```bash
 git clone https://github.com/mrjk/python-superconf2.git
 cd python-superconf2
@@ -40,6 +44,7 @@ from superconf.configuration import Configuration
 from superconf.fields import FieldString, FieldInt, FieldBool, FieldList
 
 class AppConfig(Configuration):
+
     class Meta:
         loaders = [Environment()]  # Load from environment variables
     
