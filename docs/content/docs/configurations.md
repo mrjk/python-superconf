@@ -15,6 +15,7 @@ Key features:
 - Default values and help text support
 
 Example:
+
 ```python
 from superconf.configuration import Configuration
 from superconf.fields import FieldString, FieldInt, FieldBool
@@ -45,6 +46,7 @@ Key features:
 - Extra fields support (enabled by default)
 
 Example:
+
 ```python
 from superconf.configuration import ConfigurationDict
 from superconf.fields import FieldString, FieldInt
@@ -82,6 +84,7 @@ Key features:
 - Extra fields support (enabled by default)
 
 Example:
+
 ```python
 from superconf.configuration import ConfigurationList
 from superconf.fields import FieldString, FieldInt, FieldList
@@ -110,21 +113,21 @@ print(config.services[1].timeout)  # 30 (default)
 All configuration classes share these common features:
 
 1. **Value Loading**:
-    - Support for multiple value loaders (Environment variables, dictionaries, etc.)
-    - Caching of loaded values
-    - Value type casting
+   - Support for multiple value loaders (Environment variables, dictionaries, etc.)
+   - Caching of loaded values
+   - Value type casting
 
 2. **Field Management**:
-    - Declared fields tracking
-    - Dynamic field creation
-    - Field value validation
+   - Declared fields tracking
+   - Dynamic field creation
+   - Field value validation
 
 3. **Inheritance Support**:
-    - Configuration class inheritance
-    - Field inheritance from parent classes
-    - Override capability through Meta class
+   - Configuration class inheritance
+   - Field inheritance from parent classes
+   - Override capability through Meta class
 
 4. **Value Access**:
-    - Dictionary-style access (`config['key']`)
-    - Attribute-style access (`config.key`)
-    - Nested value access (`config.service.url`)
+   - Dictionary-style access (`config['key']`)
+   - Attribute-style access (`config.key`)
+   - Nested value access (`config.service.url`)

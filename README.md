@@ -1,8 +1,34 @@
 # SuperConf
 
-A powerful and flexible configuration management library for Python, inspired by [ClassyConf](https://classyconf.readthedocs.io/en/latest/). SuperConf provides a clean, type-safe, and intuitive way to handle configuration from multiple sources including environment variables, configuration files, and dictionaries.
 
-Inspired from cafram and [Cafram](https://classyconf.readthedocs.io/en/latest/)
+<p align='center'>
+<a href="https://gitter.im/mrjk/python-superconf">
+<img src="https://img.shields.io/gitter/room/mrjk/python-superconf" alt="Gitter"></a>
+<a href="https://pypi.org/project/superconf/">
+<img src="https://img.shields.io/pypi/v/superconf" alt="PyPI"></a>
+<a href="https://pypistats.org/packages/superconf">
+<img src="https://img.shields.io/pypi/dm/superconf" alt="PyPI - Downloads"></a>
+<a href="https://github.com/mrjk/python-superconf/releases">
+<img src="https://img.shields.io/piwheels/v/superconf?include_prereleases" alt="piwheels (including prereleases)"></a>
+<a href="https://github.com/mrjk/python-superconf/graphs/code-frequency">
+<img src="https://img.shields.io/github/commit-activity/m/mrjk/python-superconf" alt="GitHub commit activity"></a>
+<a href="https://www.gnu.org/licenses/gpl-3.0">
+<img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg" alt="License: GPL v3"></a>
+</p>
+
+<p align="center">
+<img src="https://img.shields.io/pypi/pyversions/superconf" alt="PyPI - Python Version">
+<img src="https://img.shields.io/pypi/format/superconf" alt="PyPI - Format">
+<img src="https://img.shields.io/pypi/status/superconf" alt="PyPI - Status">
+</p>
+
+-------
+
+This project is in Beta.
+
+A powerful and flexible configuration management library for Python. SuperConf provides a clean, type-safe, and intuitive way to handle configuration from multiple sources including environment variables, configuration files, and dictionaries.
+
+Inspired from [Cafram](https://github.com/barbu-it/cafram), forked from [ClassyConf](https://classyconf.readthedocs.io/en/latest/).
 
 ## Features
 
@@ -20,11 +46,13 @@ Inspired from cafram and [Cafram](https://classyconf.readthedocs.io/en/latest/)
 ### Installation
 
 Install using pip:
+
 ```bash
 pip install superconf
 ```
 
 Or install from source:
+
 ```bash
 git clone https://github.com/mrjk/python-superconf2.git
 cd python-superconf2
@@ -40,6 +68,7 @@ from superconf.configuration import Configuration
 from superconf.fields import FieldString, FieldInt, FieldBool, FieldList
 
 class AppConfig(Configuration):
+
     class Meta:
         loaders = [Environment()]  # Load from environment variables
     
@@ -65,7 +94,6 @@ print(config.port)   # 8080
 - Python 3.9 or higher
 - Dependencies:
   - pyaml >= 24.12.1
-  - classyconf >= 0.5.2
 
 ### FAQ
 
@@ -89,12 +117,14 @@ A: Yes, you can create custom field types by extending the `Field` class.
 ### Setup Development Environment
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/mrjk/python-superconf2.git
 cd python-superconf2
 ```
 
 2. Install development dependencies:
+
 ```bash
 poetry install
 ```

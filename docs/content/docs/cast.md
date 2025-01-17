@@ -9,6 +9,7 @@ SuperConf provides several built-in cast types to convert configuration values i
 Converts values to boolean type. Recognizes various string representations of true/false values.
 
 **True values:**
+
 - "1"
 - "true", "True"
 - "yes", "y"
@@ -16,6 +17,7 @@ Converts values to boolean type. Recognizes various string representations of tr
 - "t"
 
 **False values:**
+
 - "0"
 - "false", "False"
 - "no", "n"
@@ -23,6 +25,7 @@ Converts values to boolean type. Recognizes various string representations of tr
 - "f"
 
 Example:
+
 ```python
 from superconf import Configuration
 from superconf.fields import FieldBool
@@ -37,6 +40,7 @@ class AppConfig(Configuration):
 Converts values to integer type. Raises `InvalidCastConfiguration` if the value cannot be converted to an integer.
 
 Example:
+
 ```python
 from superconf import Configuration
 from superconf.fields import FieldInt
@@ -55,6 +59,7 @@ Converts values to Python lists. Can handle:
 - Quoted strings with delimiters
 
 Example:
+
 ```python
 from superconf import Configuration
 from superconf.fields import FieldList
@@ -70,6 +75,7 @@ class AppConfig(Configuration):
 Similar to AsList but converts values to Python tuples. Has the same parsing capabilities as AsList.
 
 Example:
+
 ```python
 from superconf import Configuration
 from superconf.fields import FieldTuple
@@ -82,11 +88,13 @@ class AppConfig(Configuration):
 ### AsDict (FieldDict)
 
 Converts values to Python dictionaries. Currently supports:
+
 - Empty values (returns empty dict)
 - Existing dictionary objects
 - Note: String parsing is not implemented yet
 
 Example:
+
 ```python
 from superconf import Configuration
 from superconf.fields import FieldDict
@@ -101,11 +109,13 @@ class AppConfig(Configuration):
 Provides a way to map input values to predefined options. Useful for configuration values that should be one of a set of allowed values.
 
 Features:
+
 - Mapping of input values to predefined options
 - Optional default option when invalid value is provided
 - Raises `InvalidCastConfiguration` if no default and value is invalid
 
 Example:
+
 ```python
 from superconf import Configuration
 from superconf.fields import FieldOption
@@ -131,6 +141,7 @@ This is a no-op cast that returns the value as-is. Used internally when no speci
 While not a cast in the traditional sense, the FieldString ensures values are converted to strings.
 
 Example:
+
 ```python
 from superconf import Configuration
 from superconf.fields import FieldString
@@ -145,6 +156,7 @@ class AppConfig(Configuration):
 All casts can raise `InvalidCastConfiguration` when they fail to cast a value. When using fields with `strict_cast=True` in the configuration Meta class, failed casts will raise `CastValueFailure`.
 
 Example:
+
 ```python
 class AppConfig(Configuration):
     class Meta:
