@@ -51,7 +51,12 @@ tasks:
     cmds:
       - isort --profile black superconf
       - black --check superconf tests
-      - pylint superconf || true
+      - pylint superconf
+
+  test_lint_full:
+    desc: run all linting tests
+    cmds:
+      - task: test_lint
       - yamllint $( git ls-files | grep 'yml$' )
       - pymarkdownlnt scan $( git ls-files | grep 'md$' )
 

@@ -70,5 +70,3 @@ jobs:
           find . | sort
 
           poetry run task test
-
-
