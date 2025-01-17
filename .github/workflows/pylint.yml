@@ -20,26 +20,26 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
 
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      # - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
 
       - uses: actions/cache@v4
         with:
           key: project-${{ env.cache_id }}
-          path: .cache
+          path: ~/.local
           restore-keys: |
             project-
 
-      # Prepare project dependencies
-      - name: Add .cache/bin to PATH
-        run: |
-          mkdir -p "${{ github.workspace }}/.cache/bin"
-          mkdir -p "${{ github.workspace }}/.cache/poetry/bin"
-          echo "${{ github.workspace }}/.cache/bin" >> $GITHUB_PATH
-          echo "${{ github.workspace }}/.cache/poetry/bin" >> $GITHUB_PATH
+      # # Prepare project dependencies
+      # - name: Add .cache/bin to PATH
+      #   run: |
+      #     mkdir -p "${{ github.workspace }}/.cache/bin"
+      #     mkdir -p "${{ github.workspace }}/.cache/poetry/bin"
+      #     echo "${{ github.workspace }}/.cache/bin" >> $GITHUB_PATH
+      #     echo "${{ github.workspace }}/.cache/poetry/bin" >> $GITHUB_PATH
 
       - name: Install go-task
         run: |
-          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b .cache/bin
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -51,8 +51,12 @@ jobs:
 
       - name: Setup a local virtual environment (if no poetry.toml file)
         run: |
+          echo pwd=$PWD
+          echo home=$HOME
+
           poetry env info
           poetry config --list
+
       # poetry config cache-dir "${{ github.workspace }}/.cache/poetry" --local
       # poetry config virtualenvs.path "${{ github.workspace }}/.cache/poetry" --local
       # poetry config virtualenvs.create true --local
@@ -62,5 +66,9 @@ jobs:
         run: |
           find . | sort
           poetry install
+
+          find . | sort
+
           poetry run task test
+
 
