@@ -6,7 +6,6 @@ name: gen-documentation
 on:
   push:
     branches:
-      - master
       - main
       - develop
 

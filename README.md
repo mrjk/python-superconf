@@ -1,5 +1,29 @@
 # SuperConf
 
+
+<p align='center'>
+<a href="https://gitter.im/mrjk/python-superconf">
+<img src="https://img.shields.io/gitter/room/mrjk/python-superconf" alt="Gitter"></a>
+<a href="https://pypi.org/project/superconf/">
+<img src="https://img.shields.io/pypi/v/superconf" alt="PyPI"></a>
+<a href="https://pypistats.org/packages/superconf">
+<img src="https://img.shields.io/pypi/dm/superconf" alt="PyPI - Downloads"></a>
+<a href="https://github.com/mrjk/python-superconf/releases">
+<img src="https://img.shields.io/piwheels/v/superconf?include_prereleases" alt="piwheels (including prereleases)"></a>
+<a href="https://github.com/mrjk/python-superconf/graphs/code-frequency">
+<img src="https://img.shields.io/github/commit-activity/m/mrjk/python-superconf" alt="GitHub commit activity"></a>
+<a href="https://www.gnu.org/licenses/gpl-3.0">
+<img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg" alt="License: GPL v3"></a>
+</p>
+
+<p align="center">
+<img src="https://img.shields.io/pypi/pyversions/superconf" alt="PyPI - Python Version">
+<img src="https://img.shields.io/pypi/format/superconf" alt="PyPI - Format">
+<img src="https://img.shields.io/pypi/status/superconf" alt="PyPI - Status">
+</p>
+
+-------
+
 This project is in Beta.
 
 A powerful and flexible configuration management library for Python. SuperConf provides a clean, type-safe, and intuitive way to handle configuration from multiple sources including environment variables, configuration files, and dictionaries.
