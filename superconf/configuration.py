@@ -535,7 +535,42 @@ class _Configuration(_ConfigurationBase):
                 self._cached_values[key] = conf
 
 
-class ConfigurationDict(_Configuration):
+class DeclarativeValuesMetaclass(type):
+    """
+    Collect Value objects declared on the base classes
+    """
+
+    def __new__(mcs, class_name, bases, attrs):
+        # Collect values from current class and all bases.
+        values = OrderedDict()
+
+        # Walk through the MRO and add values from base class.
+        for base in reversed(bases):
+            if hasattr(base, "_declared_values"):
+                values.update(base._declared_values)
+
+        for key, value in attrs.items():
+            if isinstance(value, Field):
+                if value.key and key != value.key:
+                    raise AttributeError(
+                        "Don't explicitly set keys when declaring values"
+                    )
+                value.key = key
+                values.update({key: value})
+
+        attrs["_declared_values"] = values
+
+        return super(DeclarativeValuesMetaclass, mcs).__new__(
+            mcs, class_name, bases, attrs
+        )
+
+    @classmethod
+    def __prepare__(mcs, name, bases, **kwds):
+        # Remember the order that values are defined.
+        return OrderedDict()
+
+
+class ConfigurationDict(_Configuration, metaclass=DeclarativeValuesMetaclass):
     """Dictionary-based configuration container.
 
     Provides a dictionary interface to configuration values and supports
@@ -635,42 +670,7 @@ class ConfigurationDict(_Configuration):
 # ====================================
 
 
-class DeclarativeValuesMetaclass(type):
-    """
-    Collect Value objects declared on the base classes
-    """
-
-    def __new__(mcs, class_name, bases, attrs):
-        # Collect values from current class and all bases.
-        values = OrderedDict()
-
-        # Walk through the MRO and add values from base class.
-        for base in reversed(bases):
-            if hasattr(base, "_declared_values"):
-                values.update(base._declared_values)
-
-        for key, value in attrs.items():
-            if isinstance(value, Field):
-                if value.key and key != value.key:
-                    raise AttributeError(
-                        "Don't explicitly set keys when declaring values"
-                    )
-                value.key = key
-                values.update({key: value})
-
-        attrs["_declared_values"] = values
-
-        return super(DeclarativeValuesMetaclass, mcs).__new__(
-            mcs, class_name, bases, attrs
-        )
-
-    @classmethod
-    def __prepare__(mcs, name, bases, **kwds):
-        # Remember the order that values are defined.
-        return OrderedDict()
-
-
-class Configuration(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
+class Configuration(ConfigurationDict):
     """Main configuration class supporting declarative field definitions.
 
     This class allows fields to be declared as class attributes and provides
