@@ -323,6 +323,9 @@ class _Configuration(_ConfigurationBase):
     def __getitem__(self, value):
         return self.declared_fields[value].__get__(self, self.__class__)
 
+    def __len__(self):
+        return len(self.declared_fields)
+
     # def __repr__(self):
     #     return "{}(loaders=[{}])".format(
     #         self.__class__.__name__,
