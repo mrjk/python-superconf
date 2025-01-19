@@ -434,7 +434,7 @@ class _Configuration(_ConfigurationBase):
         out = {}
         for key, _ in self.declared_fields.items():
             val = self.get_field_value(key)
-            if isinstance(val, ConfigurationDict):
+            if isinstance(val, _Configuration):
                 val = val.get_values(lvl=lvl - 1)
 
             out[key] = val
