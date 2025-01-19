@@ -293,12 +293,7 @@ class _Configuration(_ConfigurationBase):
             )
 
         # print ("\n\n===== CREATE NEW CONFIG", self.key, self, value)
-        # child_values = value
-        child_values = self._value
-        if child_values is NOT_SET:
-            # print(f"REMAP CHILD VALUE {self}:{key}: {child_values}=>{self._default}")
-            child_values = self._default
-        self.set_dyn_children(child_values)
+        child_values = self._default if self._value is NOT_SET else self._value
         self.set_values(child_values)
 
     def set_dyn_children(self, value):
@@ -511,6 +506,8 @@ class _Configuration(_ConfigurationBase):
 
     def set_values(self, value):
         "Set a value"
+
+        self.set_dyn_children(value)
 
         # Instanciate containers fields - Automatic
         for key, field in self.declared_fields.items():
