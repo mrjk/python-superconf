@@ -173,6 +173,7 @@ class _ConfigurationBase:
         Raises:
             UnknownSetting: If no parent exists and no default is provided
         """
+
         # Fast exit or raise exception
         if not self._parent:
             if default is not UNSET_ARG:
@@ -182,26 +183,26 @@ class _ConfigurationBase:
             )
             raise exceptions.UnknownSetting(msg)
 
-        def fetch_closest_parent(name):
-            # Fetch from closest parent
-            val = self._parent.query_inst_cfg(name, default=NOT_SET)
-            if val is NOT_SET:
-                return val
-
-            # TOFIX; Only works for dicts ?
-            if as_subkey is True and isinstance(val, dict):
-                val = val.get(self.key, NOT_SET)
-
-            return val
-
-        func_list = [
-            fetch_closest_parent,
-        ]
-
-        # Loop over functions
+        # Check parents
+        parents = self.get_hierarchy()[1:]
         out = NOT_SET
-        for func in func_list:
-            out = func(name)
+        for parent in parents:
+            out = parent.query_inst_cfg(name, default=NOT_SET)
+
+            # If a value is found, then scan it
+            if out is not NOT_SET:
+
+                # Ckeck subkey
+                if as_subkey is True:
+                    if isinstance(out, dict):
+                        out = out.get(self.key, NOT_SET)
+                    elif isinstance(out, list):
+                        assert isinstance(self.key, int), f"Got: {self.key}"
+                        out = out[self.key]
+                    else:
+                        out = NOT_SET
+
+            # Don't ask more parents if value is found
             if out is not NOT_SET:
                 break
 
