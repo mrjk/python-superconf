@@ -215,7 +215,8 @@ class Field:
             loader_from.append(str(loader))
             try:
                 # print(f"  > LOADER: try search in {loader} key: {key}")
-                result = loader.getitem(self, key, **kwargs)
+                # print("VS", self, conf_instance)
+                result = loader.getitem(conf_instance, key, **kwargs)
 
             except (KeyError, TypeError):
                 # print (f"{self}: Loader {key} {loader.__class__.__name__}
