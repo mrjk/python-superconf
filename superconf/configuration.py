@@ -405,7 +405,6 @@ class _Configuration(_ConfigurationBase):
                     return default
                 raise exceptions.UndeclaredField(f"Configuration '{key}' not found")
             assert key == field.key, f"Got: {key} != {field.key}"
-            key = field.key
 
         if key is None:
             key = field.key
