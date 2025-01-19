@@ -390,7 +390,7 @@ class _Configuration(_ConfigurationBase):
 
         # Parse input
         if field is None and key is None:
-            assert False, "BUG herrrrr"
+            assert False, "BUG here"
 
         if field is None:
             assert isinstance(key, (str, int))
@@ -514,12 +514,12 @@ class _Configuration(_ConfigurationBase):
 
             # Create child then
             val = NOT_SET
-            if value and isinstance(value, Mapping):
+            if value and isinstance(value, dict):
                 try:
                     val = value.get(key, NOT_SET)
                 except AttributeError:
                     val = NOT_SET
-            if value and isinstance(value, Sequence):
+            if value and isinstance(value, list):
                 try:
                     val = value[key]
                 except IndexError:
