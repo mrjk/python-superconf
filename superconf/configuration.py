@@ -512,27 +512,36 @@ class _Configuration(_ConfigurationBase):
         # Instanciate containers fields - Automatic
         for key, field in self.declared_fields.items():
 
+            # Create child then
+            val = NOT_SET
+            if value and isinstance(value, Mapping):
+                try:
+                    val = value.get(key, NOT_SET)
+                except AttributeError:
+                    val = NOT_SET
+            if value and isinstance(value, Sequence):
+                try:
+                    val = value[key]
+                except IndexError:
+                    val = NOT_SET
+
             if field.is_container():
-
-                # Create child then
-                val = NOT_SET
-                if value and isinstance(value, Mapping):
-                    try:
-                        val = value.get(key, NOT_SET)
-                    except AttributeError:
-                        val = NOT_SET
-                if value and isinstance(value, Sequence):
-                    try:
-                        val = value[key]
-                    except IndexError:
-                        val = NOT_SET
-
                 # print ("AUTOMATIC CREATE CHILD CONTAINER", key, field, val)
                 conf = self.create_child(key, field, value=val)
                 assert isinstance(conf, (_Configuration)), f"Got: {type(conf)}"
                 # assert isinstance(conf, (ConfigurationDict)), f"Got: {type(conf)}"
                 # print ("SET CACHED VALUE", self, conf, key, field, val)
                 self._cached_values[key] = conf
+            else:
+
+                result, _ = field.resolve_value(
+                    self,
+                    value=val,
+                )
+
+                self._value = self._value or {}
+                self._value[key] = result
+                self._cached_values[key] = result
 
 
 class DeclarativeValuesMetaclass(type):
