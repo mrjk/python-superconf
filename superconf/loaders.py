@@ -279,20 +279,22 @@ class Environment(AbstractConfigurationLoader):
         >>> env["debug"]  # "true"
     """
 
-    def __init__(self, keyfmt=EnvPrefix()):
+    def __init__(self, keyfmt=EnvPrefix(), prefix: str = None, sep: str = "__"):
         """
         :param function keyfmt: A function to pre-format variable names.
         """
         self.keyfmt = keyfmt
+        self.prefix = prefix
+        self.sep = sep
 
     def __repr__(self):
         return f"{self.__class__.__name__}(keyfmt={self.keyfmt})"
 
-    def __contains__(self, item):
+    def __contains__(self, item: str) -> bool:
         """Check if an environment variable exists for the given key."""
         return self.keyfmt(item) in os.environ
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str):
         """
         Retrieve a configuration value from environment variables.
 
@@ -306,6 +308,77 @@ class Environment(AbstractConfigurationLoader):
             KeyError: If the environment variable doesn't exist.
         """
         return os.environ[self.keyfmt(item)]
+
+    def get_env_name(self, config, item: str) -> str:
+        "Return the envirnonment name for a given key in config"
+
+        # Check if environment is enabled, and parents
+        pkey_enabled = config.query_inst_cfg("env_enabled", default=True)
+        parents = []
+        if pkey_enabled:
+            parents = config.get_hierarchy()  # [:-1]
+
+        # For each parents, from bottom to top
+        parents_keys = []
+        for parent in parents:
+
+            # Fetch pkey info
+            pkey = parent.query_inst_cfg("env_name", default=parent.key)
+            pkey_prefix = parent.query_inst_cfg("env_prefix", default="")
+            pkey_pattern = parent.query_inst_cfg("env_pattern", default="{prefix}{key}")
+
+            # Check if root:
+            pkey_prefix = pkey_prefix or ""
+            if not pkey:
+                # Is probably root, then we have to guess the name if not explicit
+                pkey = ""
+                if not pkey_prefix:
+                    pkey = parent.__class__.__name__
+                    pkey_prefix = ""
+
+            # Render format
+            pfinal = pkey_pattern.format(
+                prefix=pkey_prefix,
+                key=pkey,
+            )
+            pfinal = [x for x in [pkey_prefix, pkey] if x]
+            pfinal = "_".join(pfinal)
+            parents_keys.append(pfinal)
+
+            # Quit if object does not want parents
+            pkey_parents = parent.query_inst_cfg("env_parents", default=True)
+            if pkey_parents is False:
+                break
+
+        # Reverse key order, from top to bottom, transform to string, and then uppsercase
+        parents_keys = list(reversed(parents_keys))
+        parents_keys.append(item)
+        fkey = self.sep.join(parents_keys).upper()
+
+        return fkey
+
+    def getitem(self, config, item: str):
+        """
+        Retrieve a configuration value by key.
+
+        Args:
+            config: The configuration object.
+            item (str): The configuration key to retrieve.
+
+        Returns:
+            The configuration value for the given key.
+
+        Raises:
+            KeyError: If the key doesn't exist.
+        """
+
+        fkey = self.get_env_name(config, item)
+        ret = os.environ[fkey]
+        # print("==== FOUND ENV", fkey, "=", ret)
+        return ret
+
+        # return self.__getitem__(item)
+        # raise NotImplementedError()  # pragma: no cover
 
 
 class EnvFile(AbstractConfigurationLoader):
