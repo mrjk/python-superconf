@@ -243,7 +243,7 @@ class Field:
             results_from.append(f"casted:{cast}")
         # except ValueError as err:
         #     error = err
-        except exceptions.InvalidCastConfiguration as err:
+        except (exceptions.InvalidCastConfiguration, ValueError) as err:
             error = err
 
         # Check for strict_cast mode:
