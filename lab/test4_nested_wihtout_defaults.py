@@ -40,16 +40,6 @@ class Resource(Configuration):
     "Represent resources"
 
     class Meta:
-        extra_fields = True
-
-    location = Field(default="MISSING LOCATION")
-    owner = Field(default="MISSING OWNER")
-
-
-class Resource(Configuration):
-    "Represent resources"
-
-    class Meta:
         extra_fields = False
         default = {
             "location": "MISSING LOCATION2",
@@ -128,6 +118,7 @@ assert o_laptop["owner"] == "rob"
 # Ensure values are correctly defaulted on partial items
 o_wifi = o_resources["wifi-ap"]
 assert isinstance(o_wifi, Resource)
+assert o_wifi.get_values() is not RESOURCES1["wifi-ap"]
 assert o_wifi.get_values() != RESOURCES1["wifi-ap"]
 
 # Ensure defaults are correctly set on partial values
