@@ -1,7 +1,7 @@
 "Main configuratio  class"
 
 
-# pylint: disable=unused-argument, too-few-public-methods, too-many-instance-attributes, use-dict-literal
+# pylint: disable=unused-argument, too-few-public-methods, too-many-instance-attributes, use-dict-literal, protected-access
 
 import copy
 import logging
@@ -212,6 +212,17 @@ class _ConfigurationBase:
             assert isinstance(
                 out, cast
             ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
+        return out
+
+    def get_hierarchy(self):
+        "Return a list of parents NEW VERSION"
+        out = [self]
+
+        target = self
+        while target._parent is not None and target._parent not in out:
+            target = target._parent
+            out.append(target)
+
         return out
 
 
