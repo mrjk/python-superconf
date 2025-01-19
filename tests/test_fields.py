@@ -44,14 +44,13 @@ def test_field_value_casting(typed_config_class, field, value, expected):
 def test_field_validation_errors(typed_config_class):
     """Test field validation and error handling"""
     # Test invalid port number - config creation should succeed but value access should fail
-    config = typed_config_class(loaders=[Dict({"port": "invalid"})])
+
     with pytest.raises(InvalidCastConfiguration):
-        _ = config.port
+        config = typed_config_class(loaders=[Dict({"port": "invalid"})])
 
     # Test invalid boolean
-    config = typed_config_class(loaders=[Dict({"debug": "invalid"})])
     with pytest.raises(InvalidCastConfiguration):
-        _ = config.debug
+        config = typed_config_class(loaders=[Dict({"debug": "invalid"})])
 
 
 def test_field_dict_operations(typed_config_class):
