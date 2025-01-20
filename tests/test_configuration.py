@@ -182,30 +182,35 @@ def test_cast_functionality():
     assert config.field is None
 
 
-# def test_parent_configuration_query():
-#     """Test querying parent configuration with various parameters"""
+def test_parent_configuration_query():
+    """Test querying parent configuration with various parameters"""
 
-#     class ChildConfig(Configuration):
-#         child_field = Field()
+    class ChildConfig(Configuration):
+        child_field = Field()
 
-#     class ParentConfig(Configuration):
-#         parent_field = FieldConf(
-#             children_class=ChildConfig,
-#             default={"child_field": "parent_value"})
+    class ParentConfig(Configuration):
 
+        meta__custom = "custom_value"
+        meta__default = {"parent_field": {"child_field": "parent_value"}}
 
-#     parent = ParentConfig()
-#     child = parent["parent_field"]
-#     # child = ChildConfig(parent=parent)
+        parent_field = FieldConf(
+            children_class=ChildConfig, default={"child_field": "parent_value"}
+        )
 
-#     # Test querying existing parent field
-#     assert child.query_parent_cfg("children_class") == ChildConfig
+    parent = ParentConfig()
+    child = parent["parent_field"]
+    # child = ChildConfig(parent=parent) # This does not work ...
 
-#     # Test querying with as_subkey parameter
-#     assert child.query_parent_cfg("default", as_subkey=True) == "parent_value"
+    # Test querying existing parent field
+    assert child.query_parent_cfg("children_class") is NOT_SET
 
-#     # Test with cast parameter
-#     assert child.query_parent_cfg("parent_field", cast=str) == "parent_value"
+    # Test querying with as_subkey parameter
+    assert child.query_parent_cfg("default", as_subkey=True) == {
+        "child_field": "parent_value"
+    }
+
+    # Test with cast parameter
+    assert child.query_parent_cfg("custom", cast=str) == "custom_value"
 
 
 def test_dynamic_children_creation():
