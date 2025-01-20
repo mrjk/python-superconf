@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 # ====================================
 
 
-class _ConfigurationBase:
+class Node:
     """Base class for configuration objects providing core configuration query functionality.
 
     This class implements the basic configuration query mechanisms used by all configuration
@@ -232,10 +232,10 @@ class _ConfigurationBase:
 # ====================================
 
 
-class _Configuration(_ConfigurationBase):
+class Store(Node):
     """Base configuration container class that manages configuration fields and values.
 
-    This class extends _ConfigurationBase to provide field management, value caching,
+    This class extends Node to provide field management, value caching,
     and dynamic child configuration creation capabilities.
     """
 
@@ -252,7 +252,7 @@ class _Configuration(_ConfigurationBase):
             **kwargs: Additional configuration options
         """
 
-        # super(_Configuration, self).__init__(key=key, value=value, parent=parent)
+        # super(Store, self).__init__(key=key, value=value, parent=parent)
         super().__init__(key=key, value=value, parent=parent)
 
         # As this can be updated during runtime ...
@@ -432,7 +432,7 @@ class _Configuration(_ConfigurationBase):
         out = {}
         for key, _ in self.declared_fields.items():
             val = self.get_field_value(key)
-            if isinstance(val, _Configuration):
+            if isinstance(val, Store):
                 val = val.get_values(lvl=lvl - 1)
 
             out[key] = val
@@ -531,7 +531,7 @@ class _Configuration(_ConfigurationBase):
             if field.is_container():
                 # print ("AUTOMATIC CREATE CHILD CONTAINER", key, field, val)
                 conf = self.create_child(key, field, value=val)
-                assert isinstance(conf, (_Configuration)), f"Got: {type(conf)}"
+                assert isinstance(conf, (Store)), f"Got: {type(conf)}"
                 # assert isinstance(conf, (ConfigurationDict)), f"Got: {type(conf)}"
                 # print ("SET CACHED VALUE", self, conf, key, field, val)
                 self._cached_values[key] = conf
@@ -582,7 +582,7 @@ class DeclarativeValuesMetaclass(type):
         return OrderedDict()
 
 
-class ConfigurationDict(_Configuration, metaclass=DeclarativeValuesMetaclass):
+class ConfigurationDict(Store, metaclass=DeclarativeValuesMetaclass):
     """Dictionary-based configuration container.
 
     Provides a dictionary interface to configuration values and supports
@@ -697,7 +697,7 @@ class Configuration(ConfigurationDict):
 # ====================================
 
 
-class ConfigurationList(_Configuration):
+class ConfigurationList(Store):
     """List-based configuration container.
 
     Provides a list interface to configuration values and supports
