@@ -26,6 +26,7 @@ tasks:
           - fields
           - loaders
           - casts
+          - anchors
         cmd: |
           mkdir -p content/images/schema_{{.ITEM}}
           pyreverse -my -A -o svg \
