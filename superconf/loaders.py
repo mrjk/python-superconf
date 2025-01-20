@@ -329,7 +329,8 @@ class Environment(AbstractConfigurationLoader):
 
             # Check if root:
             pkey_prefix = pkey_prefix or ""
-            if not pkey:
+            # pylint: disable=protected-access
+            if parent._parent is None and pkey is None:
                 # Is probably root, then we have to guess the name if not explicit
                 pkey = ""
                 if not pkey_prefix:
@@ -353,6 +354,7 @@ class Environment(AbstractConfigurationLoader):
         # Reverse key order, from top to bottom, transform to string, and then uppsercase
         parents_keys = list(reversed(parents_keys))
         parents_keys.append(item)
+        parents_keys = [x for x in parents_keys if x]
         fkey = self.sep.join(parents_keys).upper()
 
         return fkey
