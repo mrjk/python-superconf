@@ -57,8 +57,8 @@ pip install superconf
 Or install from source:
 
 ```bash
-git clone https://github.com/mrjk/python-superconf2.git
-cd python-superconf2
+git clone https://github.com/mrjk/python-superconf.git
+cd python-superconf
 pip install -e .
 ```
 
@@ -122,8 +122,8 @@ A: Yes, you can create custom field types by extending the `Field` class.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/mrjk/python-superconf2.git
-cd python-superconf2
+git clone https://github.com/mrjk/python-superconf.git
+cd python-superconf
 ```
 
 2. Install development dependencies:
@@ -162,8 +162,8 @@ This project is licensed under the GPLv3 License.
 ### Support
 
 For support, please:
-1. Check the [documentation](https://github.com/mrjk/python-superconf2/docs)
-2. Open an issue on [GitHub](https://github.com/mrjk/python-superconf2/issues)
+1. Check the [documentation](https://github.com/mrjk/python-superconf/docs)
+2. Open an issue on [GitHub](https://github.com/mrjk/python-superconf/issues)
 
 ### Related Projects
 
