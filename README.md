@@ -2,6 +2,9 @@
 
 
 <p align='center'>
+<a href="https://github.com/mrjk/python-superconf">
+<img src="logo/banner.svg" alt="Gitter"></a>
+
 <a href="https://gitter.im/mrjk/python-superconf">
 <img src="https://img.shields.io/gitter/room/mrjk/python-superconf" alt="Gitter"></a>
 <a href="https://pypi.org/project/superconf/">
