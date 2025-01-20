@@ -1,3 +1,6 @@
+
+# pylint: skip-file
+
 import sys
 from pprint import pprint
 

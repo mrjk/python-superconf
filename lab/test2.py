@@ -1,3 +1,6 @@
+
+# pylint: skip-file
+
 from pprint import pprint
 
 import pytest
