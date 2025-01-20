@@ -158,7 +158,15 @@ class Node:
         )
         raise exceptions.UnknownSetting(msg)
 
-    def query_parent_cfg(self, name, as_subkey=False, cast=None, default=UNSET_ARG):
+    def query_cfg(self, name, include_self=True, **kwargs):
+        "Temporary wrapper"
+
+        return self.query_parent_cfg(name, include_self=True, **kwargs)
+
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def query_parent_cfg(
+        self, name, as_subkey=False, cast=None, default=UNSET_ARG, include_self=False
+    ):
         """Query configuration from parent object.
 
         Args:
@@ -184,7 +192,9 @@ class Node:
             raise exceptions.UnknownSetting(msg)
 
         # Check parents
-        parents = self.get_hierarchy()[1:]
+        parents = self.get_hierarchy()
+        if include_self is False:
+            parents = parents[1:]
         out = NOT_SET
         for parent in parents:
             out = parent.query_inst_cfg(name, default=NOT_SET)
