@@ -16,6 +16,23 @@ tasks:
   # Generate
   # =============
 
+  prep_doc:
+    desc: Prepare documentation assets
+    cmds:
+      - task: copy_readme
+      - task: copy_logo
+      - task: gen_class_graph
+
+  copy_logo:
+    desc: inject logo into documentation
+    cmds:
+      - cp -R ../logo/. content/logo
+
+  copy_readme:
+    desc: inject readme into documentation
+    cmds:
+      - cp -R ../README.md content/index.md
+
   gen_class_graph:
     desc: generate superconf class diagrams
     cmds:
@@ -42,12 +59,12 @@ tasks:
   serve:
     desc: serve mkdoc website locally
     cmds:
-      - task: gen_class_graph
+      - task: prep_doc
       - mkdocs serve
 
   publish:
     desc: update gh_page branch with new documentation
     cmds:
-      - task: gen_class_graph
+      - task: prep_doc
       - poetry run mkdocs gh-deploy --force
 
