@@ -52,7 +52,7 @@ Examples:
 import os
 
 # from pprint import pprint
-from typing import Optional, List
+from typing import List, Optional
 
 
 class PathAnchor:
@@ -81,7 +81,7 @@ class PathAnchor:
             mode (Optional[str], optional): Display mode for path rendering.
                 Can be 'abs' for absolute paths or 'rel' for relative paths.
                 If None, the mode remains unchanged. Defaults to None.
-            anchor (Optional[PathAnchor], optional): Another PathAnchor object to use as 
+            anchor (Optional[PathAnchor], optional): Another PathAnchor object to use as
                 reference point.
                 Defaults to None.
         """

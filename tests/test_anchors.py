@@ -55,7 +55,7 @@ class TestPathAnchor:
         """Test retrieving anchor chain."""
         child = PathAnchor("child", anchor=project_anchor)
         grandchild = PathAnchor("grandchild", anchor=child)
-        
+
         parents = grandchild.get_parents()
         assert len(parents) == 2
         assert parents[0] == child
@@ -94,11 +94,14 @@ class TestFileAnchor:
         """Test nested file paths with anchors."""
         config_dir = PathAnchor("config", anchor=project_anchor)
         config_file = FileAnchor("settings.yml", anchor=config_dir)
-        
+
         assert config_file.get_path() == "config/settings.yml"
-        assert config_file.get_path(mode="rel", start="/fake/root") == "config/settings.yml"
+        assert (
+            config_file.get_path(mode="rel", start="/fake/root")
+            == "config/settings.yml"
+        )
 
     def test_file_path_cleaning(self, project_anchor):
         """Test file path normalization."""
         messy_file = FileAnchor("subdir/../config/./file.txt", anchor=project_anchor)
-        assert messy_file.get_path(clean=True) == "/fake/root/project/config/file.txt" 
+        assert messy_file.get_path(clean=True) == "/fake/root/project/config/file.txt"
