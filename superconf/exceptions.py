@@ -21,6 +21,7 @@ class InvalidCastConfiguration(ConfigurationException):
     "Raised when an invalid cast configuration is found"
 
 
+# class CastValueFailure(ConfigurationException, ValueError):
 class CastValueFailure(ConfigurationException):
     "Raised when a value can't be casted"
 

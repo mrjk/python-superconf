@@ -108,7 +108,7 @@ class AppBackends(Configuration):
 
     class Meta:
         cache = True
-        env_enabled = False
+        env_enabled = True
         env_prefix = "prefix"
         # env_pattern = "MYAPPBACKENDS___{key}"
         # env_parents = True

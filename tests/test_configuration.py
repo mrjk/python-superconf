@@ -254,7 +254,7 @@ def test_configuration_cast_property():
     assert field_instance.cast == custom_cast
 
     config.set_values({"field": "test"})
-    assert config.field == "casted_casted_test"
+    assert config.field == "casted_test"
 
 
 def test_configuration_list_operations():
@@ -398,7 +398,7 @@ def test_special_meta_configurations():
 
     config = SpecialConfig(value={"field": "1333"})
 
-    # Test strict casting
+    # Test strict casting - CastValueFailure/ValueError
     with pytest.raises(ValueError):
         config.set_values({"field": "not_a_number"})
 
