@@ -209,8 +209,10 @@ class Field:
             raise TypeError(f"Cast must be callable, got: {type(cast)}")
 
         # Process things
+        is_casted = False
         result = NOT_SET
         loader_from = []
+        results_from = []
         for loader in loaders:
             loader_from.append(str(loader))
             try:
@@ -218,17 +220,16 @@ class Field:
                 # print("VS", self, conf_instance)
                 result = loader.getitem(conf_instance, key, **kwargs)
 
-            except (KeyError, TypeError):
-                # print (f"{self}: Loader {key} {loader.__class__.__name__}
-                # failed with error: {type(err)}{err}")
+            except KeyError:
                 continue
 
             if result is not NOT_SET:
+                results_from.append(f"from_loader:{loader}")
                 result = cast(result)
+                is_casted = True
                 break
 
         # Nothing found in all loaders, then fallback on default
-        results_from = []
         if result is NOT_SET:
             result = value
             results_from.append("from_value")
@@ -237,23 +238,23 @@ class Field:
             results_from.append("from_default")
 
         # Try to cast value
-        error = None
-        try:
-            result = cast(result)
-            results_from.append(f"casted:{cast}")
-        # except ValueError as err:
-        #     error = err
-        except (exceptions.InvalidCastConfiguration, ValueError) as err:
-            error = err
+        if not is_casted:
+            error = None
+            try:
+                result = cast(result)
+                results_from.append(f"casted:{cast}")
+            except (exceptions.InvalidCastConfiguration, ValueError) as err:
+                error = err
+                # result = cast() # TOFIX: This should work
+                results_from.append(f"casted_reset:{cast}")
 
-        # Check for strict_cast mode:
-        # print ("DEFAUUUB", conf_instance, conf_instance._strict_cast)
-        if error is not None and conf_instance._strict_cast is True:
-            msg = (
-                f"Got error {conf_instance}.{key} {type(error)}: {error}, "
-                "set strict_cast=False to disable this error"
-            )
-            raise exceptions.CastValueFailure(msg)
+            # Check for strict_cast mode:
+            if error is not None and conf_instance._strict_cast is True:
+                msg = (
+                    f"Got error {conf_instance}.{key} {type(error)}: {error}, "
+                    "set strict_cast=False to disable this error"
+                )
+                raise exceptions.CastValueFailure(msg)
 
         meta = SimpleNamespace(
             cast=cast,
