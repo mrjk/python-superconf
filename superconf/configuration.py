@@ -183,7 +183,7 @@ class Node:
         """
 
         # Fast exit or raise exception
-        if not self._parent:
+        if not self._parent and include_self is False:
             if default is not UNSET_ARG:
                 return default
             msg = (
