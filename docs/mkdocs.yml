@@ -79,6 +79,9 @@ nav:
         - Fields: reference/fields.md
         - Loaders: reference/loaders.md
         - Cast: reference/cast.md
-      - Anchors: reference/anchors.md
+      - Extra configuration:
+        - XDG: reference/extra_xdg.md
+      - Extra lib:
+        - Anchors: reference/anchors.md
   - Info:
       - Alternatives: infos/alternatives.md

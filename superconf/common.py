@@ -1,6 +1,14 @@
 "Common code"
 
 
+import json
+import logging
+
+import yaml
+
+log = logging.getLogger(__name__)
+
+
 class NotSet(str):
     """
     A special type that behaves as a replacement for None.
@@ -46,3 +54,19 @@ DEFAULT = Default()
 assert UNSET_ARG is not NOT_SET
 # assert UNSET_ARG is not NOT_SET
 # assert UNSET_ARG == NOT_SET
+
+
+def from_json(string):
+    "Transform JSON string to python dict"
+    return json.loads(string)
+
+
+def from_yaml(string):
+    "Transform YAML string to python dict"
+    return yaml.safe_load(string)
+
+
+def read_file(file):
+    "Read file content"
+    with open(file, encoding="utf-8") as _file:
+        return "".join(_file.readlines())

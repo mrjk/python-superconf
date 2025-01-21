@@ -44,11 +44,12 @@ tasks:
           - loaders
           - casts
           - anchors
+          - extra/xdg
         cmd: |
-          mkdir -p content/images/schema_{{.ITEM}}
+          mkdir -p content/images/schema_{{.ITEM | replace "/" "_" }}
           pyreverse -my -A -o svg \
             -p superconf \
-            -d content/images/schema_{{.ITEM}} \
+            -d content/images/schema_{{.ITEM | replace "/" "_"}} \
             ../superconf/{{.ITEM}}.py
       - >
         echo "Image generated in: content/images/"

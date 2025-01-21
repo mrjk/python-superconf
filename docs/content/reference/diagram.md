@@ -19,6 +19,12 @@
 ### Casts
 ![Alt Text](../images/schema_casts/classes_superconf.svg)
 
+## Configuration Extra
+
+### XDGConfig
+![Alt Text](../images/schema_extra_xdg/classes_superconf.svg)
+
+
 ## Helpers
 
 ### Anchors
