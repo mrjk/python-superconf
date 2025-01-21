@@ -8,13 +8,8 @@ import pytest
 
 import superconf.exceptions
 from superconf.common import DEFAULT, FAIL, NOT_SET
-from superconf.configuration import (
-    Configuration,
-    ConfigurationDict,
-    Environment,
-)
+from superconf.configuration import Configuration, ConfigurationDict, Environment
 from superconf.fields import (
-
     Field,
     FieldBool,
     FieldConf,

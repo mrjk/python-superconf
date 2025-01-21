@@ -8,8 +8,10 @@ covering path resolution, mode handling, and anchor chain functionality.
 
 
 import os
+
 import pytest
-from superconf.anchors import PathAnchor, FileAnchor
+
+from superconf.anchors import FileAnchor, PathAnchor
 
 
 @pytest.fixture

@@ -1,9 +1,13 @@
+# pylint: skip-file
+
+
 import os
-import pytest
 from pathlib import Path
 
-from superconf.extra.xdg import XDGConfig, XDGException
+import pytest
+
 from superconf.configuration import Configuration
+from superconf.extra.xdg import XDGConfig, XDGException
 
 
 @pytest.fixture

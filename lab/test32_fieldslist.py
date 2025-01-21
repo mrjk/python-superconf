@@ -1,4 +1,3 @@
-
 # pylint: skip-file
 
 import sys
@@ -15,7 +14,6 @@ from superconf.configuration import (
     Environment,
 )
 from superconf.fields import (
-
     Field,
     FieldBool,
     FieldConf,
@@ -27,9 +25,10 @@ from superconf.fields import (
     FieldString,
     FieldTuple,
 )
+from superconf.loaders import Dict
+
 # from superconf.configuration_dev import ConfigurationList
 
-from superconf.loaders import Dict
 
 # This test explore the nested use cases, WITH defaults
 
@@ -53,9 +52,10 @@ class AppList(ConfigurationList):
         ]
         children_class = ConfigurationDict
 
+
 app1 = AppList()
 
-EXPECTED = [{'key1': 'item1'}, {'key2': 'item2'}, {'key3': 'item3'}]
+EXPECTED = [{"key1": "item1"}, {"key2": "item2"}, {"key3": "item3"}]
 
 
 # pprint(app1.__dict__)

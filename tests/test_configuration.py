@@ -1,27 +1,31 @@
+# pylint: skip-file
+
+
 import pytest
+
+from superconf.common import NOT_SET
 from superconf.configuration import (
     Configuration,
-    Field,
-    FieldConf,
     ConfigurationDict,
     ConfigurationList,
+    Field,
+    FieldConf,
+)
+from superconf.exceptions import (
+    CastValueFailure,
+    UndeclaredField,
+    UnknownExtraField,
+    UnknownSetting,
 )
 from superconf.fields import (
     as_boolean,
-    as_int,
-    as_list,
     as_dict,
-    as_tuple,
-    as_option,
+    as_int,
     as_is,
+    as_list,
+    as_option,
+    as_tuple,
 )
-from superconf.exceptions import (
-    UnknownSetting,
-    UnknownExtraField,
-    UndeclaredField,
-    CastValueFailure,
-)
-from superconf.common import NOT_SET
 
 
 def test_basic_config_creation(basic_config_class):

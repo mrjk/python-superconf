@@ -1,4 +1,3 @@
-
 # pylint: skip-file
 
 import sys
@@ -87,7 +86,7 @@ app = AppConfig(value=CONFIG_MERGED)
 assert app["test_config"] == "Yeahhh"
 
 # Ensure regular fields with defaults works
-pprint( app["test_config2"])
+pprint(app["test_config2"])
 # pprint( id(app["test_config2"]), id(NOT_SET))
 assert app["test_config2"] == NOT_SET
 # assert app["test_config2"] is NOT_SET # TOFIX !!!!

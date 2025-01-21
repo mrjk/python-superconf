@@ -1,12 +1,15 @@
+# pylint: skip-file
+
 import pytest
+
 from superconf.configuration import (
     Configuration,
     ConfigurationDict,
+    Environment,
     Field,
     FieldConf,
-    Environment,
 )
-from superconf.fields import FieldBool, FieldInt, FieldString, FieldDict, FieldList
+from superconf.fields import FieldBool, FieldDict, FieldInt, FieldList, FieldString
 from superconf.loaders import Dict
 
 # Sample test data

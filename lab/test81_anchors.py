@@ -1,7 +1,9 @@
+# pylint: skip-file
 
 import os
 from pprint import pprint
-from superconf.anchors import PathAnchor, FileAnchor
+
+from superconf.anchors import FileAnchor, PathAnchor
 
 # project_dir = "/fake_root/absolute/test/project"
 
@@ -19,6 +21,7 @@ config = {
     "rel_simple": "justafile.yml",
     "rel_subdir": "subdir/subdir/file",
 }
+
 
 def test1_default():
 
@@ -45,6 +48,7 @@ def test1_default():
         pprint(retpath)
         pprint(retobj)
 
+
 test1_default()
 
 data2 = {
@@ -54,6 +58,7 @@ data2 = {
     "rel_simple": "justafile.yml",
     "rel_subdir": "subdir/subdir/file",
 }
+
 
 def test2_nested():
 
@@ -98,7 +103,9 @@ def test2_nested():
             pprint(retobj)
             pprint(retpath)
 
+
 test2_nested()
+
 
 def test3_parents():
 
@@ -126,7 +133,9 @@ def test3_parents():
     }
     pprint(ret)
 
+
 test3_parents()
+
 
 def test4_modes():
 
@@ -158,7 +167,9 @@ def test4_modes():
     pprint(ret)
     assert not ret.startswith("/")
 
+
 test4_modes()
+
 
 def test5_files():
 
@@ -198,5 +209,6 @@ def test5_files():
         "dir": pd2a.get_dir(),
     }
     pprint(ret)
+
 
 test5_files()

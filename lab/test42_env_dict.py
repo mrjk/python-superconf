@@ -14,8 +14,6 @@ from superconf.configuration import (
     ConfigurationList,
     Environment,
 )
-
-from superconf.loaders import Environment, EnvPrefix
 from superconf.fields import (
     Field,
     FieldBool,
@@ -28,7 +26,7 @@ from superconf.fields import (
     FieldString,
     FieldTuple,
 )
-
+from superconf.loaders import Dict, Environment, EnvPrefix
 
 # from superconf.wrapper import (
 #     ConfigurationWrapper,
@@ -38,7 +36,6 @@ from superconf.fields import (
 
 # from superconf.configuration_dev import ConfigurationList
 
-from superconf.loaders import Dict
 
 # This test explore the nested use cases, WITH defaults
 
@@ -64,7 +61,6 @@ CONFIG_MERGED = {"resources": RESOURCES1 | RESOURCES2}
 RESOURCES_COUNT = len(CONFIG_MERGED["resources"])
 
 sys.exit()
-
 
 
 class AppBackend(Configuration):
@@ -119,23 +115,30 @@ os.environ.update(ENV_VARS)
 app = App()
 
 
-pprint (app.__dict__)
+pprint(app.__dict__)
 
 
 OUT = app.get_values()
 pprint(OUT)
 
 print("==============")
-EXPECTED = {'backends': {'mybackend': {'enabled': True,
-                            'host': 'localhost',
-                            'password': 'admin',
-                            'port': NOT_SET,
-                            'user': 'admin'},
-              'redis': {'enabled': False,
-                        'host': 'localhost',
-                        'password': 'admin',
-                        'port': 8080,
-                        'user': 'MArCEEEl'}}
+EXPECTED = {
+    "backends": {
+        "mybackend": {
+            "enabled": True,
+            "host": "localhost",
+            "password": "admin",
+            "port": NOT_SET,
+            "user": "admin",
+        },
+        "redis": {
+            "enabled": False,
+            "host": "localhost",
+            "password": "admin",
+            "port": 8080,
+            "user": "MArCEEEl",
+        },
+    }
 }
 OUT = app.get_values()
 pprint(OUT)
@@ -147,11 +150,13 @@ assert app["backends"]["mybackend"]["enabled"] == True
 
 
 OUT = app["backends"]["redis"].get_values()
-EXPECTED = {'enabled': False,
- 'host': 'localhost',
- 'password': 'admin',
- 'port': 8080,
- 'user': 'MArCEEEl'}
+EXPECTED = {
+    "enabled": False,
+    "host": "localhost",
+    "password": "admin",
+    "port": 8080,
+    "user": "MArCEEEl",
+}
 pprint(OUT)
 assert OUT == EXPECTED
 

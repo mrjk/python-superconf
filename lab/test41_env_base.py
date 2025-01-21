@@ -14,8 +14,6 @@ from superconf.configuration import (
     ConfigurationList,
     Environment,
 )
-
-from superconf.loaders import Environment, EnvPrefix
 from superconf.fields import (
     Field,
     FieldBool,
@@ -28,7 +26,7 @@ from superconf.fields import (
     FieldString,
     FieldTuple,
 )
-
+from superconf.loaders import Dict, Environment, EnvPrefix
 
 # from superconf.wrapper import (
 #     ConfigurationWrapper,
@@ -38,7 +36,6 @@ from superconf.fields import (
 
 # from superconf.configuration_dev import ConfigurationList
 
-from superconf.loaders import Dict
 
 # This test explore the nested use cases, WITH defaults
 
@@ -64,7 +61,6 @@ CONFIG_MERGED = {"resources": RESOURCES1 | RESOURCES2}
 RESOURCES_COUNT = len(CONFIG_MERGED["resources"])
 
 
-
 class AppConfig(Configuration):
     "Main app config"
 
@@ -86,14 +82,12 @@ class AppConfig(Configuration):
 class AppBackend(Configuration):
     "Application Backend"
 
-
     # class Meta:
     #     cache = True
     #     env_enabled = False
     #     # env_prefix = None
     #     env_prefix = "MYAPPBACKENDS___"
     #     env_parents = False
-
 
     enabled = FieldBool(default="false", help="Enable backend")
     host = FieldString(default="localhost", help="Host")
@@ -104,7 +98,6 @@ class AppBackend(Configuration):
 
 class AppBackends(Configuration):
     "Application Backends"
-
 
     class Meta:
         cache = True
@@ -148,7 +141,7 @@ ENV_VARS = {
 os.environ.update(ENV_VARS)
 
 
-print ("\n\n\n++++++++++++++++++++++++++++++++++ START APPP +++++++++\n\n\n")
+print("\n\n\n++++++++++++++++++++++++++++++++++ START APPP +++++++++\n\n\n")
 
 app = App()
 
@@ -200,11 +193,13 @@ assert app["backends"]["redis"]["user"] == "MArCEEEl"
 
 
 OUT = app["backends"]["redis"].get_values()
-EXPECTED = {'enabled': False,
- 'host': 'localhost',
- 'password': 'admin',
- 'port': 8080,
- 'user': 'MArCEEEl'}
+EXPECTED = {
+    "enabled": False,
+    "host": "localhost",
+    "password": "admin",
+    "port": 8080,
+    "user": "MArCEEEl",
+}
 pprint(OUT)
 assert OUT == EXPECTED
 

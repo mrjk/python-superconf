@@ -1,4 +1,8 @@
+# pylint: skip-file
+
+
 import pytest
+
 from superconf.exceptions import UnknownSetting
 from superconf.loaders import Dict
 

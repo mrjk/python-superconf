@@ -14,8 +14,6 @@ from superconf.configuration import (
     ConfigurationList,
     Environment,
 )
-
-from superconf.loaders import Environment, EnvPrefix
 from superconf.fields import (
     Field,
     FieldBool,
@@ -28,7 +26,7 @@ from superconf.fields import (
     FieldString,
     FieldTuple,
 )
-
+from superconf.loaders import Dict, Environment, EnvPrefix
 
 # from superconf.wrapper import (
 #     ConfigurationWrapper,
@@ -38,7 +36,6 @@ from superconf.fields import (
 
 # from superconf.configuration_dev import ConfigurationList
 
-from superconf.loaders import Dict
 
 # This test explore the nested use cases, WITH defaults
 
@@ -64,7 +61,6 @@ CONFIG_MERGED = {"resources": RESOURCES1 | RESOURCES2}
 RESOURCES_COUNT = len(CONFIG_MERGED["resources"])
 
 sys.exit()
-
 
 
 class AppBackend(Configuration):
@@ -102,10 +98,7 @@ class App(Configuration):
         env_enabled = False
         env_prefix = "MY_APPLICATION"
 
-    backends = FieldConf(
-        AppBackends,
-        cast = list, 
-        default={"mysql": None})
+    backends = FieldConf(AppBackends, cast=list, default={"mysql": None})
 
 
 ENV_VARS = {
@@ -119,29 +112,37 @@ ENV_VARS = {
 os.environ.update(ENV_VARS)
 
 
-print ("============ APP INIT START")
+print("============ APP INIT START")
 
 app = App()
 
-print ("============ APP INIT DONE")
+print("============ APP INIT DONE")
 
 # pprint (app.__dict__)
 
 
 OUT = app.get_values()
-print ("============ APP GET VALUES")
+print("============ APP GET VALUES")
 pprint(OUT)
 
-EXPECTED = {'backends': [{'enabled': False,
-               'host': 'localhost',
-               'password': 'admin',
-               'port': NOT_SET,
-               'user': 'admin'},
-              {'enabled': True,
-               'host': 'localhost',
-               'password': 'admin',
-               'port': NOT_SET,
-               'user': 'MArCEEEl'}]}
+EXPECTED = {
+    "backends": [
+        {
+            "enabled": False,
+            "host": "localhost",
+            "password": "admin",
+            "port": NOT_SET,
+            "user": "admin",
+        },
+        {
+            "enabled": True,
+            "host": "localhost",
+            "password": "admin",
+            "port": NOT_SET,
+            "user": "MArCEEEl",
+        },
+    ]
+}
 
 
 assert isinstance(OUT["backends"], list), f"Expected a list, Got: {OUT['backends']}"
@@ -153,22 +154,28 @@ assert OUT == EXPECTED
 backends = app["backends"]
 pprint(backends.__dict__)
 OUT = app["backends"].get_values()
-print ("============ BACKENDS GET VALUES")
+print("============ BACKENDS GET VALUES")
 pprint(OUT)
 
 # assert False
 
 print("==============")
-EXPECTED = [{'enabled': False,
-  'host': 'localhost',
-  'password': 'admin',
-  'port': NOT_SET,
-  'user': 'admin'},
- {'enabled': False,
-  'host': 'localhost',
-  'password': 'admin',
-  'port': NOT_SET,
-  'user': 'MArCEEEl'}]
+EXPECTED = [
+    {
+        "enabled": False,
+        "host": "localhost",
+        "password": "admin",
+        "port": NOT_SET,
+        "user": "admin",
+    },
+    {
+        "enabled": False,
+        "host": "localhost",
+        "password": "admin",
+        "port": NOT_SET,
+        "user": "MArCEEEl",
+    },
+]
 
 OUT = backends.get_values()
 pprint(OUT)
@@ -183,11 +190,13 @@ assert app["backends"][1]["enabled"] == True
 
 
 OUT = app["backends"][1].get_values()
-EXPECTED = {'enabled': True,
- 'host': 'localhost',
- 'password': 'admin',
- 'port': NOT_SET,
- 'user': 'MArCEEEl'}
+EXPECTED = {
+    "enabled": True,
+    "host": "localhost",
+    "password": "admin",
+    "port": NOT_SET,
+    "user": "MArCEEEl",
+}
 
 pprint(OUT)
 assert OUT == EXPECTED

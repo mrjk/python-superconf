@@ -1,12 +1,16 @@
+# pylint: skip-file
+
+
 import pytest
+
 from superconf.casts import (
     AsBoolean,
+    AsDict,
+    AsIdentity,
     AsInt,
     AsList,
-    AsTuple,
-    AsDict,
     AsOption,
-    AsIdentity,
+    AsTuple,
     InvalidCastConfiguration,
 )
 
