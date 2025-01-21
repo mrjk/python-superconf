@@ -4,6 +4,9 @@ This module contains test cases for the PathAnchor and FileAnchor classes,
 covering path resolution, mode handling, and anchor chain functionality.
 """
 
+# pylint: skip-file
+
+
 import os
 import pytest
 from superconf.anchors import PathAnchor, FileAnchor

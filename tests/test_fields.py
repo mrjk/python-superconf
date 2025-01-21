@@ -1,3 +1,7 @@
+
+# pylint: skip-file
+
+
 import pytest
 from superconf.exceptions import InvalidCastConfiguration
 from superconf.loaders import Dict
