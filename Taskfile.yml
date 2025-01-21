@@ -42,23 +42,23 @@ tasks:
   fix_lint:
     desc: fix all what can be fixed
     cmds:
-      - isort --profile black --overwrite-in-place superconf
-      - black superconf tests
-      - pymarkdownlnt fix $( git ls-files | grep 'md$' )
+      - isort --profile black --overwrite-in-place $(git ls-files | grep '\.py$')
+      - black $(git ls-files | grep '\.py$')
+      - pymarkdownlnt fix $( git ls-files | grep '\.md$' )
 
   test_lint:
     desc: show what can be improved
     cmds:
-      - isort --profile black superconf
-      - black --check superconf tests
-      - pylint superconf
+      - isort --profile black $(git ls-files | grep '\.py$')
+      - black --check $(git ls-files | grep '\.py$')
+      - pylint $(git ls-files | grep '\.py$')
 
   test_lint_full:
     desc: run all linting tests
     cmds:
       - task: test_lint
-      - yamllint $( git ls-files | grep 'yml$' )
-      - pymarkdownlnt scan $( git ls-files | grep 'md$' )
+      - yamllint $( git ls-files | grep '\.yml$' )
+      - pymarkdownlnt scan $( git ls-files | grep '\.md$' )
 
   # Tests
   # =============
@@ -68,7 +68,7 @@ tasks:
     cmds:
       # - task: test_pytest
       # - task: test_regressions
-      - task: test_recap
+      - task: test_report
       - task: test_lab
       - task: test_lint
 
@@ -87,7 +87,7 @@ tasks:
     cmds:
       - pytest tests/test_50_*
 
-  test_recap:
+  test_report:
     desc: Report tests
     cmds:
       - pytest tests --tb no -vv -q
