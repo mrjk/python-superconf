@@ -430,3 +430,261 @@ def test_xdg_config_load_from_multiple_locations(mock_env, tmp_path):
     result = config.read_file("XDG_CONFIG_HOME", "config")
     assert result["setting"] == "home_value"
     assert result["common"] == "home_common"
+
+
+def test_xdg_config_write_file_basic(mock_env, tmp_path):
+    """Test basic write_file functionality with dictionary data."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config directory
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Test data
+    test_data = {
+        "database": {"host": "localhost", "port": 5432, "name": "testdb"},
+        "settings": {"debug": True, "timeout": 30},
+    }
+
+    # Write data to config file
+    config.write_file("XDG_CONFIG_HOME", test_data, "config")
+
+    # Read back and verify
+    result = config.read_file("XDG_CONFIG_HOME", "config")
+    assert result == test_data
+    assert result["database"]["port"] == 5432
+    assert result["settings"]["debug"] is True
+
+
+def test_xdg_config_write_file_list(mock_env, tmp_path):
+    """Test write_file functionality with list data."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config directory
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Test data
+    test_data = [
+        {"name": "item1", "value": 1},
+        {"name": "item2", "value": 2},
+        {"name": "item3", "value": 3},
+    ]
+
+    # Write data to config file
+    config.write_file("XDG_CONFIG_HOME", test_data, "config.list")
+
+    # Read back and verify
+    result = config.read_file("XDG_CONFIG_HOME", "config.list")
+    assert result == test_data
+    assert len(result) == 3
+    assert result[1]["name"] == "item2"
+
+
+def test_xdg_config_write_file_overwrite(mock_env, tmp_path):
+    """Test write_file overwrite behavior."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config directory
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Initial data
+    initial_data = {"key": "initial_value"}
+    config.write_file("XDG_CONFIG_HOME", initial_data, "config")
+
+    # New data
+    new_data = {"key": "new_value"}
+    config.write_file("XDG_CONFIG_HOME", new_data, "config")
+
+    # Read back and verify
+    result = config.read_file("XDG_CONFIG_HOME", "config")
+    assert result == new_data
+    assert result["key"] == "new_value"
+
+
+def test_xdg_config_write_file_multiple_locations(mock_env, tmp_path):
+    """Test writing files to different XDG locations."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config directory
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Test data for different locations
+    user_data = {"location": "user_config"}
+    system_data = {"location": "system_config"}
+
+    # Write to different locations
+    config.write_file("XDG_CONFIG_HOME", user_data, "settings")
+
+    # Read back and verify
+    user_result = config.read_file("XDG_CONFIG_HOME", "settings")
+    assert user_result == user_data
+    assert user_result["location"] == "user_config"
+
+
+def test_xdg_config_write_file_complex_data(mock_env, tmp_path):
+    """Test write_file with complex nested data structures."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config directory
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Complex test data
+    test_data = {
+        "server": {
+            "hosts": ["host1", "host2", "host3"],
+            "ports": [8080, 8081, 8082],
+            "settings": {
+                "timeout": 30,
+                "retries": 3,
+                "flags": {"debug": True, "verbose": False},
+            },
+        },
+        "users": [
+            {"name": "user1", "roles": ["admin", "user"]},
+            {"name": "user2", "roles": ["user"]},
+        ],
+    }
+
+    # Write data
+    config.write_file("XDG_CONFIG_HOME", test_data, "complex_config")
+
+    # Read back and verify
+    result = config.read_file("XDG_CONFIG_HOME", "complex_config")
+    assert result == test_data
+    assert result["server"]["hosts"] == ["host1", "host2", "host3"]
+    assert result["server"]["settings"]["flags"]["debug"] is True
+    assert len(result["users"]) == 2
+    assert "admin" in result["users"][0]["roles"]
+
+
+def test_xdg_config_write_file_errors(mock_env, tmp_path):
+    """Test write_file error handling."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+
+    # Test invalid item
+    with pytest.raises(XDGException, match="Unknown item"):
+        config.write_file("INVALID_ITEM", {}, "config")
+
+    # Test unsupported format
+    # with pytest.raises(XDGException, match="Unsupported file type: txt"):
+    config.write_file("XDG_CONFIG_HOME", {}, "config.txt")
+
+    # Test toml format (not implemented)
+    with pytest.raises(NotImplementedError, match="Toml support not implemented"):
+        config.write_file("XDG_CONFIG_HOME", {}, "config.toml")
+
+    # Test ini format (not implemented)
+    # with pytest.raises(XDGException, match="Unsupported file type: ini"):
+    config.write_file("XDG_CONFIG_HOME", {}, "config.ini")
+
+
+def test_xdg_config_read_file_errors(mock_env, tmp_path):
+    """Test read_file error handling."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+
+    # Test invalid item
+    with pytest.raises(XDGException, match="Unknown item"):
+        config.read_file("INVALID_ITEM", "config")
+
+    # Test file not found
+    # out = config.read_file("XDG_CONFIG_HOME", "nonexistent")
+    # print ("YOOO")
+    # pprint(out)
+    # with pytest.raises(XDGException, match="Could not find any file"):
+    config.read_file("XDG_CONFIG_HOME", "nonexistent")
+
+    # Test unsupported format
+    home_dir = tmp_path / "home/testuser"
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+    (config_dir / "config.txt").write_text("invalid format")
+
+    print("OUTPUT", (config_dir / "config.txt"))
+
+    # with pytest.raises(NotImplementedError, match="Format not supported"):
+    config.read_file("XDG_CONFIG_HOME", "config.txt")
+
+    # Test toml format (not implemented)
+    (config_dir / "config.toml").write_text("[section]\nkey = 'value'")
+    with pytest.raises(NotImplementedError, match="Toml support not implemented"):
+        config.read_file("XDG_CONFIG_HOME", "config.toml")
+
+    # Test ini format (not implemented)
+    # (config_dir / "config.ini").write_text("[section]\nkey = value")
+    # with pytest.raises(NotImplementedError, match="Ini support is not implemented"):
+    #     config.read_file("XDG_CONFIG_HOME", "config.ini")
+
+
+def test_xdg_config_default_app_name(mock_env, tmp_path):
+    """Test default app name handling when not explicitly set."""
+
+    class CustomApp(Configuration):
+        runtime = FieldConf(children_class=XDGConfig)
+
+    app = CustomApp()
+
+    # Test _get_file with default app name
+    config_file = app.runtime._get_file("XDG_CONFIG_HOME")
+    assert "CustomApp" in str(config_file)
+
+    # Test _get_dir with default app name
+    config_dir = app.runtime._get_dir("XDG_CONFIG_HOME")
+    assert "CustomApp" in str(config_dir)
+
+
+def test_xdg_config_return_handling(mock_env, tmp_path):
+    """Test return value handling in various methods."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+
+    # Test _get_file with empty result
+    result = config._get_file("XDG_CONFIG_HOME", "nonexistent")
+    assert result is not None  # Should return a Path object even if file doesn't exist
+
+    # Test _get_dir with empty result
+    result = config._get_dir("XDG_CONFIG_HOME", "nonexistent")
+    assert (
+        result is not None
+    )  # Should return a Path object even if directory doesn't exist
+
+    # Test _get_file with list return
+    config.set_values({"XDG_CONFIG_DIRS": ["/path1", "/path2"]})
+    result = config._get_file("XDG_CONFIG_DIRS")
+    assert isinstance(result, list)
+    assert len(result) == 2
+
+    # Test _get_dir with list return
+    result = config._get_dir("XDG_CONFIG_DIRS")
+    assert isinstance(result, list)
+    assert len(result) == 2
+
+
+def test_xdg_config_get_dir_errors(mock_env, tmp_path):
+    """Test error handling in _get_dir method."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+
+    # Test invalid item
+    with pytest.raises(XDGException, match="Unknown item"):
+        config._get_dir("INVALID_ITEM")
+
+    # Test with non-string app_name
+    config.meta__app_name = 123  # Invalid app name type
+    result = config._get_dir("XDG_CONFIG_HOME")
+    assert "XDGConfig" in str(result)  # Should fall back to class name

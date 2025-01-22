@@ -93,7 +93,7 @@ def from_yaml(string):
     return yaml.safe_load(string)
 
 
-def to_yaml(obj, headers=False):
+def to_yaml(obj):
     "Transform obj to YAML"
     return yaml.dump(obj)
 
