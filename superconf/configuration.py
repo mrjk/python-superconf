@@ -1,7 +1,7 @@
 "Main configuratio  class"
 
 
-# pylint: disable=unused-argument, too-few-public-methods, too-many-instance-attributes, use-dict-literal, protected-access
+# pylint: disable=unused-argument, too-few-public-methods, too-many-instance-attributes, use-dict-literal, protected-access, too-many-branches
 
 import copy
 import logging
@@ -10,14 +10,14 @@ from collections import OrderedDict
 # from collections import Mapping, Sequence
 from collections.abc import Mapping, Sequence
 
+# pylint: disable=unused-import
+from pprint import pprint
+
 from superconf import exceptions
 
 from .common import NOT_SET, UNSET_ARG
 from .fields import Field, FieldConf
 from .loaders import Environment
-
-# from pprint import pprint
-
 
 # from types import SimpleNamespace
 # from typing import Callable
@@ -58,7 +58,7 @@ class Node:
     # Instance config management
     # ----------------------------
 
-    def query_inst_cfg(self, *args, cast=None, **kwargs):
+    def query_inst_cfg(self, *args, cast=None, report=False, **kwargs):
         """Query instance configuration with optional type casting.
 
         Args:
@@ -69,7 +69,7 @@ class Node:
         Returns:
             The configuration value, optionally cast to the specified type
         """
-        out, _ = self._query_inst_cfg(*args, **kwargs)
+        out, _report = self._query_inst_cfg(*args, **kwargs)
         # print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
         # pprint(query_from)
 
@@ -83,6 +83,8 @@ class Node:
             assert isinstance(
                 out, cast
             ), f"Wrong type for config {self}, expected {cast}, got: {type(out)} {out}"
+        if report:
+            return out, _report
         return out
 
     # @classmethod
@@ -158,14 +160,19 @@ class Node:
         )
         raise exceptions.UnknownSetting(msg)
 
-    def query_cfg(self, name, include_self=True, **kwargs):
+    def query_cfg(self, name, include_self=True, report=False, **kwargs):
         "Temporary wrapper"
-
-        return self.query_parent_cfg(name, include_self=True, **kwargs)
+        return self.query_parent_cfg(name, include_self=True, report=report, **kwargs)
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     def query_parent_cfg(
-        self, name, as_subkey=False, cast=None, default=UNSET_ARG, include_self=False
+        self,
+        name,
+        as_subkey=False,
+        cast=None,
+        default=UNSET_ARG,
+        include_self=False,
+        report=False,
     ):
         """Query configuration from parent object.
 
@@ -185,6 +192,8 @@ class Node:
         # Fast exit or raise exception
         if not self._parent and include_self is False:
             if default is not UNSET_ARG:
+                if report:
+                    return default, "No parents, return default value"
                 return default
             msg = (
                 f"Setting '{name}' has not been declared in hierarchy of '{repr(self)}'"
@@ -192,15 +201,25 @@ class Node:
             raise exceptions.UnknownSetting(msg)
 
         # Check parents
+        _report = []
         parents = self.get_hierarchy()
         if include_self is False:
             parents = parents[1:]
         out = NOT_SET
         for parent in parents:
-            out = parent.query_inst_cfg(name, default=NOT_SET)
+            _report.append(f"Check '{name}' in parent {parent}")
+
+            if report:
+                out, _report2 = parent.query_inst_cfg(
+                    name, default=NOT_SET, report=True
+                )
+                _report.append(_report2)
+            else:
+                out = parent.query_inst_cfg(name, default=NOT_SET)
 
             # If a value is found, then scan it
             if out is not NOT_SET:
+                _report.append(f"Found '{name}' in parent {parent}= {out}")
 
                 # Ckeck subkey
                 if as_subkey is True:
@@ -211,10 +230,14 @@ class Node:
                         out = out[self.key]
                     else:
                         out = NOT_SET
+                _report.append(f"Found2 '{name}' in parent {parent}= {out}")
 
             # Don't ask more parents if value is found
             if out is not NOT_SET:
                 break
+
+        if out is NOT_SET:
+            _report.append(f"NotFound '{name}' in parent: {parent}")
 
         if cast is not None:
             # Try to cast if asked
@@ -229,6 +252,9 @@ class Node:
                 f"Setting '{name}' has not been declared in hierarchy of '{repr(self)}'"
             )
             raise exceptions.UnknownSetting(msg)
+
+        if report:
+            return out, _report
         return out
 
     def get_hierarchy(self):
