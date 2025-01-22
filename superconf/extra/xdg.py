@@ -178,7 +178,7 @@ class XDGConfig(ConfigurationDict):
 
     def get_config_file(self, name=None):
         """Get config file path."""
-        return self._get_file("XDG_CONFIG_HOME", name)
+        return self.get_file("XDG_CONFIG_HOME", name)
 
     def get_config_dir(self, name=None):
         """Get config directory path."""
@@ -186,19 +186,19 @@ class XDGConfig(ConfigurationDict):
 
     # def get_data_file(self, name=None):
     #     """Get data file path."""
-    #     return self._get_file('XDG_DATA_HOME', name)
+    #     return self.get_file('XDG_DATA_HOME', name)
 
     # def get_cache_file(self, name=None):
     #     """Get cache file path."""
-    #     return self._get_file('XDG_CACHE_HOME', name)
+    #     return self.get_file('XDG_CACHE_HOME', name)
 
     # def get_state_file(self, name=None):
     #     """Get state file path."""
-    #     return self._get_file('XDG_STATE_HOME', name)
+    #     return self.get_file('XDG_STATE_HOME', name)
 
     # def get_runtime_file(self, name=None):
     #     """Get runtime file path."""
-    #     return self._get_file('XDG_RUNTIME_DIR', name)
+    #     return self.get_file('XDG_RUNTIME_DIR', name)
 
     # def get_data_dir(self, name=None):
     #     """Get data directory path."""
@@ -281,7 +281,7 @@ class XDGConfig(ConfigurationDict):
         "Read a file content"
 
         # Fetch best file
-        files = self._get_file(item, name=name)
+        files = self.get_file(item, name=name)
         if not isinstance(files, list):
             files = [files]
 
@@ -327,7 +327,7 @@ class XDGConfig(ConfigurationDict):
         "Write content to file"
 
         # Fetch best file
-        files = self._get_file(item, name=name)
+        files = self.get_file(item, name=name)
         if not isinstance(files, list):
             files = [files]
 
@@ -358,7 +358,7 @@ class XDGConfig(ConfigurationDict):
             write_file(file, out)
             break
 
-    def _get_file(self, item, name=None):
+    def get_file(self, item, name=None):
         """Get file path for given XDG item."""
 
         # Fetch current value
@@ -377,7 +377,8 @@ class XDGConfig(ConfigurationDict):
 
         # Prepare extensions
         extensions = list(self.meta__xdg_file_fmt)
-        extensions.append(extensions[0])
+        if extensions:  # Only append first extension if list is not empty
+            extensions.append(extensions[0])
 
         # Parse paths
         app_name = self.query_cfg("app_name", default=None)

@@ -127,7 +127,7 @@ def test_xdg_config_invalid_item(mock_env):
     config = XDGConfig()
 
     with pytest.raises(XDGException) as exc_info:
-        config._get_file("INVALID_ITEM")
+        config.get_file("INVALID_ITEM")
     assert "Unknown item" in str(exc_info.value)
 
 
@@ -272,10 +272,10 @@ def test_xdg_config_check_stacks(mock_env, tmp_path):
         runtime = FieldConf(children_class=XDGConfig)
 
         def check_stacks(self):
-            return self.runtime._get_file("XDG_CONFIG_HOME")
+            return self.runtime.get_file("XDG_CONFIG_HOME")
 
         def check_stacks2(self):
-            return self.runtime._get_file("XDG_CONFIG_HOME", "TUTU")
+            return self.runtime.get_file("XDG_CONFIG_HOME", "TUTU")
 
     app = App()
     # pprint(app.query_cfg("app_name", report=True), width=200)
@@ -639,8 +639,8 @@ def test_xdg_config_default_app_name(mock_env, tmp_path):
 
     app = CustomApp()
 
-    # Test _get_file with default app name
-    config_file = app.runtime._get_file("XDG_CONFIG_HOME")
+    # Test get_file with default app name
+    config_file = app.runtime.get_file("XDG_CONFIG_HOME")
     assert "CustomApp" in str(config_file)
 
     # Test _get_dir with default app name
@@ -653,8 +653,8 @@ def test_xdg_config_return_handling(mock_env, tmp_path):
     config = XDGConfig()
     config.meta__app_name = "testapp"
 
-    # Test _get_file with empty result
-    result = config._get_file("XDG_CONFIG_HOME", "nonexistent")
+    # Test get_file with empty result
+    result = config.get_file("XDG_CONFIG_HOME", "nonexistent")
     assert result is not None  # Should return a Path object even if file doesn't exist
 
     # Test _get_dir with empty result
@@ -663,9 +663,9 @@ def test_xdg_config_return_handling(mock_env, tmp_path):
         result is not None
     )  # Should return a Path object even if directory doesn't exist
 
-    # Test _get_file with list return
+    # Test get_file with list return
     config.set_values({"XDG_CONFIG_DIRS": ["/path1", "/path2"]})
-    result = config._get_file("XDG_CONFIG_DIRS")
+    result = config.get_file("XDG_CONFIG_DIRS")
     assert isinstance(result, list)
     assert len(result) == 2
 
@@ -716,7 +716,7 @@ def test_xdg_config_app_name_edge_cases():
             app_name = 123  # Invalid app name type
 
     app = CustomApp()
-    assert "CustomApp" in str(app.runtime._get_file("XDG_CONFIG_HOME"))
+    assert "CustomApp" in str(app.runtime.get_file("XDG_CONFIG_HOME"))
     assert "CustomApp" in str(app.runtime._get_dir("XDG_CONFIG_HOME"))
 
     # Test with no app_name
@@ -724,7 +724,7 @@ def test_xdg_config_app_name_edge_cases():
         runtime = FieldConf(children_class=XDGConfig)
 
     app = NoNameApp()
-    assert "NoNameApp" in str(app.runtime._get_file("XDG_CONFIG_HOME"))
+    assert "NoNameApp" in str(app.runtime.get_file("XDG_CONFIG_HOME"))
     assert "NoNameApp" in str(app.runtime._get_dir("XDG_CONFIG_HOME"))
 
 
@@ -756,3 +756,32 @@ def test_xdg_config_parse_path_edge_cases(mock_env, tmp_path):
     result = config._parse_path([str(home_dir) + "/"], prefix="testapp")
     assert len(result) == 1
     assert str(result[0]).endswith("testapp")
+
+
+def test_xdg_config_empty_file_fmt(mock_env, tmp_path):
+    """Test behavior when meta__xdg_file_fmt is empty."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    config.meta__xdg_file_fmt = []  # Set empty format list
+
+    # Create test directory
+    home_dir = tmp_path / "home/testuser"
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Test that get_file still works
+    result = config.get_file("XDG_CONFIG_HOME", "config")
+    assert isinstance(result, Path)
+
+    # Test that read_file returns None for missing file
+    assert config.read_file("XDG_CONFIG_HOME", "config") is None
+
+    # Create a test file and verify we can still read it with explicit extension
+    test_content = {"key": "value"}
+    config.meta__xdg_file_fmt = ["yml"]  # Temporarily set format for writing
+    config.write_file("XDG_CONFIG_HOME", test_content, "config")
+    config.meta__xdg_file_fmt = []  # Reset to empty
+
+    # Should still be able to read with explicit extension
+    result = config.read_file("XDG_CONFIG_HOME", "config.yml")
+    assert result == test_content
