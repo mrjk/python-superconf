@@ -278,8 +278,9 @@ def test_xdg_config_check_stacks(mock_env, tmp_path):
             return self.runtime._get_file("XDG_CONFIG_HOME", "TUTU")
 
     app = App()
-    # pprint(app.query_cfg("app_name", report=True), width=180)
-    # pprint(app.runtime.query_cfg("app_name", report=True), width=180)
+    # pprint(app.query_cfg("app_name", report=True), width=200)
+    # pprint(app.runtime.query_cfg("app_name", report=True), width=200)
+
     result = app.check_stacks()
     # Should return a Path object pointing to the app's config directory
     assert isinstance(result, Path)
@@ -330,3 +331,102 @@ def test_xdg_config_field_integration(mock_env):
     assert App.Meta.app_name == "testapp"
     assert app.runtime.query_cfg("app_name") == "testapp"
     assert app.runtime.query_cfg("env_prefix") == "TEST_APP"
+
+
+def test_xdg_config_create_and_load(mock_env, tmp_path):
+    """Test creating and loading config files in XDG paths."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config directory and files
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Create different config files with test data
+    configs = {
+        "settings.yml": """
+            database:
+                host: localhost
+                port: 5432
+                name: testdb
+            logging:
+                level: INFO
+                file: /var/log/app.log
+            """,
+        "auth.json": """
+            {
+                "secret_key": "test123",
+                "allowed_hosts": ["localhost", "127.0.0.1"],
+                "timeout": 3600
+            }
+            """,
+    }
+
+    for fname, content in configs.items():
+        (config_dir / fname).write_text(content)
+
+    # Test loading YAML config
+    yaml_result = config.read_file("XDG_CONFIG_HOME", "settings")
+    assert yaml_result["database"]["host"] == "localhost"
+    assert yaml_result["database"]["port"] == 5432
+    assert yaml_result["logging"]["level"] == "INFO"
+
+    # Test loading JSON config
+    json_result = config.read_file("XDG_CONFIG_HOME", "auth")
+    assert json_result["secret_key"] == "test123"
+    assert "localhost" in json_result["allowed_hosts"]
+    assert json_result["timeout"] == 3600
+
+    # Test loading with full path including extension
+    yaml_result_full = config.read_file("XDG_CONFIG_HOME", "settings.yml")
+    assert yaml_result_full == yaml_result
+
+
+def test_xdg_config_load_from_multiple_locations(mock_env, tmp_path):
+    """Test loading configs from different XDG locations with precedence."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+
+    # Setup directories
+    home_dir = tmp_path / "home/testuser"
+    etc_dir = tmp_path / "etc/xdg/testapp"
+    usr_dir = tmp_path / "usr/local/etc/xdg/testapp"
+
+    # Create config directories
+    config_home = home_dir / ".config/testapp"
+    config_home.mkdir(parents=True)
+    etc_dir.mkdir(parents=True)
+    usr_dir.mkdir(parents=True)
+
+    # Create config files with different values
+    configs = {
+        str(
+            config_home / "config.yml"
+        ): """
+            setting: home_value
+            common: home_common
+            """,
+        str(
+            etc_dir / "config.yml"
+        ): """
+            setting: etc_value
+            common: etc_common
+            etc_only: etc_specific
+            """,
+        str(
+            usr_dir / "config.yml"
+        ): """
+            setting: usr_value
+            common: usr_common
+            usr_only: usr_specific
+            """,
+    }
+
+    for fpath, content in configs.items():
+        Path(fpath).write_text(content)
+
+    # Test loading - should get home value due to precedence
+    result = config.read_file("XDG_CONFIG_HOME", "config")
+    assert result["setting"] == "home_value"
+    assert result["common"] == "home_common"
