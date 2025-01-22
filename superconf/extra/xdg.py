@@ -2,6 +2,7 @@
 
 # pylint: disable=too-few-public-methods, too-many-nested-blocks, too-many-branches
 
+import logging
 import os
 from pathlib import Path
 
@@ -11,6 +12,9 @@ from pprint import pprint
 from superconf.common import from_json, from_yaml, read_file
 from superconf.configuration import ConfigurationDict
 from superconf.fields import Field
+
+logger = logging.getLogger(__name__)
+
 
 # ====================================
 # Exceptions and casts
@@ -224,9 +228,13 @@ class XDGConfig(ConfigurationDict):
                 if name:
 
                     # Validate name doesn't already end with any extension
-                    for ext in extensions:
-                        if name.endswith(f".{ext}"):
-                            name = name[: -len(ext) - 1]  # Remove the extension
+                    name, file_extension = os.path.splitext(name)
+                    if file_extension:
+                        file_extension = file_extension.lstrip(".")
+                        if file_extension not in extensions:
+                            name = f"{name}.{file_extension}"
+                        else:
+                            extensions = [file_extension]
 
                     default_path = os.path.join(path, f"{name}.{extensions[0]}")
                     found = False
@@ -262,7 +270,7 @@ class XDGConfig(ConfigurationDict):
         # print ("MATCHED", found, ret)
         return ret
 
-    def read_file(self, item, name=None):
+    def read_file(self, item, name=None, missing_ok=True):
         "Read a file content"
 
         # Fetch best file
@@ -278,11 +286,15 @@ class XDGConfig(ConfigurationDict):
 
         # Return first file
         out = None
+        found = False
         for file in files:
             file = str(file)
 
             if not os.path.isfile(file):
                 continue
+
+            found = True
+            logger.info("Read file %s", file)
 
             fcontent = read_file(file)
             if file.endswith("yaml") or file.endswith("yml"):
@@ -297,6 +309,10 @@ class XDGConfig(ConfigurationDict):
                 raise NotImplementedError(f"Format not supported: {file}")
 
             break
+
+        if not found:
+            if not missing_ok:
+                raise XDGException(f"Could not find any file in {str(files[0])}")
 
         return out
 
