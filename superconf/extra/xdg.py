@@ -5,6 +5,9 @@
 import os
 from pathlib import Path
 
+# pylint: disable=unused-import
+from pprint import pprint
+
 from superconf.common import from_json, from_yaml, read_file
 from superconf.configuration import ConfigurationDict
 from superconf.fields import Field
@@ -213,6 +216,7 @@ class XDGConfig(ConfigurationDict):
             path = os.path.expandvars(path)
             if isinstance(prefix, str):
                 path = os.path.join(path, prefix)
+            path = path.rstrip("/")
 
             if extensions:
                 # File lookup only
@@ -234,7 +238,6 @@ class XDGConfig(ConfigurationDict):
                                 path = fpath
                                 found = True
                 else:
-
                     default_path = f"{path}.{extensions[0]}"
                     found = False
                     for ext in extensions:
@@ -319,12 +322,11 @@ class XDGConfig(ConfigurationDict):
         extensions.append(extensions[0])
 
         # Parse paths
-        # print ("YOOOOOOOOOOOOOIII1")
         app_name = self.query_cfg("app_name", default=None)
-        # print ("YOOOOOOOOOOOOOIII2")
         if not isinstance(app_name, str):
             root = self.get_hierarchy()[-1]
             app_name = root.__class__.__name__
+        assert app_name
 
         # print ("=== PARSE PATH", values, name, app_name, extensions)
         ret = self._parse_path(
@@ -357,7 +359,11 @@ class XDGConfig(ConfigurationDict):
         extensions = []
 
         # Parse paths
-        app_name = self.query_cfg("app_name")
+        app_name = self.query_cfg("app_name", default=None)
+        if not app_name or not isinstance(app_name, str):
+            root = self.get_hierarchy()[-1]
+            app_name = root.__class__.__name__
+
         ret = self._parse_path(
             values, name=name, prefix=app_name, extensions=extensions
         )
