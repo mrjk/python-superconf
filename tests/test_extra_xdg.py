@@ -3,11 +3,13 @@
 
 import os
 from pathlib import Path
+from pprint import pprint
 
 import pytest
 
 from superconf.configuration import Configuration
 from superconf.extra.xdg import XDGConfig, XDGException
+from superconf.fields import FieldConf
 
 
 @pytest.fixture
@@ -199,7 +201,7 @@ def test_xdg_config_in_app(mock_env, tmp_path):
             app_name = "testapp"
             env_prefix = "TEST_APP"
 
-        runtime = XDGConfig()
+        runtime = FieldConf(children_class=XDGConfig)
 
     app = TestApp()
     home_dir = tmp_path / "home/testuser"
@@ -210,4 +212,121 @@ def test_xdg_config_in_app(mock_env, tmp_path):
 
     # Verify runtime configuration
     assert isinstance(app.runtime, XDGConfig)
-    assert app.runtime.get_config_dir() == home_dir / ".config"
+    assert app.runtime.get_config_dir() == home_dir / ".config" / "testapp"
+
+
+def test_xdg_config_default(mock_env, tmp_path):
+    """Test XDG configuration as part of an application."""
+
+    # TODO: This should work outside the class, before env in changed !
+    class TestApp(Configuration):
+        """Test application configuration."""
+
+        runtime = FieldConf(children_class=XDGConfig)
+
+    app = TestApp()
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config
+    config_dir = home_dir / ".config/TestApp"
+    config_dir.mkdir(parents=True)
+
+    # Verify runtime configuration
+    assert isinstance(app.runtime, XDGConfig)
+    print(home_dir / ".config" / "TestApp")
+    print(app.runtime.get_config_dir())
+    assert app.runtime.get_config_dir() == home_dir / ".config" / "TestApp"
+
+
+def test_xdg_config_custom_dirs(mock_env, monkeypatch):
+    """Test XDG configuration with custom XDG_CONFIG_DIRS."""
+    custom_dirs = "$HOME/dir1:dir2:dir3"
+    monkeypatch.setenv("XDG_CONFIG_DIRS", custom_dirs)
+
+    class App(Configuration):
+        runtime = FieldConf(children_class=XDGConfig)
+
+    app = App()
+    # pprint(app.__dict__)
+    # pprint(app.get_values())
+    assert isinstance(app.runtime, XDGConfig)
+    # Verify the custom dirs are properly expanded
+    home = os.environ.get("HOME")
+    expected_dirs = [os.path.expandvars(f"{home}/dir1"), "dir2", "dir3"]
+    pprint(expected_dirs)
+    pprint(app.runtime.XDG_CONFIG_DIRS)
+    assert app.runtime.XDG_CONFIG_DIRS == expected_dirs
+
+
+def test_xdg_config_check_stacks(mock_env, tmp_path):
+    """Test check_stacks functionality."""
+
+    class App(Configuration):
+        # meta__app_name = "MySUPERAPP"
+
+        class Meta:
+            cache = True
+            app_name = "MySUPERAPP"
+            env_prefix = "MY_APPLICATION"
+
+        runtime = FieldConf(children_class=XDGConfig)
+
+        def check_stacks(self):
+            return self.runtime._get_file("XDG_CONFIG_HOME")
+
+        def check_stacks2(self):
+            return self.runtime._get_file("XDG_CONFIG_HOME", "TUTU")
+
+    app = App()
+    # pprint(app.query_cfg("app_name", report=True), width=180)
+    # pprint(app.runtime.query_cfg("app_name", report=True), width=180)
+    result = app.check_stacks()
+    # Should return a Path object pointing to the app's config directory
+    assert isinstance(result, Path)
+    print(result)
+    assert str(result).endswith("MySUPERAPP.yml")
+
+
+def test_xdg_read_file_locations(mock_env, tmp_path):
+    """Test reading files from different XDG locations."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test files in different XDG locations
+    config_home = home_dir / ".config/testapp"
+    config_home.mkdir(parents=True)
+
+    test_configs = {"config.yml": "key: value1", "config.user.yml": "key: value2"}
+
+    for fname, content in test_configs.items():
+        (config_home / fname).write_text(content)
+
+    # Test reading from XDG_CONFIG_HOME
+    result1 = config.read_file("XDG_CONFIG_HOME", "config")
+    assert result1["key"] == "value1"
+
+    # Test reading user config
+    result2 = config.read_file("XDG_CONFIG_HOME", "config.user")
+    assert result2["key"] == "value2"
+
+    # Test reading non-existent file
+    result3 = config.read_file("XDG_CONFIG_HOME", "nonexistent")
+    assert result3 is None
+
+
+def test_xdg_config_field_integration(mock_env):
+    """Test XDGConfig integration with FieldConf."""
+
+    class App(Configuration):
+        class Meta:
+            app_name = "testapp"
+            env_prefix = "TEST_APP"
+
+        runtime = FieldConf(children_class=XDGConfig)
+
+    app = App()
+    assert isinstance(app.runtime, XDGConfig)
+    assert App.Meta.app_name == "testapp"
+    assert app.runtime.query_cfg("app_name") == "testapp"
+    assert app.runtime.query_cfg("env_prefix") == "TEST_APP"
