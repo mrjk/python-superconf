@@ -688,3 +688,71 @@ def test_xdg_config_get_dir_errors(mock_env, tmp_path):
     config.meta__app_name = 123  # Invalid app name type
     result = config._get_dir("XDG_CONFIG_HOME")
     assert "XDGConfig" in str(result)  # Should fall back to class name
+
+
+def test_xdg_config_read_file_missing_not_ok(mock_env, tmp_path):
+    """Test read_file with missing_ok=False."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Create test config directory
+    config_dir = home_dir / ".config/testapp"
+    config_dir.mkdir(parents=True)
+
+    # Test with missing_ok=False
+    with pytest.raises(XDGException, match="Could not find any file"):
+        config.read_file("XDG_CONFIG_HOME", "nonexistent", missing_ok=False)
+
+
+def test_xdg_config_app_name_edge_cases():
+    """Test edge cases for app name handling."""
+
+    # Test with non-string app_name
+    class CustomApp(Configuration):
+        runtime = FieldConf(children_class=XDGConfig)
+
+        class Meta:
+            app_name = 123  # Invalid app name type
+
+    app = CustomApp()
+    assert "CustomApp" in str(app.runtime._get_file("XDG_CONFIG_HOME"))
+    assert "CustomApp" in str(app.runtime._get_dir("XDG_CONFIG_HOME"))
+
+    # Test with no app_name
+    class NoNameApp(Configuration):
+        runtime = FieldConf(children_class=XDGConfig)
+
+    app = NoNameApp()
+    assert "NoNameApp" in str(app.runtime._get_file("XDG_CONFIG_HOME"))
+    assert "NoNameApp" in str(app.runtime._get_dir("XDG_CONFIG_HOME"))
+
+
+def test_xdg_config_parse_path_edge_cases(mock_env, tmp_path):
+    """Test edge cases in _parse_path method."""
+    config = XDGConfig()
+    config.meta__app_name = "testapp"
+    home_dir = tmp_path / "home/testuser"
+
+    # Test with empty values list
+    result = config._parse_path([], name="test")
+    assert result == []
+
+    # Test with name containing extension
+    result = config._parse_path(
+        [str(home_dir)], name="test.yml", extensions=["yml", "yaml"]
+    )
+    assert len(result) == 1
+    assert str(result[0]).endswith("test.yml")
+
+    # Test with name containing unsupported extension
+    result = config._parse_path(
+        [str(home_dir)], name="test.txt", extensions=["yml", "yaml"]
+    )
+    assert len(result) == 1
+    assert str(result[0]).endswith("test.txt.yml")
+
+    # Test directory path with trailing slash
+    result = config._parse_path([str(home_dir) + "/"], prefix="testapp")
+    assert len(result) == 1
+    assert str(result[0]).endswith("testapp")
