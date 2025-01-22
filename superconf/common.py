@@ -69,7 +69,6 @@ assert UNSET_ARG is not NOT_SET
 assert NOT_SET is not UNSET_ARG
 assert not isinstance(UNSET_ARG, str)
 assert not isinstance(NOT_SET, str)
-print((NOT_SET or "INVALID"))
 assert (NOT_SET or "INVALID") == "INVALID"
 
 # assert UNSET_ARG is not NOT_SET
