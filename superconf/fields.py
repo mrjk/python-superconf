@@ -243,10 +243,10 @@ class Field:
             try:
                 result = cast(result)
                 results_from.append(f"casted:{cast}")
-            except (exceptions.InvalidCastConfiguration, ValueError) as err:
+            except (exceptions.InvalidCastConfiguration, ValueError, TypeError) as err:
                 error = err
-                # result = cast() # TOFIX: This should work
-                results_from.append(f"casted_reset:{cast}")
+                result = NOT_SET
+                results_from.append(f"not_castable:{cast}")
 
             # Check for strict_cast mode:
             if error is not None and conf_instance._strict_cast is True:
