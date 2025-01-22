@@ -9,7 +9,14 @@ from pathlib import Path
 # pylint: disable=unused-import
 from pprint import pprint
 
-from superconf.common import from_json, from_yaml, read_file
+from superconf.common import (
+    from_json,
+    from_yaml,
+    read_file,
+    to_json,
+    to_yaml,
+    write_file,
+)
 from superconf.configuration import ConfigurationDict
 from superconf.fields import Field
 
@@ -315,6 +322,41 @@ class XDGConfig(ConfigurationDict):
                 raise XDGException(f"Could not find any file in {str(files[0])}")
 
         return out
+
+    def write_file(self, item, data, name=None):
+        "Write content to file"
+
+        # Fetch best file
+        files = self._get_file(item, name=name)
+        if not isinstance(files, list):
+            files = [files]
+
+        # Return error if no files
+        if not files:
+            if name:
+                raise XDGException(f"Could not find any file in {item} called {name}")
+            raise XDGException(f"Could not find any file in {item}")
+
+        # Write only on the first file
+        files = [files[0]]
+        for file in files:
+            file = str(file)
+
+            # fcontent = read_file(file)
+            if file.endswith("yaml") or file.endswith("yml"):
+                out = to_yaml(data)
+            elif file.endswith("json"):
+                out = to_json(data)
+            elif file.endswith("toml"):
+                raise NotImplementedError("Toml support not implemented yet")
+            elif file.endswith("ini"):
+                raise NotImplementedError("Ini support is not implemented yet")
+            else:
+                raise NotImplementedError(f"Format not supported: {file}")
+
+            logger.info("Write data in file %s", file)
+            write_file(file, out)
+            break
 
     def _get_file(self, item, name=None):
         """Get file path for given XDG item."""

@@ -1,9 +1,9 @@
 "Common code"
 
 # pylint: disable=too-few-public-methods
-
 import json
 import logging
+import os
 
 import yaml
 
@@ -81,12 +81,50 @@ def from_json(string):
     return json.loads(string)
 
 
+def to_json(obj, nice=True):
+    "Transform JSON string to python dict"
+    if nice:
+        return json.dumps(obj, indent=2)
+    return json.dumps(obj)
+
+
 def from_yaml(string):
     "Transform YAML string to python dict"
     return yaml.safe_load(string)
+
+
+def to_yaml(obj, headers=False):
+    "Transform obj to YAML"
+    return yaml.dump(obj)
+
+    # # Ruamel support
+    # options = {}
+    # string_stream = StringIO()
+
+    # if isinstance(obj, str):
+    #     obj = json.loads(obj)
+
+    # yaml.dump(obj, string_stream, **options)
+    # output_str = string_stream.getvalue()
+    # string_stream.close()
+    # if not headers:
+    #     output_str = output_str.split("\n", 2)[2]
+    # return output_str
 
 
 def read_file(file):
     "Read file content"
     with open(file, encoding="utf-8") as _file:
         return "".join(_file.readlines())
+
+
+def write_file(file, content, create_dirs=True):
+    "Write content to file"
+
+    if create_dirs:
+        file_folder = os.path.dirname(file)
+        if not os.path.exists(file_folder):
+            os.makedirs(file_folder)
+
+    with open(file, "w", encoding="utf-8") as _file:
+        _file.write(content)
