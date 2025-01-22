@@ -223,6 +223,12 @@ class Node:
             assert isinstance(
                 out, cast
             ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
+
+        if out is NOT_SET and default is UNSET_ARG:
+            msg = (
+                f"Setting '{name}' has not been declared in hierarchy of '{repr(self)}'"
+            )
+            raise exceptions.UnknownSetting(msg)
         return out
 
     def get_hierarchy(self):
