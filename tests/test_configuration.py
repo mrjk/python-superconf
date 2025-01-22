@@ -1,6 +1,8 @@
 # pylint: skip-file
 
 
+from pprint import pprint
+
 import pytest
 
 from superconf.common import NOT_SET
@@ -168,6 +170,7 @@ def test_cast_functionality():
 
     # Test successful cast
     config = CastConfig()
+    assert config.get_value("field") == NOT_SET
     config.set_values({"field": 42})
     assert config.field == 42
     assert isinstance(config.field, int)
@@ -206,7 +209,9 @@ def test_parent_configuration_query():
     # child = ChildConfig(parent=parent) # This does not work ...
 
     # Test querying existing parent field
-    assert child.query_parent_cfg("children_class") is NOT_SET
+    # pprint(parent.__dict__)
+    # print("RESULT", child.query_cfg("children_class", default="TUTU"))
+    assert child.query_cfg("children_class", default="TUTU") is NOT_SET
 
     # Test querying with as_subkey parameter
     assert child.query_parent_cfg("default", as_subkey=True) == {
