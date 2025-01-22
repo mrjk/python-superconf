@@ -56,7 +56,6 @@ class AsBoolean(AbstractCast):
             self.values.update(values)
 
     def __call__(self, value):
-        # print (f"\n\n === PRINT CAST {value}===  \n")
         try:
             return self.values[str(value).lower()]
         except KeyError as err:
@@ -77,7 +76,7 @@ class AsInt(AbstractCast):
     def __call__(self, value):
         try:
             return int(value)
-        except ValueError as err:
+        except (ValueError, TypeError) as err:
             # TOFIX: Raise or report unset ?
             # return NOT_SET
             raise InvalidCastConfiguration(
