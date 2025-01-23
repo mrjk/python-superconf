@@ -19,4 +19,4 @@ Implementation scope is restricted to Python's native `argparse` module exclusiv
 * Third-party parser implementations must be maintained externally
 * API design requires well-defined interfaces for parser integration
 * Reduced core codebase complexity and maintenance burden
-* Clear separation of concerns between core functionality and parser implementations 
+* Clear separation of concerns between core functionality and parser implementations

@@ -1,6 +1,9 @@
 ---
 
 # See: https://pymarkdown.readthedocs.io/en/latest/rules/
+extensions:
+  pragmas:
+    enabled: True
 
 plugins:
   md012:

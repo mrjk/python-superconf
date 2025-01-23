@@ -43,7 +43,10 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      # auto_append: ["../LICENSE"]
+      base_path: [".."]
+
   - pymdownx.tabbed:
       alternate_style: true
   - tables
@@ -86,4 +89,7 @@ nav:
         - XDG: reference/extra_xdg.md
       - Extra lib:
         - Anchors: reference/anchors.md
-  # - Info:
+  - Project:
+    - Contributing: info/contributing.md
+    - Code of Conduct: info/code_of_conduct.md
+    - License: info/license.md

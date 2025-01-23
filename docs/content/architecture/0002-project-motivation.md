@@ -9,6 +9,7 @@ Accepted
 ## Context
 
 Python applications often require handling configuration from multiple sources, with proper type validation and flexibility. Existing solutions have limitations:
+
 - Lack of strong type safety
 - Limited support for nested configurations
 - Complex APIs
@@ -31,6 +32,7 @@ We decided to create SuperConf as a new configuration management library with th
 ## Consequences
 
 ### Benefits
+
 - Improved reliability through type-safe configuration
 - Reduced configuration-related bugs through validation
 - Better developer experience with clear, intuitive API
@@ -39,6 +41,7 @@ We decided to create SuperConf as a new configuration management library with th
 - Strong foundation for complex configuration needs
 
 ### Challenges
+
 - Maintaining backward compatibility with Python 3.9+
 - Need for comprehensive documentation
 - Ongoing maintenance of multiple configuration sources

@@ -1,6 +1,6 @@
 # SuperConf
 
-
+<!--- pyml disable-num-lines 20 no-inline-html -->
 <p align='center'>
 <a href="https://github.com/mrjk/python-superconf">
 <img src="logo/banner.svg" alt="SuperConf Logo"></a>

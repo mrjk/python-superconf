@@ -15,31 +15,31 @@ Optimization of object lifecycle management requires strict instantiation polici
 ### Class Instantiation Specifications
 
 1. `Configuration` Class:
-    * Primary instantiation scope: Application level
-    * Lifecycle: Usually single instance per configuration context
-    * Responsibility: Configuration state management
+   * Primary instantiation scope: Application level
+   * Lifecycle: Usually single instance per configuration context
+   * Responsibility: Configuration state management
 
 2. `Field` Class:
-    * Instantiation constraints:
-        * Class definition context only (user)
-        * Child object declarations (internal only)
-    * Lifecycle: Bound to parent Configuration instance
-    * Responsibility: Field configuration
+   * Instantiation constraints:
+     * Class definition context only (user)
+     * Child object declarations (internal only)
+   * Lifecycle: Bound to parent Configuration instance
+   * Responsibility: Field configuration
 
 3. `Loader` Class:
-    * Primary instantiation context: Class definitions
-    * Supported patterns:
-        * Static class-defined loaders
-        * Instance loaders for edge case handling
-    * Lifecycle: Determined by usage context
-    * Responsibility: Data loaders
+   * Primary instantiation context: Class definitions
+   * Supported patterns:
+     * Static class-defined loaders
+     * Instance loaders for edge case handling
+   * Lifecycle: Determined by usage context
+   * Responsibility: Data loaders
 
 4. `Cast` Class:
-    * Primary instantiation scope: Application level
-    * Purpose: Edge case type conversion handling
-    * Lifecycle: On-demand instantiation
-    * Responsibility: Type casting
-    
+   * Primary instantiation scope: Application level
+   * Purpose: Edge case type conversion handling
+   * Lifecycle: On-demand instantiation
+   * Responsibility: Type casting
+  
 ## Consequences
 
 * Reduced memory footprint through controlled instantiation
