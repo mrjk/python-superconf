@@ -49,6 +49,7 @@ markdown_extensions:
   - tables
   - footnotes
   - attr_list
+  - sane_lists
 
 plugins:
   - search
@@ -73,7 +74,9 @@ nav:
       - Loaders: docs/loaders.md
       - Cast: docs/cast.md
   - Reference:
-      - Overview: reference/diagram.md
+      - Overview:
+        - Diagram: reference/diagram.md
+        - Architecture: architecture/list.md
       - Configuration:
         - Configuration: reference/configuration.md
         - Fields: reference/fields.md

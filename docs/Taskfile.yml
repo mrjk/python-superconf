@@ -22,6 +22,7 @@ tasks:
       - task: copy_readme
       - task: copy_logo
       - task: gen_class_graph
+      - task: gen_adr_toc
 
   copy_logo:
     desc: inject logo into documentation
@@ -32,6 +33,13 @@ tasks:
     desc: inject readme into documentation
     cmds:
       - cp -R ../README.md content/index.md
+
+  gen_adr_toc:
+    desc: generate adr toc
+    preconditions:
+      - command -v adr
+    cmds:
+      - adr generate toc > content/architecture/list.md
 
   gen_class_graph:
     desc: generate superconf class diagrams
