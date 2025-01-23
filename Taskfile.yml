@@ -70,6 +70,7 @@ tasks:
       # - task: test_regressions
       - task: test_report
       - task: test_lab
+      - task: test_examples
       - task: test_lint
 
   test_pytest:
@@ -78,9 +79,14 @@ tasks:
       - pytest tests
 
   test_lab:
+    dest: Test lab
+    cmds:
+      - bash ./scripts/run_python_scripts.sh lab 'test[0-9]*'
+
+  test_examples:
     dest: Test examples
     cmds:
-      - bash lab/run_lab.sh
+      - bash ./scripts/run_python_scripts.sh examples 'example[0-9]*'
 
   test_regressions:
     desc: Test for regressions
