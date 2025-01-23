@@ -5,7 +5,7 @@ import os
 from pprint import pprint
 
 from superconf.configuration import NOT_SET, Configuration
-from superconf.extra.xdg import XDGConfig
+from superconf.extra.xdg import UserConfig, XDGConfig
 from superconf.fields import Field, FieldBool, FieldConf, FieldString
 from superconf.loaders import Environment
 
@@ -17,18 +17,17 @@ ENV_VARS = {
 os.environ.update(ENV_VARS)
 
 
+# class EnvVars(UserConfig, XDGConfig):
+#     "Just a wrapper of things"
+
+
 class AppConfig(Configuration):
     "Application Config example"
 
     debug = FieldBool(default=False)
     notify_url = FieldString()
 
-    # root_dir = FieldString(default=NOT_SET)
-    # root_dir = FieldString()
     root_dir = Field()
-    # root_dir = Field(default=NOT_SET)
-    # root_dir = Field(default=None)
-    # module_dir = FieldString(default="~/projects/module")
     module_dir = Field()  # default="~/projects/module")
     data_dir = FieldString(default="~/projects/data")
 
@@ -48,11 +47,11 @@ class App(Configuration):
     # Simple Custom app config
     config = FieldConf(children_class=AppConfig)
 
+    # Demo method
     def check_stacks(self):
         "Check all stacks"
 
         print("Try contextes")
-        # root_dir = self.get_root_dir()
         print(f"Root dir is: {self.root_dir}")
         print(f"Module dir is: {self.module_dir}")
         print(f"Data dir is: {self.data_dir}")
@@ -218,6 +217,9 @@ def run2():
     app = App(value=custom_conf)
     pprint(app.get_values())
     app.check_stacks()
+    print("========================= Whole Dump")
+
+    pprint(app.get_values())
 
 
 if __name__ == "__main__":
