@@ -6,5 +6,5 @@ Install SuperConf using pip:
 pip install superconf
 ```
 
-For basic usage and features, check out the [quickstart documentation](../quickstart/).
+For basic usage and features, check out the [quickstart documentation](quickstart.md).
 

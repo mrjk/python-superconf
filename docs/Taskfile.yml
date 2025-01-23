@@ -19,7 +19,6 @@ tasks:
   prep_doc:
     desc: Prepare documentation assets
     cmds:
-      - task: copy_readme
       - task: copy_logo
       - task: gen_class_graph
       - task: gen_adr_toc
@@ -29,17 +28,16 @@ tasks:
     cmds:
       - cp -R ../logo/. content/logo
 
-  copy_readme:
-    desc: inject readme into documentation
-    cmds:
-      - cp -R ../README.md content/index.md
-
   gen_adr_toc:
     desc: generate adr toc
-    preconditions:
-      - command -v adr
     cmds:
-      - adr generate toc > content/architecture/list.md
+      - |
+        if command -v adr &>/dev/null; then
+          echo "Update adr toc update"
+          adr generate toc > content/architecture/list.md
+        else
+          echo "Skip adr toc update"
+        fi
 
   gen_class_graph:
     desc: generate superconf class diagrams
