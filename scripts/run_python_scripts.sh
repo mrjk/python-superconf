@@ -33,7 +33,7 @@ run_python_files ()
   fi
 }
 
-run_python_files $@
+run_python_files "$@"
 
 echo -e "\n=========================="
 echo "All tests passed"

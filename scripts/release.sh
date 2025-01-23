@@ -92,7 +92,8 @@ is_prerelease() {
 # - Feature branches for pre-releases (e.g., beta versions)
 # - Main branch for production releases
 check_branch() {
-    local current_branch=$(git rev-parse --abbrev-ref HEAD)
+    local current_branch
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
     
     if is_prerelease "$@"; then
         # For pre-releases, prevent release from main/master
@@ -152,7 +153,8 @@ update_version() {
 commit_and_tag() {
     echo ">>> Starting commit and tag process"
     # Get current version from poetry without extra output
-    local version=$(poetry version -s)
+    local version
+    version=$(poetry version -s)
     
     git add pyproject.toml superconf/__init__.py
     
