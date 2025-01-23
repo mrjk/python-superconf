@@ -4,9 +4,9 @@
 import os
 from pprint import pprint
 
-from superconf.configuration import Configuration
+from superconf.configuration import Configuration, NOT_SET
 from superconf.extra.xdg import XDGConfig
-from superconf.fields import FieldBool, FieldConf, FieldString
+from superconf.fields import FieldBool, FieldConf, Field, FieldString
 from superconf.loaders import Environment
 
 ENV_VARS = {
@@ -22,7 +22,13 @@ class AppConfig(Configuration):
 
     debug = FieldBool(default=False)
     notify_url = FieldString()
-    root_dir = FieldString(default="~/projects/data")
+
+    # root_dir = FieldString(default=NOT_SET)
+    # root_dir = FieldString()
+    root_dir = Field()
+    # root_dir = Field(default=NOT_SET)
+    # root_dir = Field(default=None)
+    data_dir = FieldString(default="~/projects/data")
     module_dir = FieldString(default="~/projects/module")
 
 
@@ -45,12 +51,22 @@ class App(Configuration):
         "Check all stacks"
 
         print("Try contextes")
-        runtime = self.runtime
-        root_dir = runtime.get_file(None)
-        # pprint(root_dir)
+        self.get_root_dir()
 
 
-def run():
+    def get_root_dir(self):
+        "Return root dir"
+        root_dir1 = self.config.root_dir
+        root_dir2 = self.runtime.get_file("XDG_CONFIG_HOME")
+        root_dir3 = self.runtime.get_dir("XDG_CONFIG_HOME")
+
+        pprint(root_dir1)
+        pprint(root_dir2)
+        pprint(root_dir3)
+
+
+
+def run1():
     "Main example"
 
     # Start app
@@ -130,6 +146,7 @@ def run():
     runtime.meta__xdg_file_fmt = []
     out4 = runtime.read_file("XDG_CONFIG_HOME", "subconfig")
     print("When empty, should return None:", out4)
+    print ("Expect some common output with get_file and get_dir when no extensions are set")
 
     # Add more file formats: TODO
 
@@ -152,5 +169,16 @@ def run():
     print("So the looked up name for module_dir is:", out)
 
 
+def run2():
+    "Main example"
+
+    # Start app
+    app = App()
+
+    # print("=========================")
+    app.check_stacks()
+
+
 if __name__ == "__main__":
-    run()
+    run1()
+    # run2()

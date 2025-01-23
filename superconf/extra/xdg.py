@@ -182,7 +182,7 @@ class XDGConfig(ConfigurationDict):
 
     def get_config_dir(self, name=None):
         """Get config directory path."""
-        return self._get_dir("XDG_CONFIG_HOME", name)
+        return self.get_dir("XDG_CONFIG_HOME", name)
 
     # def get_data_file(self, name=None):
     #     """Get data file path."""
@@ -202,19 +202,19 @@ class XDGConfig(ConfigurationDict):
 
     # def get_data_dir(self, name=None):
     #     """Get data directory path."""
-    #     return self._get_dir('XDG_DATA_HOME', name)
+    #     return self.get_dir('XDG_DATA_HOME', name)
 
     # def get_cache_dir(self, name=None):
     #     """Get cache directory path."""
-    #     return self._get_dir('XDG_CACHE_HOME', name)
+    #     return self.get_dir('XDG_CACHE_HOME', name)
 
     # def get_state_dir(self, name=None):
     #     """Get state directory path."""
-    #     return self._get_dir('XDG_STATE_HOME', name)
+    #     return self.get_dir('XDG_STATE_HOME', name)
 
     # def get_runtime_dir(self, name=None):
     #     """Get runtime directory path."""
-    #     return self._get_dir('XDG_RUNTIME_DIR', name)
+    #     return self.get_dir('XDG_RUNTIME_DIR', name)
 
     def _parse_path(self, values, name=None, prefix=None, extensions=None):
         """Parse and expand path."""
@@ -397,7 +397,7 @@ class XDGConfig(ConfigurationDict):
 
         return ret
 
-    def _get_dir(self, item, name=None):
+    def get_dir(self, item, name=None):
         """Get directory path for given XDG item."""
 
         # Fetch current value

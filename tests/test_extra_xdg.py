@@ -643,8 +643,8 @@ def test_xdg_config_default_app_name(mock_env, tmp_path):
     config_file = app.runtime.get_file("XDG_CONFIG_HOME")
     assert "CustomApp" in str(config_file)
 
-    # Test _get_dir with default app name
-    config_dir = app.runtime._get_dir("XDG_CONFIG_HOME")
+    # Test get_dir with default app name
+    config_dir = app.runtime.get_dir("XDG_CONFIG_HOME")
     assert "CustomApp" in str(config_dir)
 
 
@@ -657,8 +657,8 @@ def test_xdg_config_return_handling(mock_env, tmp_path):
     result = config.get_file("XDG_CONFIG_HOME", "nonexistent")
     assert result is not None  # Should return a Path object even if file doesn't exist
 
-    # Test _get_dir with empty result
-    result = config._get_dir("XDG_CONFIG_HOME", "nonexistent")
+    # Test get_dir with empty result
+    result = config.get_dir("XDG_CONFIG_HOME", "nonexistent")
     assert (
         result is not None
     )  # Should return a Path object even if directory doesn't exist
@@ -669,24 +669,24 @@ def test_xdg_config_return_handling(mock_env, tmp_path):
     assert isinstance(result, list)
     assert len(result) == 2
 
-    # Test _get_dir with list return
-    result = config._get_dir("XDG_CONFIG_DIRS")
+    # Test get_dir with list return
+    result = config.get_dir("XDG_CONFIG_DIRS")
     assert isinstance(result, list)
     assert len(result) == 2
 
 
 def test_xdg_config_get_dir_errors(mock_env, tmp_path):
-    """Test error handling in _get_dir method."""
+    """Test error handling in get_dir method."""
     config = XDGConfig()
     config.meta__app_name = "testapp"
 
     # Test invalid item
     with pytest.raises(XDGException, match="Unknown item"):
-        config._get_dir("INVALID_ITEM")
+        config.get_dir("INVALID_ITEM")
 
     # Test with non-string app_name
     config.meta__app_name = 123  # Invalid app name type
-    result = config._get_dir("XDG_CONFIG_HOME")
+    result = config.get_dir("XDG_CONFIG_HOME")
     assert "XDGConfig" in str(result)  # Should fall back to class name
 
 
@@ -717,7 +717,7 @@ def test_xdg_config_app_name_edge_cases():
 
     app = CustomApp()
     assert "CustomApp" in str(app.runtime.get_file("XDG_CONFIG_HOME"))
-    assert "CustomApp" in str(app.runtime._get_dir("XDG_CONFIG_HOME"))
+    assert "CustomApp" in str(app.runtime.get_dir("XDG_CONFIG_HOME"))
 
     # Test with no app_name
     class NoNameApp(Configuration):
@@ -725,7 +725,7 @@ def test_xdg_config_app_name_edge_cases():
 
     app = NoNameApp()
     assert "NoNameApp" in str(app.runtime.get_file("XDG_CONFIG_HOME"))
-    assert "NoNameApp" in str(app.runtime._get_dir("XDG_CONFIG_HOME"))
+    assert "NoNameApp" in str(app.runtime.get_dir("XDG_CONFIG_HOME"))
 
 
 def test_xdg_config_parse_path_edge_cases(mock_env, tmp_path):
