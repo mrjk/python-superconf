@@ -1,6 +1,6 @@
 "Support value casting"
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-return-statements
 
 import ast
 from collections.abc import Mapping, Sequence
@@ -62,6 +62,23 @@ class AsBoolean(AbstractCast):
             raise InvalidCastConfiguration(
                 f"Error casting value {value} to boolean"
             ) from err
+
+
+class AsString(AbstractCast):
+    """Cast a value to a string.
+
+    Attempts to convert the input value to a string using Python's built-in str() function.
+
+    Raises:
+        InvalidCastConfiguration: If the value cannot be converted to a string.
+    """
+
+    def __call__(self, value):
+        if isinstance(value, str):
+            return str(value)
+        if not value:
+            return ""
+        return str(value)
 
 
 class AsInt(AbstractCast):
@@ -286,6 +303,76 @@ class AsIdentity(AbstractCast):
     """
 
     def __call__(self, value):
+        return value
+
+
+class AsBest(AbstractCast):
+    """Cast a value to its most appropriate Python type.
+
+    Attempts to intelligently determine and convert the input value to the most
+    suitable Python type by trying different conversions in order:
+    1. None for null/empty values
+    2. Boolean for true/false-like strings
+    3. Integer for numeric strings without decimals
+    4. Float for numeric strings with decimals
+    5. List for comma-separated strings or sequence-like inputs
+    6. Dict for mapping-like inputs
+    7. Original string if no other conversion succeeds
+
+    Examples:
+        >>> cast = AsBest()
+        >>> cast('123')  # Returns: 123 (int)
+        >>> cast('3.14')  # Returns: 3.14 (float)
+        >>> cast('true')  # Returns: True (bool)
+        >>> cast('a,b,c')  # Returns: ['a', 'b', 'c'] (list)
+    """
+
+    def __init__(self, delimiter=",", quotes="\"'"):
+        self.list_caster = AsList(delimiter=delimiter, quotes=quotes)
+        self.dict_caster = AsDict(delimiter=delimiter, quotes=quotes)
+
+    def __call__(self, value):
+        if not value:
+            return None
+
+        # Try boolean first for true/false strings
+        if isinstance(value, str):
+
+            # Try integer
+            try:
+                if "." not in value:
+                    return int(value)
+            except ValueError:
+                pass
+
+            # Try float
+            try:
+                return float(value)
+            except ValueError:
+                pass
+
+            # Try list (if contains delimiter)
+            if "," in value:
+                try:
+                    return self.list_caster(value)
+                except (InvalidCastConfiguration, AssertionError):
+                    pass
+
+        # Try dict for mapping types
+        if isinstance(value, Mapping):
+            try:
+                return self.dict_caster(value)
+            except (InvalidCastConfiguration, AssertionError):
+                pass
+
+        # Try list for sequence types
+        if isinstance(value, Sequence) and not isinstance(value, str):
+            try:
+                return self.list_caster(value)
+            except (InvalidCastConfiguration, AssertionError):
+                pass
+
+        # Return as is if no conversion succeeded
         return value
 
 

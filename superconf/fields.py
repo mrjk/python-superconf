@@ -12,11 +12,21 @@ from typing import Callable
 
 from superconf import exceptions
 
-from .casts import AsBoolean, AsDict, AsIdentity, AsInt, AsList, AsOption, AsTuple
+from .casts import (
+    AsBoolean,
+    AsDict,
+    AsIdentity,
+    AsInt,
+    AsList,
+    AsOption,
+    AsString,
+    AsTuple,
+)
 from .common import FAIL, NOT_SET
 from .loaders import _Value
 
 # Shortcuts for standard casts
+as_string = AsString()
 as_boolean = AsBoolean()
 as_int = AsInt()
 as_list = AsList()
