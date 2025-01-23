@@ -337,7 +337,7 @@ class Store(Node):
 
         # print ("\n\n===== CREATE NEW CONFIG", self.key, self, value)
         child_values = self._default if self._value is NOT_SET else self._value
-        self.set_values(child_values)
+        self.set_values(child_values, lookup=True)
 
     def set_dyn_children(self, value):
         "Placeholder"
@@ -549,7 +549,7 @@ class Store(Node):
         out.update(self._declared_values)
         return out
 
-    def set_values(self, value):
+    def set_values(self, value, lookup=False):
         "Set a value"
 
         self.set_dyn_children(value)
@@ -582,6 +582,7 @@ class Store(Node):
                 result, _ = field.resolve_value(
                     self,
                     value=val,
+                    lookup=lookup,
                 )
 
                 self._value = self._value or {}

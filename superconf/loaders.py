@@ -342,7 +342,7 @@ class Environment(AbstractConfigurationLoader):
                 prefix=pkey_prefix,
                 key=pkey,
             )
-            pfinal = [x for x in [pkey_prefix, pkey] if x]
+            pfinal = [str(x) for x in [pkey_prefix, pkey] if x]
             pfinal = "_".join(pfinal)
             parents_keys.append(pfinal)
 
@@ -354,7 +354,8 @@ class Environment(AbstractConfigurationLoader):
         # Reverse key order, from top to bottom, transform to string, and then uppsercase
         parents_keys = list(reversed(parents_keys))
         parents_keys.append(item)
-        parents_keys = [x for x in parents_keys if x]
+        parents_keys = [str(x) for x in parents_keys if x]
+        # print(parents_keys)
         fkey = self.sep.join(parents_keys).upper()
 
         return fkey

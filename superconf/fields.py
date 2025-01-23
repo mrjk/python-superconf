@@ -121,6 +121,7 @@ class Field:
         default=NOT_SET,
         cast=NOT_SET,
         loaders=NOT_SET,
+        lookup=True,
         **kwargs,
     ):
         """Resolve the final value for this field.
@@ -137,6 +138,7 @@ class Field:
             default: Override for the field's default value.
             cast: Override for the field's cast function.
             loaders: List of loader objects to use for value lookup.
+            lookup: Enable loaders, or only use _value instead.
             **kwargs: Additional keyword arguments passed to loaders.
 
         Returns:
@@ -190,10 +192,21 @@ class Field:
             cast_from.append(f"conf_attr:{conf_instance}._cast")
 
         # Process loaders
-        if loaders is NOT_SET:
-            loaders = conf_instance._loaders
-        if value:
-            loaders.insert(0, _Value({key: value}))
+        if not lookup:
+            loaders = [_Value({key: value})]
+        else:
+            if loaders is NOT_SET:
+                loaders = conf_instance._loaders
+            if value:
+                # pylint: disable=using-constant-test
+                if False:
+                    loaders.insert(0, _Value({key: value}))
+                else:
+                    # Remove any existing _Value
+                    loaders = [
+                        loader for loader in loaders if not isinstance(loader, _Value)
+                    ]
+                    loaders.append(_Value({key: value}))
 
         # Determine cast method
         if callable(cast):
