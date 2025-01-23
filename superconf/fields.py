@@ -7,6 +7,7 @@
 
 
 # from pprint import pprint
+import logging
 from types import SimpleNamespace
 from typing import Callable
 
@@ -34,6 +35,8 @@ as_dict = AsDict()
 as_tuple = AsTuple()
 as_option = AsOption
 as_is = AsIdentity()
+
+logger = logging.getLogger(__name__)
 
 
 class Field:
@@ -236,9 +239,12 @@ class Field:
         result = NOT_SET
         loader_from = []
         results_from = []
+        # print(f"ACTUAL LOADERS FOR {self}", loaders)
+        logger.debug("Current loaders for %s: %s", self, loaders)
         for loader in loaders:
             loader_from.append(str(loader))
             try:
+                logger.debug("Try loader for %s.%s: %s", self, key, loaders)
                 # print(f"  > LOADER: try search in {loader} key: {key}")
                 # print("VS", self, conf_instance)
                 result = loader.getitem(conf_instance, key, **kwargs)

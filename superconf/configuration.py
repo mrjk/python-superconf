@@ -70,8 +70,7 @@ class Node:
             The configuration value, optionally cast to the specified type
         """
         out, _report = self._query_inst_cfg(*args, **kwargs)
-        # print(f"CONFIG QUERY FOR {self}: {args[0]} {query_from} => {out}")
-        # pprint(query_from)
+        logger.debug("Node config query for %s.%s=%s", self, args[0], out)
 
         if isinstance(out, (dict, list)):
             out = copy.copy(out)
@@ -462,7 +461,6 @@ class Store(Node):
 
         if self._cache:
             self._cached_values[key] = conf
-            # print("CACHE CHILD", self, key, conf)
         return conf
 
     def get_values(self, lvl=-1, **kwargs):
@@ -571,11 +569,12 @@ class Store(Node):
                     val = NOT_SET
 
             if field.is_container():
+                logger.debug(
+                    "Create child container %s.%s: %s=%s", self, key, field, val
+                )
                 # print ("AUTOMATIC CREATE CHILD CONTAINER", key, field, val)
                 conf = self.create_child(key, field, value=val)
                 assert isinstance(conf, (Store)), f"Got: {type(conf)}"
-                # assert isinstance(conf, (ConfigurationDict)), f"Got: {type(conf)}"
-                # print ("SET CACHED VALUE", self, conf, key, field, val)
                 self._cached_values[key] = conf
             else:
 
@@ -698,8 +697,6 @@ class ConfigurationDict(Store, metaclass=DeclarativeValuesMetaclass):
                     child_class = children_class
 
                 if not field:
-                    # print("REGISTER DYN FIELD", key, children_class)
-
                     xtra_kwargs = {}
                     if not child_class:
                         # No children_class, then it's just a field
@@ -707,6 +704,10 @@ class ConfigurationDict(Store, metaclass=DeclarativeValuesMetaclass):
                     else:
                         child_cls = FieldConf
                         xtra_kwargs = dict(children_class=child_class)
+
+                    logger.debug(
+                        "Register dynamic field %s.%s: %s", self, key, child_cls
+                    )
 
                     # Create dynamic field
                     field = child_cls(
