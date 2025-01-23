@@ -9,6 +9,7 @@ from pathlib import Path
 # pylint: disable=unused-import
 from pprint import pprint
 
+from superconf.casts import AsBest, AsList, AsString
 from superconf.common import (
     from_json,
     from_yaml,
@@ -32,39 +33,13 @@ class XDGException(Exception):
     "XDG error"
 
 
-class AsSplitString:
-    """
-    Split string to list
-    """
-
-    def __init__(self, sep=" "):
-        self.sep = sep
-
-    def __call__(self, value):
-        # print ("CALL AsSplitString", self, value)
-
-        # print (f"\n\n === PRINT CASTLIST {value}===  \n", self)
-        # assert isinstance(value, str), f"Got: {type(value)}: {value}"
-
-        if isinstance(value, str):
-            return value.split(self.sep)
-
-        assert isinstance(value, list), f"Got: {type(value)}: {value}"
-
-        return value
-
-
-class CastEnvValue:
-    "Cast simple environment var, as string"
-
-    def __call__(self, value):
-        # print ("CALL CastEnvValue", self, value)
-        out = os.path.expandvars(value)
-        return out
-
-
-class CastEnvColonValues(AsSplitString, CastEnvValue):
+class CastEnvColonValues(AsList):
     "Cast env value as list with colon seprated values"
+
+    def __init__(self, **kwargs):
+
+        self.as_best = AsBest()
+        super().__init__(**kwargs)
 
     def __call__(self, value):
         # print ("CALL CastEnvColonValues", self, value )
@@ -72,11 +47,13 @@ class CastEnvColonValues(AsSplitString, CastEnvValue):
         # print ("EXECUTED", out)
 
         out = super().__call__(value)
-        out = [os.path.expandvars(x) for x in out]
+        ret = []
+        for x in out:
+            x = os.path.expandvars(x)
+            x = self.as_best(x)
+            ret.append(x)
 
-        # out = super(AsSplitString, self).__call__(out)
-
-        return out
+        return ret
 
 
 # ====================================
@@ -84,74 +61,34 @@ class CastEnvColonValues(AsSplitString, CastEnvValue):
 # ====================================
 
 # Create cast instances
-cast_env = CastEnvValue()
-cast_env_colon = CastEnvColonValues(sep=":")
+cast_env = AsBest()  # Try fetch best type
+cast_env_colon = AsList(delimiter=":")  # We force lists with delimiter
 
 
 class UserConfig(ConfigurationDict):
     "User var support"
 
-    meta__env_parents = False
-    meta__env_name = ""
+    meta__env_parents = False  # Not parent keys
+    meta__env_name = ""  # No prefix for environment vars
 
     HOME = Field(default="/home/user", cast=cast_env)
-
     USER = Field(default="user", cast=cast_env)
-
     UID = Field(default="1000", cast=cast_env)
-
-    SHELL = Field(default="/bin/bash", cast=cast_env)
-
-    SHLVL = Field(default="/bin/bash", cast=cast_env)
-
-    PWD = Field(default="/", cast=cast_env)
-    OLDPWD = Field(default="/", cast=cast_env)
-
-    PATH = Field(default="/", cast=cast_env_colon)
-
     LANG = Field(default="en_US.utf8", cast=cast_env)
 
+    SHELL = Field(default="/bin/bash", cast=cast_env)
+    SHLVL = Field(default="/bin/bash", cast=cast_env)
+    PWD = Field(default="/", cast=cast_env)
+    OLDPWD = Field(default="/", cast=cast_env)
+    PATH = Field(default="/", cast=cast_env_colon)
     DISPLAY = Field(default="", cast=cast_env)
 
-
-class ExtraConfig(ConfigurationDict):
-    "Extra var support"
-
-    meta__env_parents = False
-    meta__env_name = ""
-
-    GIT_AUTHOR_EMAIL = Field(default="user@email.tld", cast=cast_env)
-    GIT_AUTHOR_NAME = Field(default="user", cast=cast_env)
-
-    # TERM
-    # SSH_AGENT_PID, SSH_AUTH_SOCK
-    # XDG_SEAT
-    # XDG_SEAT_PATH
-    # XDG_SESSION_CLASS
-    # XDG_SESSION_DESKTOP
-    # XDG_SESSION_ID
-    # XDG_SESSION_PATH
-    # XDG_SESSION_TYPE
-    # VIRTUAL_ENV
-    # LOGNAME
-    # GNUPGHOME
-    # GIT_COMMITTER_EMAIL
-    # GIT_COMMITTER_NAME
-    # GITEA_LOGIN
-    # GITEA_SERVER_URL
-    # GH_REPO
-    # GH_TOKEN
-    # DIRENV_DIR
-    # DIRENV_FILE
-    # DESKTOP_SESSION
-    # DBUS_SESSION_BUS_ADDRESS
+    WEIRD = Field(cast=cast_env)
 
 
-class XDGConfig(ConfigurationDict):
+class XDGConfig(UserConfig):
     "Base class with XDG var support"
 
-    meta__env_parents = False
-    meta__env_name = ""
     meta__xdg_file_fmt = [
         "yml",
         "yaml",
@@ -176,6 +113,7 @@ class XDGConfig(ConfigurationDict):
     XDG_CONFIG_DIRS = Field(default="/etc/xdg", cast=cast_env_colon)
     XDG_DATA_DIRS = Field(default="/usr/local/share:/usr/share", cast=cast_env_colon)
 
+    # Legacy commands
     def get_config_file(self, name=None):
         """Get config file path."""
         return self.get_file("XDG_CONFIG_HOME", name)
@@ -184,38 +122,7 @@ class XDGConfig(ConfigurationDict):
         """Get config directory path."""
         return self.get_dir("XDG_CONFIG_HOME", name)
 
-    # def get_data_file(self, name=None):
-    #     """Get data file path."""
-    #     return self.get_file('XDG_DATA_HOME', name)
-
-    # def get_cache_file(self, name=None):
-    #     """Get cache file path."""
-    #     return self.get_file('XDG_CACHE_HOME', name)
-
-    # def get_state_file(self, name=None):
-    #     """Get state file path."""
-    #     return self.get_file('XDG_STATE_HOME', name)
-
-    # def get_runtime_file(self, name=None):
-    #     """Get runtime file path."""
-    #     return self.get_file('XDG_RUNTIME_DIR', name)
-
-    # def get_data_dir(self, name=None):
-    #     """Get data directory path."""
-    #     return self.get_dir('XDG_DATA_HOME', name)
-
-    # def get_cache_dir(self, name=None):
-    #     """Get cache directory path."""
-    #     return self.get_dir('XDG_CACHE_HOME', name)
-
-    # def get_state_dir(self, name=None):
-    #     """Get state directory path."""
-    #     return self.get_dir('XDG_STATE_HOME', name)
-
-    # def get_runtime_dir(self, name=None):
-    #     """Get runtime directory path."""
-    #     return self.get_dir('XDG_RUNTIME_DIR', name)
-
+    # Internal API
     def _parse_path(self, values, name=None, prefix=None, extensions=None):
         """Parse and expand path."""
 
@@ -478,3 +385,34 @@ class XDGConfig(ConfigurationDict):
     #                 break
 
     #     return Path(fname)
+
+
+class ExtraConfig(XDGConfig):
+    "Extra var support"
+
+    GIT_AUTHOR_EMAIL = Field()
+    GIT_AUTHOR_NAME = Field()
+    GIT_COMMITTER_EMAIL = Field()
+    GIT_COMMITTER_NAME = Field()
+
+    TERM = Field()
+    SSH_AGENT_PID = Field()
+    SSH_AUTH_SOCK = Field()
+    XDG_SEAT = Field()
+    XDG_SEAT_PATH = Field()
+    XDG_SESSION_CLASS = Field()
+    XDG_SESSION_DESKTOP = Field()
+    XDG_SESSION_ID = Field()
+    XDG_SESSION_PATH = Field()
+    XDG_SESSION_TYPE = Field()
+    VIRTUAL_ENV = Field()
+    LOGNAME = Field()
+    GNUPGHOME = Field()
+    # GITEA_LOGIN = Field()
+    # GITEA_SERVER_URL = Field()
+    # GH_REPO = Field()
+    # GH_TOKEN = Field()
+    # DIRENV_DIR = Field()
+    # DIRENV_FILE = Field()
+    DESKTOP_SESSION = Field()
+    DBUS_SESSION_BUS_ADDRESS = Field()
