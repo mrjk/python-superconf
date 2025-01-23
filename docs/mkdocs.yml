@@ -65,7 +65,10 @@ plugins:
             show_root_heading: true
 
 nav:
-  - Home: index.md
+  - Home: 
+      - Index: index.md
+      - Install: install.md
+      - Quickstart: quickstart.md
   - Guides:
       - Basic Guide: guides/guide_101.md
       - Nested Configuration: guides/guide_102_nested.md

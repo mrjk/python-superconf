@@ -4,7 +4,24 @@
 <p align='center'>
 <a href="https://github.com/mrjk/python-superconf">
 <img src="logo/banner.svg" alt="SuperConf Logo"></a>
+</p>
 
+<p align="center">
+<a href="https://github.com/mrjk/python-superconf">
+<img src="https://img.shields.io/badge/github-%23121011.svg?style=Flat&logo=github&logoColor=blue&label=Repo" alt="Github Repo"></a>
+<a href="https://mrjk.github.io/python-superconf/">
+<img src="https://img.shields.io/badge/github%20pages-121013?style=Flat&logo=github&logoColor=blue&label=Page" alt="Github Page"></a>
+<a href="https://github.com/mrjk/python-superconf/tags/">
+<img src="https://img.shields.io/badge/github-%23121011.svg?style=Flat&logo=github&logoColor=blue&label=Releases" alt="Github Releases"></a>
+</p>
+
+<p align="center">
+<img src="https://img.shields.io/pypi/pyversions/superconf" alt="PyPI - Python Version">
+<img src="https://img.shields.io/pypi/format/superconf" alt="PyPI - Format">
+<img src="https://img.shields.io/pypi/status/superconf" alt="PyPI - Status">
+</p>
+
+<p align="center">
 <a href="https://gitter.im/mrjk/python-superconf">
 <img src="https://img.shields.io/gitter/room/mrjk/python-superconf" alt="Gitter"></a>
 <a href="https://pypi.org/project/superconf/">
@@ -17,12 +34,6 @@
 <img src="https://img.shields.io/github/commit-activity/m/mrjk/python-superconf" alt="GitHub commit activity"></a>
 <a href="https://www.gnu.org/licenses/gpl-3.0">
 <img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg" alt="License: GPL v3"></a>
-</p>
-
-<p align="center">
-<img src="https://img.shields.io/pypi/pyversions/superconf" alt="PyPI - Python Version">
-<img src="https://img.shields.io/pypi/format/superconf" alt="PyPI - Format">
-<img src="https://img.shields.io/pypi/status/superconf" alt="PyPI - Status">
 </p>
 
 -------
