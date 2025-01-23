@@ -378,6 +378,9 @@ class Environment(AbstractConfigurationLoader):
         # print("==== LOOK  ENV", fkey)
         ret = os.environ[fkey]
         # print("==== FOUND ENV", fkey, "=", ret)
+
+        ret = os.path.expandvars(ret)
+        ret = os.path.expanduser(ret)
         return ret
 
         # return self.__getitem__(item)
