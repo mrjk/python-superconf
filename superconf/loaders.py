@@ -402,9 +402,16 @@ class EnvFile(AbstractConfigurationLoader):
 
     Example:
         >>> env = EnvFile(".env", keyfmt=EnvPrefix("MYAPP_"))
-        >>> # With .env containing: DEBUG=true
-        >>> "debug" in env  # True
-        >>> env["debug"]  # "true"
+
+        With .env containing: DEBUG=true
+
+        >>> "debug" in env
+
+        Returns `True`
+
+        >>> env["debug"]
+
+        Return `"true"`
     """
 
     def __init__(self, filename=".env", keyfmt=EnvPrefix()):
@@ -491,11 +498,12 @@ class RecursiveSearch(AbstractConfigurationLoader):
 
     Example:
         >>> search = RecursiveSearch("/home/user/project")
-        >>> # Will look for .env, .ini, and .cfg files in:
-        >>> # /home/user/project
-        >>> # /home/user
-        >>> # /home
-        >>> # /
+
+        Will look for .env, .ini, and .cfg files in:
+        /home/user/project
+        /home/user
+        /home
+        /
     """
 
     def __init__(
