@@ -4,14 +4,14 @@
 import os
 from pprint import pprint
 
-from superconf.configuration import Configuration, NOT_SET
+from superconf.configuration import NOT_SET, Configuration
 from superconf.extra.xdg import XDGConfig
-from superconf.fields import FieldBool, FieldConf, Field, FieldString
+from superconf.fields import Field, FieldBool, FieldConf, FieldString
 from superconf.loaders import Environment
 
 ENV_VARS = {
     "XDG_CONFIG_DIRS": "$HOME/dir1:dir2:dir3",
-    "SUP3RCONF__CONFIG__MODULE_DIR": "/usr/local/modules",
+    "SUP3RCONF__CONFIG__DATA_DIR": "/usr/local/data",
 }
 
 os.environ.update(ENV_VARS)
@@ -28,8 +28,9 @@ class AppConfig(Configuration):
     root_dir = Field()
     # root_dir = Field(default=NOT_SET)
     # root_dir = Field(default=None)
+    # module_dir = FieldString(default="~/projects/module")
+    module_dir = Field()  # default="~/projects/module")
     data_dir = FieldString(default="~/projects/data")
-    module_dir = FieldString(default="~/projects/module")
 
 
 class App(Configuration):
@@ -51,19 +52,46 @@ class App(Configuration):
         "Check all stacks"
 
         print("Try contextes")
-        self.get_root_dir()
+        # root_dir = self.get_root_dir()
+        print(f"Root dir is: {self.root_dir}")
+        print(f"Module dir is: {self.module_dir}")
+        print(f"Data dir is: {self.data_dir}")
 
-
-    def get_root_dir(self):
+    # Create 3 top level properties
+    @property
+    def root_dir(self):
         "Return root dir"
-        root_dir1 = self.config.root_dir
-        root_dir2 = self.runtime.get_file("XDG_CONFIG_HOME")
-        root_dir3 = self.runtime.get_dir("XDG_CONFIG_HOME")
 
-        pprint(root_dir1)
-        pprint(root_dir2)
-        pprint(root_dir3)
+        # Check explicit config first
+        ret = self.config.root_dir
+        if ret is NOT_SET:
+            # Fallback on default XDG config
+            ret = os.path.join(self.runtime.get_dir("XDG_CONFIG_HOME"), "projects")
 
+        return ret
+
+    @property
+    def module_dir(self):
+        "Return module dir"
+
+        # Check explicit config first
+        ret = self.config.module_dir
+        if ret is NOT_SET:
+            # Fallback on root_dir sub directory
+            ret = os.path.join(self.root_dir, "modules")
+
+        return ret
+
+    @property
+    def data_dir(self):
+        "Return module dir"
+
+        # Check explicit config first
+        ret = self.config.data_dir
+        if ret is NOT_SET:
+            # Fallback on default XDG config
+            ret = os.path.join(self.runtime.get_dir("XDG_STATE_HOME"), "data")
+        return ret
 
 
 def run1():
@@ -146,7 +174,9 @@ def run1():
     runtime.meta__xdg_file_fmt = []
     out4 = runtime.read_file("XDG_CONFIG_HOME", "subconfig")
     print("When empty, should return None:", out4)
-    print ("Expect some common output with get_file and get_dir when no extensions are set")
+    print(
+        "Expect some common output with get_file and get_dir when no extensions are set"
+    )
 
     # Add more file formats: TODO
 
@@ -172,13 +202,24 @@ def run1():
 def run2():
     "Main example"
 
-    # Start app
+    # Start app wihtout config
     app = App()
+    print("=========================")
+    pprint(app.get_values())
+    app.check_stacks()
 
-    # print("=========================")
+    # Start app with config
+    custom_conf = {
+        "config": {
+            "root_dir": "/tmp/new_root_dir",
+        },
+    }
+    print("=========================")
+    app = App(value=custom_conf)
+    pprint(app.get_values())
     app.check_stacks()
 
 
 if __name__ == "__main__":
     run1()
-    # run2()
+    run2()
