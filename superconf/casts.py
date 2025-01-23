@@ -328,6 +328,7 @@ class AsBest(AbstractCast):
     """
 
     def __init__(self, delimiter=",", quotes="\"'"):
+        self.delimiter = delimiter
         self.list_caster = AsList(delimiter=delimiter, quotes=quotes)
         self.dict_caster = AsDict(delimiter=delimiter, quotes=quotes)
 
@@ -352,7 +353,7 @@ class AsBest(AbstractCast):
                 pass
 
             # Try list (if contains delimiter)
-            if "," in value:
+            if self.delimiter and self.delimiter in value:
                 try:
                     return self.list_caster(value)
                 except (InvalidCastConfiguration, AssertionError):
