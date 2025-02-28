@@ -7,6 +7,7 @@ import pytest
 import superconf.exceptions
 from superconf.configuration import Configuration
 from superconf.fields import Field, FieldConf
+
 # from superconf.loaders import Dict
 
 # This test explore the default specificities of classyconf
@@ -90,7 +91,7 @@ count = 0
 out = {}
 for name, i in app.items():
     count += 1
-    out[name] = app.get_value(i.key, default=i.get_default()) #, cast=i.cast)
+    out[name] = app.get_value(i.key, default=i.get_default())  # , cast=i.cast)
 
 # ASsert we have the correct number of children and the values are correct
 assert count == CHILDREN_COUNT

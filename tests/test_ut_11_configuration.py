@@ -1,12 +1,12 @@
 """Unit tests for basic Configuration functionality."""
 
 from pprint import pprint
+
 import pytest
 
 import superconf.exceptions
 from superconf.configuration import Configuration
 from superconf.fields import Field
-
 
 EXAMPLE_DICT = {
     "item1": True,
@@ -35,6 +35,7 @@ OVERRIDE_CONFIG = {
 
 class BaseAppConfig(Configuration):
     """Base configuration class for tests."""
+
     field1 = Field(default=False, help="Toggle debugging on/off.")
     field2 = Field(default="Default value", help="Another field")
     field3 = Field(default=42, help="Another field")
@@ -44,23 +45,27 @@ class BaseAppConfig(Configuration):
 
 class DefaultAppConfig(BaseAppConfig):
     """Configuration with default Meta settings."""
+
     pass
 
 
 class StrictAppConfig(BaseAppConfig):
     """Configuration with strict settings."""
+
     class Meta:
         allow_undeclared = False
 
 
 class AllowExtraAppConfig(BaseAppConfig):
     """Configuration allowing extra fields."""
+
     class Meta:
         allow_undeclared = True
 
 
 class DefaultValueConfig(BaseAppConfig):
     """Configuration with Meta.default values."""
+
     class Meta:
         default = {
             "field1": True,
@@ -130,7 +135,7 @@ def test_value_overrides_meta_default():
     """Test that provided values override Meta.default values."""
     config = DefaultValueConfig(value=OVERRIDE_CONFIG)
     assert config.field1 is True  # From OVERRIDE_CONFIG
-    
+
     # print("===========")
     # pprint(config.__dict__)
     # pprint(config.__children__["field2"].__dict__)
@@ -158,7 +163,7 @@ def test_known_value_retrieval(full_config):
 def test_unknown_value_retrieval(full_config):
     """Test retrieval behavior for unknown configuration values."""
     assert full_config.get_value("tutu", default="SUPER") == "SUPER"
-    
+
     with pytest.raises(superconf.exceptions.UndeclaredField):
         full_config.get_value("toto")
 
@@ -182,19 +187,20 @@ def test_mutable_object_behavior(full_config):
     original = full_config.field5.copy()
     full_config.field5["new_key"] = "new_value"
     next_access = full_config.field5
-    assert next_access == original, "Mutable objects should return a new copy on each access"
+    assert (
+        next_access == original
+    ), "Mutable objects should return a new copy on each access"
 
 
 def test_iteration_and_values(full_config):
     """Test iteration over configuration items and value consistency."""
     collected_config = {}
     item_count = 0
-    
+
     for name, item in full_config.items():
         item_count += 1
         collected_config[name] = full_config.get_value(
-            item.key, 
-            default=item.get_default()
+            item.key, default=item.get_default()
         )
 
     assert item_count == len(FULL_CONFIG)
@@ -219,4 +225,4 @@ def test_extra_fields_behavior_allow():
     config = AllowExtraAppConfig(value=EXTRA_CONFIG)
     assert hasattr(config, "extra_field")
     assert config.extra_field == "should not be allowed"
-    assert config["extra_field"] == "should not be allowed" 
+    assert config["extra_field"] == "should not be allowed"

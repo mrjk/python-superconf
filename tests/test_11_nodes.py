@@ -1,6 +1,8 @@
 """Test suite for Node class base functionality."""
+
 import pytest
-from superconf.nodes import Node, NOT_SET
+
+from superconf.nodes import NOT_SET, Node
 
 
 class TestNodeBase:
@@ -12,9 +14,9 @@ class TestNodeBase:
         t = Node()
 
         # Test dunder methods presence and default values
-        assert hasattr(t, '__key__')
-        assert hasattr(t, '__parent__')
-        assert hasattr(t, '__value__')
+        assert hasattr(t, "__key__")
+        assert hasattr(t, "__parent__")
+        assert hasattr(t, "__value__")
         assert t.__key__ is None
         assert t.__parent__ is None
         assert t.__value__ is NOT_SET
@@ -25,7 +27,7 @@ class TestNodeBase:
         assert t.name == Node.__name__
         assert t.fname == Node.__name__
         assert isinstance(t.fkey, str)
-        assert t.fkey == ''
+        assert t.fkey == ""
 
     def test_12_direct_node_values(self):
         """Test Node instantiation with different parameter combinations."""
@@ -57,14 +59,14 @@ class TestNodeBase:
 
     def test_13_node_configuration(self):
         """Test Node configuration with different meta configurations."""
-        
+
         # Test classes with different meta configurations
         class NodeWithMeta(Node):
             class Meta:
                 NAME1 = "test_meta"
 
         class NodeWithMetaAttr(Node):
-            __meta__ = type('Meta', (), {'NAME2': "test_meta_attr"})
+            __meta__ = type("Meta", (), {"NAME2": "test_meta_attr"})
 
         class NodeWithMetaName(Node):
             meta__NAME2 = "test_direct_meta"
@@ -80,21 +82,22 @@ class TestNodeBase:
         node4 = NodeWithInit()
 
         # Test query_inst_cfg basic functionality
-        assert node1.query_inst_cfg('NAME1') == "test_meta"
-        assert node2.query_inst_cfg('NAME2') == "test_meta_attr"
-        assert node3.query_inst_cfg('NAME2') == "test_direct_meta"
-        assert node4.query_inst_cfg('NAME3') == "test_init"
+        assert node1.query_inst_cfg("NAME1") == "test_meta"
+        assert node2.query_inst_cfg("NAME2") == "test_meta_attr"
+        assert node3.query_inst_cfg("NAME2") == "test_direct_meta"
+        assert node4.query_inst_cfg("NAME3") == "test_init"
 
         # Test query_inst_cfg with parameters
-        assert node1.query_inst_cfg('MISSING', default="default") == "default"
-        assert node2.query_inst_cfg('NAME2', override={'NAME2': "override"}) == "override"
-        
+        assert node1.query_inst_cfg("MISSING", default="default") == "default"
+        assert (
+            node2.query_inst_cfg("NAME2", override={"NAME2": "override"}) == "override"
+        )
+
         # Test with report parameter
         report = []
-        cfg_value = node1.query_inst_cfg('NAME1', report=report)
+        cfg_value = node1.query_inst_cfg("NAME1", report=report)
         assert cfg_value == "test_meta"
-        assert report == ['class_meta:Meta.NAME1']
-
+        assert report == ["class_meta:Meta.NAME1"]
 
 
 class TestNodeNested:
@@ -103,34 +106,34 @@ class TestNodeNested:
     def test_21_direct_node_nested(self):
         """Test nested Node structures."""
         # Context setup
-        t1 = Node(key='k1', value={"level": 1}, parent=None)
-        t2 = Node(key='k2', value={"level": 2}, parent=t1)
-        t3 = Node(key='k3', value={"level": 3}, parent=t2)
+        t1 = Node(key="k1", value={"level": 1}, parent=None)
+        t2 = Node(key="k2", value={"level": 2}, parent=t1)
+        t3 = Node(key="k3", value={"level": 3}, parent=t2)
 
         # Test t1 attributes
-        assert t1.__key__ == 'k1'
+        assert t1.__key__ == "k1"
         assert t1.__parent__ is None
         assert t1.__value__ == {"level": 1}
         assert t1.parent is None
-        assert t1.key == 'k1'
+        assert t1.key == "k1"
 
         # Test t2 attributes
-        assert t2.__key__ == 'k2'
+        assert t2.__key__ == "k2"
         assert t2.__parent__ == t1
         assert t2.__value__ == {"level": 2}
         assert t2.parent == t1
-        assert t2.key == 'k2'
+        assert t2.key == "k2"
 
         # Test t3 attributes
-        assert t3.__key__ == 'k3'
+        assert t3.__key__ == "k3"
         assert t3.__parent__ == t2
         assert t3.__value__ == {"level": 3}
         assert t3.parent == t2
-        assert t3.key == 'k3'
+        assert t3.key == "k3"
 
     def test_22_nested_node_configuration(self):
         """Test nested Node configuration inheritance."""
-        
+
         class _Common(Node):
             meta__BASE_VALUE = "base"
             meta__COMMON_VALUE = "UNSET"
@@ -155,43 +158,49 @@ class TestNodeNested:
                 OVERRIDE_VALUE = "grandchild"
 
         # Create nested structure
-        base_node = BaseConfig(key='base')
-        child_node = ChildConfig(key='child', parent=base_node)
-        grand_child = GrandChildConfig(key='grandchild', parent=child_node)
+        base_node = BaseConfig(key="base")
+        child_node = ChildConfig(key="child", parent=base_node)
+        grand_child = GrandChildConfig(key="grandchild", parent=child_node)
 
         # Test value inheritance
         report = []
 
-        assert base_node.query_inst_cfg('BASE_VALUE')  == "override"
-        assert child_node.query_inst_cfg('BASE_VALUE')  == "base"
-        assert grand_child.query_inst_cfg('BASE_VALUE')  == "base"
+        assert base_node.query_inst_cfg("BASE_VALUE") == "override"
+        assert child_node.query_inst_cfg("BASE_VALUE") == "base"
+        assert grand_child.query_inst_cfg("BASE_VALUE") == "base"
 
+        assert base_node.query_inst_cfg("CHILD_VALUE") == "UNSET"
+        assert child_node.query_inst_cfg("CHILD_VALUE") == "child"
+        assert grand_child.query_inst_cfg("CHILD_VALUE") == "UNSET"
 
-        assert base_node.query_inst_cfg('CHILD_VALUE')  == "UNSET"
-        assert child_node.query_inst_cfg('CHILD_VALUE')  == "child"
-        assert grand_child.query_inst_cfg('CHILD_VALUE')  == "UNSET"
+        assert base_node.query_inst_cfg("GRAND_CHILD_VALUE") == "UNSET"
+        assert child_node.query_inst_cfg("GRAND_CHILD_VALUE") == "UNSET"
+        assert grand_child.query_inst_cfg("GRAND_CHILD_VALUE") == "grandchild"
 
-        assert base_node.query_inst_cfg('GRAND_CHILD_VALUE') == "UNSET"
-        assert child_node.query_inst_cfg('GRAND_CHILD_VALUE') == "UNSET"
-        assert grand_child.query_inst_cfg('GRAND_CHILD_VALUE') == "grandchild"
-
-        assert base_node.query_inst_cfg('OVERRIDE_VALUE') == "base"
-        assert child_node.query_inst_cfg('OVERRIDE_VALUE') == "child"
-        assert grand_child.query_inst_cfg('OVERRIDE_VALUE') == "grandchild"
-
+        assert base_node.query_inst_cfg("OVERRIDE_VALUE") == "base"
+        assert child_node.query_inst_cfg("OVERRIDE_VALUE") == "child"
+        assert grand_child.query_inst_cfg("OVERRIDE_VALUE") == "grandchild"
 
         # Test with override
-        assert grand_child.query_inst_cfg('OVERRIDE_VALUE', override={'OVERRIDE_VALUE':"custom"}) == "custom"
+        assert (
+            grand_child.query_inst_cfg(
+                "OVERRIDE_VALUE", override={"OVERRIDE_VALUE": "custom"}
+            )
+            == "custom"
+        )
 
         # Test with unexisting value
-        assert grand_child.query_inst_cfg('UNEXISTING_VALUE', default="default") == "default"
+        assert (
+            grand_child.query_inst_cfg("UNEXISTING_VALUE", default="default")
+            == "default"
+        )
 
         # Test with report
         report = []
-        value = grand_child.query_inst_cfg('OVERRIDE_VALUE', report=report)
+        value = grand_child.query_inst_cfg("OVERRIDE_VALUE", report=report)
         assert value == "grandchild"
-        assert report == ['class_meta:Meta.OVERRIDE_VALUE']
+        assert report == ["class_meta:Meta.OVERRIDE_VALUE"]
 
 
 # if __name__ == '__main__':
-#     pytest.main([__file__]) 
+#     pytest.main([__file__])
