@@ -426,10 +426,28 @@ class ContainerDict(ContainerInstance):
         return copy.deepcopy(ret)
 
 
+
+
+    def get(self, key, default=UNSET_ARG):
+        "Get"
+        if key in self.__children__:
+            return self.__children__[key]
+        return default
+
     def items(self):
         "Items"
         return self.get_children().items()
 
+
+    def values(self):
+        "Values"
+        return self.get_children().values()
+
+    def keys(self):
+        "Keys"
+        return self.get_children().keys()
+        
+        
 
 
 ##################

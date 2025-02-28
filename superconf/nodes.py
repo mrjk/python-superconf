@@ -189,6 +189,8 @@ class Node:
             if val is not UNSET_ARG:
                 query_from.append(f"dict_override:{name}")
                 return val
+        elif override is not None:
+            raise ValueError(f"Invalid override type: {type(override)}")
 
         # Fetch from self._NAME
         # Good for initial setup, if write mode is required
@@ -224,7 +226,7 @@ class Node:
 
         if default is not UNSET_ARG:
             query_from.append("default_arg")
-            return default, query_from
+            return default
 
         msg = (
             f"Setting '{name}' has not been declared before being used"
@@ -232,8 +234,13 @@ class Node:
         )
         raise exceptions.UnknownSetting(msg)
 
-    def query_cfg(self, name: str, include_self: bool = True,
-                 report: bool = False, **kwargs) -> Any:
+    # TODO: Deprecate query_inst_cfg, and use this method instead
+    # Add support for folowing parameters
+    def query_cfg(self, name: str, 
+            include_self: bool = True,
+            include_parents: bool = True,
+            include_root: bool = True,
+            report: bool = False, **kwargs) -> Any:
         """Query configuration from self and parent hierarchy.
         
         Args:
