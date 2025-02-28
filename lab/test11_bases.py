@@ -1,0 +1,101 @@
+# pylint: skip-file
+
+from pprint import pprint
+
+import pytest
+
+import superconf.exceptions
+from superconf.configuration import Configuration
+from superconf.fields import Field, FieldConf
+# from superconf.loaders import Dict
+
+# This test explore the default specificities of classyconf
+# We want to keep this API compatible
+
+
+example_dict = {
+    "item1": True,
+    "item2": 4333,
+}
+
+FULL_CONFIG = {
+    "field1": False,
+    "field2": "Default value",
+    "field3": 42,
+    "field4": example_dict,
+    "field5": example_dict,
+}
+CHILDREN_COUNT = len(FULL_CONFIG)
+
+
+class AppConfig(Configuration):
+
+    class Meta:
+        # loaders = [Environment()]
+        cache = False
+
+    field1 = Field(default=False, help="Toggle debugging on/off.")
+    field2 = Field(default="Default value", help="Another field")
+    field3 = Field(default=42, help="Another field")
+    field4 = Field(default=example_dict, help="Another dict field")
+    field5 = Field(default=example_dict, help="Another dict field")
+
+
+app = AppConfig(value=FULL_CONFIG)
+
+# We check here we can access via attributes and items
+assert app.field1 is False
+assert isinstance(app.field1, bool)
+assert app["field1"] is False
+assert isinstance(app["field1"], bool)
+
+
+# We check known value retrieval here
+t1 = app.get_value("field2")
+pprint(t1)
+assert t1 == "Default value"
+t1 = app.get_value("field3")
+assert t1 == 42
+
+
+# We check unknown value retrieval here
+t1 = app.get_value("tutu", default="SUPER")
+pprint(t1)
+assert t1 == "SUPER"
+with pytest.raises(superconf.exceptions.UndeclaredField):
+    # Raise exceptions on unset values without defaults
+    out = app.get_value("toto")
+    print("OUT", out)
+
+
+# For immutable objects, ensure we have the same ids
+assert isinstance(app.field2, str)
+assert app.field2 is app.field2
+assert app.field2 == app.field2
+assert app.field2 == "Default value"
+
+
+# For mutable objects, ensure we have different ids
+# Ensure we have a different object when returned, but containing the same value
+assert isinstance(app.field5, dict)
+# assert app.field5 is not app.field5, "When cache is disabled"
+assert app.field5 is app.field5, "When cache is enabled"
+assert app.field5 == app.field5
+assert app.field5 is not example_dict
+assert app.field5 == example_dict
+
+
+# Ensure we can iterate on children and we have the correct number of children
+count = 0
+out = {}
+for name, i in app.items():
+    count += 1
+    out[name] = app.get_value(i.key, default=i.get_default()) #, cast=i.cast)
+
+# ASsert we have the correct number of children and the values are correct
+assert count == CHILDREN_COUNT
+assert out == FULL_CONFIG
+assert out is not FULL_CONFIG
+
+
+print("All tests OK")
