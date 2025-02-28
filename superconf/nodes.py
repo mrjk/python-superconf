@@ -1,6 +1,32 @@
+"""Configuration node classes for managing hierarchical configuration.
+
+This module provides the core Node class and related functionality for managing
+hierarchical configuration data. The Node class serves as the base class for all
+configuration objects in the superconf library.
+
+Key features:
+- Hierarchical configuration with parent-child relationships
+- Flexible value querying with multiple fallback levels
+- Support for metadata and configuration overrides
+- Type checking and validation
+- Customizable behavior through Meta class settings
+
+The Node class implements a sophisticated configuration query system that checks
+multiple sources in a defined precedence order:
+
+1. Dictionary overrides
+2. Instance attributes with _name prefix 
+3. Class Meta attributes
+4. Instance attributes with meta__ prefix
+5. Parent configuration objects
+
+This allows for flexible configuration management while maintaining strict type
+safety and validation.
+"""
 
 import logging
 import copy
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 from pprint import pprint
 
 from superconf.common import NOT_SET, UNSET_ARG
@@ -10,29 +36,41 @@ from superconf import exceptions
 
 logger = logging.getLogger(__name__)
 
-
+T = TypeVar('T', bound='Node')
 
 class Node:
     """Base class for configuration objects providing core configuration query functionality.
 
-    This class implements the basic configuration query mechanisms used by all configuration
-    classes. It supports querying configuration values from various sources including
-    instance attributes, class Meta attributes, and parent configurations.
+    This class implements hierarchical configuration management with support for querying values
+    from multiple sources in a defined precedence order:
+    1. Dictionary overrides
+    2. Instance attributes with _name prefix
+    3. Class Meta attributes
+    4. Instance attributes with meta__ prefix
+    5. Parent configuration objects
+    
+    Attributes:
+        __key__: Configuration key identifier
+        __parent__: Reference to parent configuration object
+        __value__: Stored configuration value
+        Meta: Inner class for class-level configuration settings
     """
 
-    __key__ = None
-    __parent__ = None
-    __value__ = NOT_SET
+    __key__: Optional[Union[str, int]] = None
+    __parent__: Optional['Node'] = None
+    __value__: Any = NOT_SET
 
     class Meta:
-        """Class to store class-level configuration overrides."""
+        """Class to store class-level configuration settings."""
 
-    def __init__(self, key=None, value=NOT_SET, parent=None):
-        """Initialize a configuration base instance.
+    def __init__(self, key: Optional[Union[str, int]] = None, 
+                 value: Any = NOT_SET,
+                 parent: Optional['Node'] = None) -> None:
+        """Initialize a configuration node.
 
         Args:
-            key: The configuration key name
-            value: The configuration value (defaults to NOT_SET)
+            key: The configuration key identifier
+            value: The configuration value
             parent: Parent configuration object if this is a child config
         """
         self.__key__ = key
@@ -41,25 +79,25 @@ class Node:
 
 
     @property
-    def key(self):
-        "Key"
+    def key(self) -> Optional[Union[str, int]]:
+        """The configuration key identifier."""
         return self.__key__ or None
 
     @property
-    def parent(self):
-        "Parent"
+    def parent(self) -> Optional['Node']:
+        """The parent configuration object."""
         return self.__parent__
     
 
     @property
-    def name(self):
-        "Name"
+    def name(self) -> str:
+        """The display name - either the key or class name."""
         return self.key or self.__class__.__name__
 
 
     @property
-    def fname(self):
-        "Full name"
+    def fname(self) -> str:
+        """The full hierarchical name including all parent names."""
         curr = self
         out = []
         while curr is not None:
@@ -69,15 +107,14 @@ class Node:
         return ".".join(out)
 
     @property
-    def fkey(self):
-        "Full key"
+    def fkey(self) -> str:
+        """The full hierarchical key including all parent keys."""
         curr = self
         out = []
         while curr is not None:
             curr_key = curr.key
             if not isinstance(curr_key, (int, str)):
                 curr_key = ""
-                # break
             out.append(curr_key)
             curr = curr.parent
         out.reverse()
@@ -87,16 +124,21 @@ class Node:
     # Instance config management
     # ----------------------------
 
-    def query_inst_cfg(self,name, cast=None, report=None, **kwargs):
+    def query_inst_cfg(self, name: str, cast: Optional[Type] = None,
+                      report: Optional[List] = None, **kwargs) -> Any:
         """Query instance configuration with optional type casting.
 
         Args:
-            *args: Variable length argument list passed to _query_inst_cfg
+            name: Configuration setting name to query
             cast: Optional type to cast the result to
-            **kwargs: Arbitrary keyword arguments passed to _query_inst_cfg
+            report: Optional list to collect query trace information
+            **kwargs: Additional arguments passed to _query_inst_cfg
 
         Returns:
             The configuration value, optionally cast to the specified type
+
+        Raises:
+            AssertionError: If casting fails
         """
         report = report if isinstance(report, list) else []
         out = self._query_inst_cfg(name, report=report, **kwargs)
@@ -114,24 +156,27 @@ class Node:
             ), f"Wrong type for config {self}, expected {cast}, got: {type(out)} {out}"
         return out
 
-    def _query_inst_cfg(self, name, override=None, default=UNSET_ARG, report=None):
+    def _query_inst_cfg(self, name: str, override: Optional[Dict] = None,
+                       default: Any = UNSET_ARG,
+                       report: Optional[List] = None) -> Any:
         """Internal method to query instance configuration from various sources.
 
-        Searches for configuration values in the following order:
+        Searches for configuration values in the following precedence order:
         1. Dictionary override if provided
         2. Instance attribute with _name prefix
-        3. Class Meta attribute
-        4. Instance attribute with meta__ prefix
-        5. Default value if provided
+        3. Class Meta attribute via __meta__
+        4. Class Meta attribute via Meta class
+        5. Instance attribute with meta__ prefix
+        6. Default value if provided
 
         Args:
             name: Configuration setting name to query
             override: Optional dictionary of override values
-            parents: Whether to check parent configurations
             default: Default value if setting is not found
+            report: Optional list to collect query trace information
 
         Returns:
-            Tuple of (value, query_sources) where query_sources is a list of searched locations
+            The configuration value if found
 
         Raises:
             UnknownSetting: If the setting is not found and no default is provided
@@ -156,12 +201,8 @@ class Node:
         cls = self
         if hasattr(cls, "__meta__"):
             val = getattr(cls.__meta__, name, UNSET_ARG)
-            # print("Meta Value", cls.__meta__, name, val)
-            # pprint(cls.__meta__)
-            # pprint(cls.__meta__.__dict__)
             if val != UNSET_ARG:
                 query_from.append(f"class_meta:__meta__.{name}")
-                # print ("SELF CLASS Meta retrieval for: {cls}" , name, val)
                 return val
 
         # Python class params: self.Meta.NAME
@@ -169,12 +210,8 @@ class Node:
         cls = self
         if hasattr(cls, "Meta"):
             val = getattr(cls.Meta, name, UNSET_ARG)
-            # print("Meta Value", cls.Meta, name, val)
-            # pprint(cls.__meta__)
-            # pprint(cls.__meta__.__dict__)
             if val != UNSET_ARG:
                 query_from.append(f"class_meta:Meta.{name}")
-                # print ("SELF CLASS Meta retrieval for: {cls}" , name, val)
                 return val
 
 
@@ -195,33 +232,48 @@ class Node:
         )
         raise exceptions.UnknownSetting(msg)
 
-    def query_cfg(self, name, include_self=True, report=False, **kwargs):
-        "Temporary wrapper"
-        return self.query_parent_cfg(name, include_self=True, report=report, **kwargs)
+    def query_cfg(self, name: str, include_self: bool = True,
+                 report: bool = False, **kwargs) -> Any:
+        """Query configuration from self and parent hierarchy.
+        
+        Args:
+            name: Configuration setting name to query
+            include_self: Whether to include self in the query
+            report: Whether to return query trace information
+            **kwargs: Additional arguments passed to query_parent_cfg
+            
+        Returns:
+            The configuration value, optionally with query trace information
+        """
+        return self.query_parent_cfg(name, include_self=include_self,
+                                   report=report, **kwargs)
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     def query_parent_cfg(
         self,
-        name,
-        as_subkey=False,
-        cast=None,
-        default=UNSET_ARG,
-        include_self=False,
-        report=False,
-    ):
-        """Query configuration from parent object.
+        name: str,
+        as_subkey: bool = False,
+        cast: Optional[Type] = None,
+        default: Any = UNSET_ARG,
+        include_self: bool = False,
+        report: bool = False,
+    ) -> Any:
+        """Query configuration from parent hierarchy.
 
         Args:
             name: Configuration setting name to query
-            as_subkey: If True and parent value is dict, get self.__key__ from it
+            as_subkey: If True and parent value is dict/list, get value using self.__key__
             cast: Optional type to cast the result to
             default: Default value if setting is not found
+            include_self: Whether to include self in the query
+            report: Whether to return query trace information
 
         Returns:
-            The configuration value from the parent, optionally cast to specified type
+            The configuration value, optionally with query trace information
 
         Raises:
-            UnknownSetting: If no parent exists and no default is provided
+            UnknownSetting: If setting is not found and no default provided
+            AssertionError: If casting fails or invalid key type for list access
         """
 
         # Fast exit or raise exception
@@ -292,8 +344,13 @@ class Node:
             return out, _report
         return out
 
-    def get_hierarchy(self):
-        "Return a list of parents NEW VERSION"
+    def get_hierarchy(self) -> List['Node']:
+        """Return the configuration hierarchy from self to root.
+        
+        Returns:
+            List of Node objects representing the configuration hierarchy,
+            starting with self and ending with the root node.
+        """
         out = [self]
 
         target = self
