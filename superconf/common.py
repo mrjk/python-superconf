@@ -39,6 +39,23 @@ class NotSet(_NoneType):
     def repr(self):
         return "<NOT_SET>"
 
+    @property
+    def type(self):
+        "Return object type"
+        return self.__class__
+
+class NotSetList(NotSet, list):
+    "Represent an unset list"
+
+    def repr(self):
+        return "<NOT_SET_LIST>"
+    
+class NotSetDict(NotSet, dict):
+    "Represent an unset dict"
+
+    def repr(self):
+        return "<NOT_SET_DICT>"
+
 
 class UnSetArg(_NoneType):
     "Represent an unset arg"
@@ -62,6 +79,8 @@ class Default(_NoneType):
 
 
 NOT_SET = NotSet()
+NOT_SET_LIST = NotSetList()
+NOT_SET_DICT = NotSetDict()
 UNSET_ARG = UnSetArg()
 FAIL = UnSetArg()
 DEFAULT = Default()

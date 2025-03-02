@@ -4,8 +4,10 @@
 
 import ast
 from collections.abc import Mapping, Sequence
+from pprint import pprint
 
-from .common import FAIL  # , NOT_SET, UNSET_ARG
+
+from .common import FAIL, NOT_SET, UNSET_ARG, NOT_SET_LIST, NOT_SET_DICT
 from .exceptions import InvalidCastConfiguration
 
 
@@ -133,9 +135,20 @@ class AsList(AbstractCast):
 
     def _parse(self, value):
 
-        if not value:
-            # print ("PARSE AS EMPTY", value)
-            return self.cast([])
+
+        # print("CAST___LIST", NOT_SET_LIST, NOT_SET_LIST.type, issubclass(type(value), NOT_SET_LIST.type), value)
+        # pprint(type(value).__mro__)
+        # pprint(NOT_SET_LIST.type)
+        if isinstance(value, NOT_SET.type):
+        # if issubclass(type(value), NOT_SET.type):
+            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            return NOT_SET_LIST
+            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            # return self.cast([])
+
+        if value is None:
+            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            return NOT_SET_LIST
 
         if isinstance(value, str):
             # print ("PARSE AS STRING", value)
@@ -147,7 +160,16 @@ class AsList(AbstractCast):
         if isinstance(value, Mapping):
             assert False, f"TOFIX: Unsupported type dict, {value}"
 
-        assert False
+        # if not value:
+        #     # Generic fallback
+        #     # print ("PARSE AS EMPTY", value)
+        #     return self.cast([])
+
+        raise InvalidCastConfiguration(
+            f"Error casting value {value} to list"
+        )
+
+        # assert False, f"TOFIX: Unsupported type {type(value)}"
 
     def _parse_string(self, string):
         elements = []
@@ -228,9 +250,21 @@ class AsDict(AbstractCast):
     def _parse(self, value):
         "Internal helper to parse values"
 
-        if not value:
-            # print ("PARSE AS EMPTY", value)
-            return self.cast({})
+        if isinstance(value, NOT_SET.type):
+        # if issubclass(type(value), NOT_SET.type):
+            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            return NOT_SET_DICT
+            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            # return self.cast([])
+
+        if value is None:
+            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            return NOT_SET_DICT
+
+
+        # if not value:
+        #     # print ("PARSE AS EMPTY", value)
+        #     return self.cast({})
 
         if isinstance(value, str):
             assert False, "String  parsing is not implemeted yet"

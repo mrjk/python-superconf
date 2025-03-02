@@ -268,13 +268,16 @@ class LeafInstance(Node):
 
     def _cast_value(self, value):
         "Cast value"
-        print("CAST VALUE", self.__cast__, value)
 
         if self.__cast__ is None:
             return value
-        if value in [UNSET_ARG, NOT_SET]:
+        # if value in [UNSET_ARG, NOT_SET]:
+        if value is UNSET_ARG:
             return value
         
+
+        print("CAST VALUE", self.__cast__, value)
+
         value = self.__cast__(value)
         
         return value

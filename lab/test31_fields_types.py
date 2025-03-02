@@ -6,7 +6,7 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
-from superconf.common import DEFAULT, FAIL, NOT_SET
+from superconf.common import DEFAULT, FAIL, NOT_SET, NOT_SET_LIST, NOT_SET_DICT
 from superconf.configuration import Configuration, ConfigurationDict
 from superconf.fields import (
     Field,
@@ -208,11 +208,16 @@ class AppList(Configuration):
 
     list_test1 = FieldList(default=[])
     list_test2 = FieldList(default=["item1", "item2", "item3"])
-    list_test3 = FieldList(default=0)
     list_test4 = FieldList(default=None)
     list_test5 = FieldList(default="item26")
     list_test6 = FieldList(default="item27,item28,item29")
     list_test7 = FieldList()
+
+class AppListFail1(AppList):
+    "This should fail since zero is not convertible to list ..."
+
+    list_test3 = FieldList(default=0)
+
 
 
 app1 = AppList()
@@ -220,15 +225,16 @@ app1 = AppList()
 EXPECTED = {
     "list_test1": [],
     "list_test2": ["item1", "item2", "item3"],
-    "list_test3": [],
-    "list_test4": [],
+    "list_test4": NOT_SET_LIST,
     "list_test5": ["item26"],
     "list_test6": ["item27", "item28", "item29"],
-    "list_test7": [],
+    "list_test7": NOT_SET_LIST,
 }
 
-
-pprint(app1.get_value())
+out = app1.get_value()
+assert isinstance(out["list_test7"], list)
+pprint(out)
+pprint(EXPECTED)
 assert app1.get_value() == EXPECTED
 
 
@@ -247,7 +253,7 @@ class AppTuple(Configuration):
 
     list_test1 = FieldTuple(default=[])
     list_test2 = FieldTuple(default=["item1", "item2", "item3"])
-    list_test3 = FieldTuple(default=0)
+    # list_test3 = FieldTuple(default=0)
     list_test4 = FieldTuple(default=None)
     list_test5 = FieldTuple(default="item26")
     list_test6 = FieldTuple(default="item27,item28,item29")
@@ -259,15 +265,16 @@ app1 = AppTuple()
 EXPECTED = {
     "list_test1": (),
     "list_test2": ("item1", "item2", "item3"),
-    "list_test3": (),
-    "list_test4": (),
+    # "list_test3": (),
+    "list_test4": NOT_SET_LIST,
     "list_test5": ("item26",),
     "list_test6": ("item27", "item28", "item29"),
-    "list_test7": (),
+    "list_test7": NOT_SET_LIST,
 }
 
 
 pprint(app1.get_value())
+pprint(EXPECTED)
 assert app1.get_value() == EXPECTED
 
 
@@ -297,7 +304,7 @@ app1 = AppDict()
 EXPECTED = {
     "field_test1": {},
     "field_test2": {"item1": "val1", "item2": "val2", "item3": "val3"},
-    "list_test3": {},
+    "list_test3": NOT_SET_DICT,
 }
 
 
