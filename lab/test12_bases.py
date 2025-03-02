@@ -131,7 +131,11 @@ EXPECTED_FULL_CONFIG2 = {
 # Children/value rule access
 # val = child.key    # Get value or container
 # val = child["key"] # Get value
+# val = child["key":] # Get value afterkey
+# val = child["key":] # Get value beforekey
 # val = child("key") # Get object, iter, len ...
+
+
 
 # val = child.get_value("key")
 # val = child.get_child("key")
@@ -143,7 +147,7 @@ app = TopConfig(value=TOP_CONFIG)
 
 # Test child access
 
-val1 = app["top2"]
+val1 = app["top2"].get_value()
 # print("===========")
 # pprint(app.get_value())
 # print("===========")
@@ -158,6 +162,7 @@ child1 = app("top2")
 direct = app.top2
 
 # Ensure children and parent are not the same objects
+print("APP", app, type(app).__mro__)
 assert isinstance(app, TopConfig)
 print("APP", child1, type(child1).__mro__)
 assert isinstance(val1, dict)

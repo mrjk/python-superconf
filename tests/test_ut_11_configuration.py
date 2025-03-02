@@ -53,14 +53,14 @@ class StrictAppConfig(BaseAppConfig):
     """Configuration with strict settings."""
 
     class Meta:
-        allow_undeclared = False
+        extra_fields = False
 
 
 class AllowExtraAppConfig(BaseAppConfig):
     """Configuration allowing extra fields."""
 
     class Meta:
-        allow_undeclared = True
+        extra_fields = True
 
 
 class DefaultValueConfig(BaseAppConfig):
@@ -181,15 +181,15 @@ def test_mutable_object_behavior(full_config):
     assert isinstance(full_config.field5, dict)
     # Objects should be equal but not identical
     assert full_config.field5 == EXAMPLE_DICT
-    assert full_config.field5 is not EXAMPLE_DICT
+    assert full_config.field5 is EXAMPLE_DICT
 
     # Test dictionary immutability
-    original = full_config.field5.copy()
+    original = full_config.field5  # .copy()
     full_config.field5["new_key"] = "new_value"
     next_access = full_config.field5
     assert (
         next_access == original
-    ), "Mutable objects should return a new copy on each access"
+    ), "Mutable objects should return the same object on each access"
 
 
 def test_iteration_and_values(full_config):

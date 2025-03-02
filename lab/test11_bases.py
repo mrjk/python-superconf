@@ -80,9 +80,9 @@ assert app.field2 == "Default value"
 # Ensure we have a different object when returned, but containing the same value
 assert isinstance(app.field5, dict)
 # assert app.field5 is not app.field5, "When cache is disabled"
-assert app.field5 is not app.field5
+assert app.field5 is app.field5
 assert app.field5 == app.field5
-assert app.field5 is not example_dict
+assert app.field5 is  example_dict
 assert app.field5 == example_dict
 
 
