@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T", bound="Node")
 
 
-class Node:
+class BaseNode:
     """Base class for configuration objects providing core configuration query functionality.
 
     This class implements hierarchical configuration management with support for querying values
@@ -83,11 +83,19 @@ class Node:
     def key(self) -> Optional[Union[str, int]]:
         """The configuration key identifier."""
         return self.__key__ or None
+    
+    @key.setter
+    def key(self, value: Optional[Union[str, int]]):
+        self.__key__ = value
 
     @property
     def parent(self) -> Optional["Node"]:
         """The parent configuration object."""
         return self.__parent__
+    
+    @parent.setter
+    def parent(self, value: Optional["Node"]):
+        self.__parent__ = value
 
     @property
     def name(self) -> str:
@@ -119,8 +127,30 @@ class Node:
         out.reverse()
         return ".".join(out)
 
+
+class Node(BaseNode):
+    "Node with config management and inheritance"
+
     # Instance config management
     # ----------------------------
+
+
+    def get_hierarchy(self) -> List["Node"]:
+        """Return the configuration hierarchy from self to root.
+
+        Returns:
+            List of Node objects representing the configuration hierarchy,
+            starting with self and ending with the root node.
+        """
+        out = [self]
+
+        target = self
+        while target.__parent__ is not None and target.__parent__ not in out:
+            target = target.__parent__
+            out.append(target)
+
+        return out
+
 
     def query_inst_cfg(
         self,
@@ -360,20 +390,4 @@ class Node:
 
         if report:
             return out, _report
-        return out
-
-    def get_hierarchy(self) -> List["Node"]:
-        """Return the configuration hierarchy from self to root.
-
-        Returns:
-            List of Node objects representing the configuration hierarchy,
-            starting with self and ending with the root node.
-        """
-        out = [self]
-
-        target = self
-        while target.__parent__ is not None and target.__parent__ not in out:
-            target = target.__parent__
-            out.append(target)
-
         return out

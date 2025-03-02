@@ -176,10 +176,16 @@ class AppConfig(Configuration):
 
 
 app = AppConfig(value=CONFIG_MERGED)
-EXPECTED = {'namespace2': NOT_SET, 'namespace': 'default_ns', 'location': 'home2', 'owner': 'MISSING OWNER2', 'extra_field': 'extra_value'}
+EXPECTED = {'namespace2': NOT_SET, 
+            'namespace': 'default_ns', 
+            'location': 'home2', 
+            'namespace3': 'Absent',
+            'owner': 'MISSING OWNER2', 
+            'extra_field': 'extra_value'}
 
 out = app.get_value()
-print(out["resources"]["wifi-ap"] , EXPECTED)
+pprint(out["resources"]["wifi-ap"] )
+pprint(EXPECTED)
 assert out["resources"]["wifi-ap"] == EXPECTED
 assert out["resources"]["wifi-ap"]["extra_field"] == "extra_value"
 
@@ -201,7 +207,7 @@ EXPECTED = {
             "location": "MISSING LOCATION2",
             "namespace": "default_ns",
             "namespace2": NOT_SET,
-            # "namespace3": "Absent",
+            "namespace3": "Absent",
             "owner": "MISSING OWNER2",
         }
     }
@@ -221,7 +227,7 @@ EXPECTED = {
         "location": "MISSING LOCATION2",
         "namespace": "default_ns",
         "namespace2": NOT_SET,
-        # "namespace3": "Absent",
+        "namespace3": "Absent",
         "owner": "MISSING OWNER2",
     }
 }
@@ -237,7 +243,7 @@ EXPECTED = {
     "location": "MISSING LOCATION2",
     "namespace": "default_ns",
     "namespace2": NOT_SET,
-    # "namespace3": "Absent",
+    "namespace3": "Absent",
     "owner": "MISSING OWNER2",
 }
 assert res1.get_value() == EXPECTED
