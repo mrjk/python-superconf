@@ -269,7 +269,7 @@ class LeafInstance(Node):
             return default
 
         ret = _get_value()
-        print("GET VALUE", self.__cast__, ret)
+        # print("GET VALUE", self.__cast__, ret)
         # if cast:
         #     ret = self._cast_value(ret)
 
@@ -291,7 +291,7 @@ class LeafInstance(Node):
         if value is UNSET_ARG:
             return value
 
-        print("CAST VALUE", self.fname, self.__cast__, value)
+        # print("CAST VALUE", self.fname, self.__cast__, value)
 
         try:
             value = self.__cast__(value)
@@ -629,8 +629,8 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
     def _get_child_keys(self, attr=False):
         "Get child keys"
         _children_classes = self._children_classes or []
-        print("GET CHILD KEYS", self)
-        pprint(_children_classes)
+        # print("GET CHILD KEYS", self)
+        # pprint(_children_classes)
 
         if attr:
             ret = [field.attr for field in _children_classes]
@@ -779,7 +779,7 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
         children = default_children
         for key, val in value.items():
 
-            print("REPROCESSING22", key, val)
+            # print("REPROCESSING22", key, val)
 
             if key in children:
                 # child =
