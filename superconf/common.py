@@ -44,12 +44,14 @@ class NotSet(_NoneType):
         "Return object type"
         return self.__class__
 
+
 class NotSetList(NotSet, list):
     "Represent an unset list"
 
     def repr(self):
         return "<NOT_SET_LIST>"
-    
+
+
 class NotSetDict(NotSet, dict):
     "Represent an unset dict"
 

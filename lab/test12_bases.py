@@ -66,6 +66,7 @@ class TopConfig(Configuration):
     # field1 = Field(default="default key1 value")
     # field2 = Field(default="default key2 value")
 
+
 app = TopConfig()
 
 
@@ -128,7 +129,6 @@ EXPECTED_FULL_CONFIG2 = {
 }
 
 
-
 # Children/value rule access
 # val = child.key    # Get value or container
 # val = child["key"] # Get value
@@ -137,10 +137,8 @@ EXPECTED_FULL_CONFIG2 = {
 # val = child("key") # Get object, iter, len ...
 
 
-
 # val = child.get_value("key")
 # val = child.get_child("key")
-
 
 
 app = TopConfig(value=TOP_CONFIG)
@@ -168,7 +166,7 @@ assert isinstance(app, TopConfig)
 print("APP", child1, type(child1).__mro__)
 assert isinstance(val1, dict)
 assert isinstance(child1, AppConfig)
-print("DIRECT", direct, child1, id(direct) , id(child1))
+print("DIRECT", direct, child1, id(direct), id(child1))
 assert direct is child1
 
 ###################################

@@ -18,8 +18,6 @@ from superconf.fields import Field, FieldConf
 # from superconf.loaders import Dict
 
 
-
-
 # This test explore the nested use cases
 
 

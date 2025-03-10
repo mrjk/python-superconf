@@ -83,7 +83,7 @@ class BaseNode:
     def key(self) -> Optional[Union[str, int]]:
         """The configuration key identifier."""
         return self.__key__ or None
-    
+
     @key.setter
     def key(self, value: Optional[Union[str, int]]):
         self.__key__ = value
@@ -92,7 +92,7 @@ class BaseNode:
     def parent(self) -> Optional["Node"]:
         """The parent configuration object."""
         return self.__parent__
-    
+
     @parent.setter
     def parent(self, value: Optional["Node"]):
         self.__parent__ = value
@@ -134,7 +134,6 @@ class Node(BaseNode):
     # Instance config management
     # ----------------------------
 
-
     def get_hierarchy(self) -> List["Node"]:
         """Return the configuration hierarchy from self to root.
 
@@ -150,7 +149,6 @@ class Node(BaseNode):
             out.append(target)
 
         return out
-
 
     def query_inst_cfg(
         self,

@@ -45,7 +45,15 @@ class FieldLeaf(BaseNode):
     cast = None
     instance_class = None
 
-    def __init__(self, key=None, default=NOT_SET, help="", cast=None, attr=None, instance_class=None):
+    def __init__(
+        self,
+        key=None,
+        default=NOT_SET,
+        help="",
+        cast=None,
+        attr=None,
+        instance_class=None,
+    ):
         self.__key__ = key
         self._attr = attr
         self.default = default
@@ -166,8 +174,13 @@ class LeafInstance(Node):
     meta__cast = None
 
     def __init__(
-        self, value=UNSET_ARG, default=UNSET_ARG,
-        cast=UNSET_ARG, meta=None, field=None, **kwargs
+        self,
+        value=UNSET_ARG,
+        default=UNSET_ARG,
+        cast=UNSET_ARG,
+        meta=None,
+        field=None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
 
@@ -181,17 +194,19 @@ class LeafInstance(Node):
         "Represent the instance"
         return f"{self.__class__.__name__}({self.__key__})"
 
-    def configure(self, value=UNSET_ARG, default=UNSET_ARG, cast=UNSET_ARG, meta=None, field=None):
+    def configure(
+        self, value=UNSET_ARG, default=UNSET_ARG, cast=UNSET_ARG, meta=None, field=None
+    ):
         "Initialize the instance"
-
-
 
         # Fetch settings
         override = _ArgCfg()
         override.update(meta)
-        override.update({
-            "cast": field.cast if field else UNSET_ARG,
-        })
+        override.update(
+            {
+                "cast": field.cast if field else UNSET_ARG,
+            }
+        )
         override.update(
             {
                 "default": default,
@@ -244,8 +259,7 @@ class LeafInstance(Node):
         if key is not None:
             raise NotImplementedError("Keyed value not implemented")
 
-        
-        def _get_value(default = default, nodefaults=nodefaults):
+        def _get_value(default=default, nodefaults=nodefaults):
             if self.__value__ is not NOT_SET:
                 return self.__value__
             if nodefaults:
@@ -270,7 +284,6 @@ class LeafInstance(Node):
         self.__value__ = value
         return value
 
-
     def _cast_value(self, value):
         "Cast value"
 
@@ -279,16 +292,18 @@ class LeafInstance(Node):
         # if value in [UNSET_ARG, NOT_SET]:
         if value is UNSET_ARG:
             return value
-        
 
-        print("CAST VALUE", self.fname , self.__cast__, value)
-        
+        print("CAST VALUE", self.fname, self.__cast__, value)
+
         try:
             value = self.__cast__(value)
         except Exception as e:
-            raise exceptions.InvalidCastConfiguration(f"Invalid cast for {self.fname}: {e}")
-        
+            raise exceptions.InvalidCastConfiguration(
+                f"Invalid cast for {self.fname}: {e}"
+            )
+
         return value
+
 
 class ContainerInstance(LeafInstance):
     "Container instance, either a dict or a list"
@@ -373,7 +388,9 @@ class ContainerDict(ContainerInstance):
             # if self.__children__ is not NOT_SET:
             #     ret = self.__children__.get(key, None)
             # return ret
-            return self.get_key_value(key, nodefaults=nodefaults, default=default, cast=cast)
+            return self.get_key_value(
+                key, nodefaults=nodefaults, default=default, cast=cast
+            )
 
         if self.__children__ is not NOT_SET:
             ret = {}
@@ -420,8 +437,6 @@ class ContainerDict(ContainerInstance):
     #         child.set_value(value)
     #     else:
     #         raise exceptions.InvalidField(f"Key {key} not found in {self.fname}")
-
-
 
     def __contains__(self, key):
         "Check if key is in children"
@@ -574,7 +589,7 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
             raise exceptions.InvalidCastConfiguration(
                 f"Multiple child fields found for {self.fname}: {matches}"
             )
-        
+
         if ret is None:
             if extra_fields == "warn":
                 logger.warning(
@@ -702,13 +717,14 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
         children_keys_default.extend(self._get_child_keys())
         children_keys_default = list(set(children_keys_default))
 
-
         # Instanciate default value
         default_children = {}
         for child_key in children_keys_default:
 
             # Fetch key field
-            child_field, child_cls = self._get_child_field(key=child_key, extra_fields=extra_fields)
+            child_field, child_cls = self._get_child_field(
+                key=child_key, extra_fields=extra_fields
+            )
 
             # Note: child_field can be one of:
             #  - None, disabled
@@ -748,7 +764,9 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
             # print("REPROCESSING", child_key, child_field, child_default)
 
             # Generate child instance
-            child = child_cls(parent=self, key=child_key, default=child_default, field=child_field)
+            child = child_cls(
+                parent=self, key=child_key, default=child_default, field=child_field
+            )
             default_children[child_key] = child
 
         # print("DEFAULT CHILDREN vvv", self)
@@ -778,16 +796,28 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
                         f"Key {key} is not declared in {self.fname}, use extra_fields=True to allow unknown keys"
                     )
 
-                child_field, child_cls = self._get_child_field(key=key, extra_fields=extra_fields)
+                child_field, child_cls = self._get_child_field(
+                    key=key, extra_fields=extra_fields
+                )
                 # if not child_field:
                 #     assert False, f"TO DEPRECATED, {type(child_field)}={child_field}"
                 #     child_field = node_children_class
                 # print("CHILD FIELD", key, val, child_field)
                 # pprint(self.__dict__)
-                print("CHILD CLASS", self._children_class, self.fname,key, extra_fields, child_field, child_cls)
+                print(
+                    "CHILD CLASS",
+                    self._children_class,
+                    self.fname,
+                    key,
+                    extra_fields,
+                    child_field,
+                    child_cls,
+                )
                 assert child_cls is not None, "WIP"
                 if child_cls:
-                    child = child_cls(parent=self, key=key, value=val, field=child_field)
+                    child = child_cls(
+                        parent=self, key=key, value=val, field=child_field
+                    )
 
                     # assert False, "WIP undeclared children"
                     children[key] = child

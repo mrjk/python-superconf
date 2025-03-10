@@ -59,6 +59,7 @@ ABSOLUTE = "abs"
 REL = RELATIVE
 ABS = ABSOLUTE
 
+
 class PathAnchor:
     """A class representing a path with an optional parent point and display mode.
 
@@ -92,7 +93,7 @@ class PathAnchor:
                 Defaults to None.
             clean (Optional[bool], optional): If True, normalizes the path by resolving
                 '..' and '.' components. Defaults to False.
-            name (Optional[str], optional): The name of the anchor. String helper to 
+            name (Optional[str], optional): The name of the anchor. String helper to
                 identify the anchor for other uses. Defaults to None.
         """
         if path is None:
@@ -103,7 +104,6 @@ class PathAnchor:
         self.clean = clean
         self.name = name
         # assert name
-
 
     def __repr__(self) -> str:
         """Return a string representation of the PathAnchor object.
@@ -118,7 +118,7 @@ class PathAnchor:
         parent = self.parent
         if parent:
             top_dir = parent.get_dir(clean=True)
-            child_path = self.get_path(mode='rel', start=top_dir, clean=True)
+            child_path = self.get_path(mode="rel", start=top_dir, clean=True)
             ret = f"<{name} [{top_dir}]{child_path}"
 
         # Add suffix
@@ -134,7 +134,7 @@ class PathAnchor:
             str: The path as a string
         """
         return str(self.get_path())
-    
+
     def __neg__(self) -> str:
         """Return the relative path as a string.
 
@@ -142,14 +142,14 @@ class PathAnchor:
             str: The path as a string
         """
         return str(self.get_path(mode="rel"))
-    
+
     def __pos__(self) -> str:
         """Return the absolute path as a string.
 
         Returns:
             str: The path as a string
         """
-        return str(self.get_path(mode="abs"))   
+        return str(self.get_path(mode="abs"))
 
     def __call__(self, **kwargs) -> str:
         """Return the path as a string, accept get_path arguments.
@@ -158,22 +158,14 @@ class PathAnchor:
             str: The path as a string
         """
         return str(self.get_path(**kwargs))
-    
 
     def __truediv__(self, other):
         """Return a new PathAnchor with the other as path and self as left part."""
-        return os.path.join(
-            ~self,
-            str(other)
-            )
+        return os.path.join(~self, str(other))
 
     def __rtruediv__(self, other):
         """Return a new PathAnchor with the other as path and self as rigth part."""
-        return os.path.join(
-            str(other),
-            self.get_path(mode="rel")
-            )
-
+        return os.path.join(str(other), self.get_path(mode="rel"))
 
     def get_mode(self, lvl: int = 0) -> Optional[str]:
         """Get the effective display mode for this path.
@@ -257,7 +249,6 @@ class PathAnchor:
             ret = self.path_source
         else:
 
-
             # OLD V1 - KEEP ORIGINAL
             parent = parent or self.parent
             if parent:
@@ -265,7 +256,6 @@ class PathAnchor:
                 # ret = os.path.join(_parent.path_source, self.path_source) # BROKEN AND NOW FIXED
             else:
                 ret = self.path_source
-
 
             # parent_req = parent or self.parent
 
@@ -275,7 +265,6 @@ class PathAnchor:
             #         parent_req = [x for x in parents if parent_req == x.name]
             #         assert len(parent_req) == 1, f"Got {len(parent_req)} parents with name {parent_req}, expected 1"
             #         parent_req = parent_req[0]
-
 
             # # OLD V1
             # parent = parent_req
@@ -293,7 +282,6 @@ class PathAnchor:
             #     ret = os.path.join(_parent.path_source, self.path_source)
             # else:
             #     ret = self.path_source
-
 
         # Clean
         if clean:
@@ -321,7 +309,7 @@ class PathAnchor:
             str: The processed path
         """
         return self.get_dir(**kwargs)
-    
+
     def get_name(self) -> str:
         """Get the basename of the anchor.
 
@@ -376,8 +364,10 @@ class FileAnchor(PathAnchor):
         if filename and directory and path:
             raise RuntimeError("filename, directory and path cannot be provided")
         elif filename and os.path.sep in filename:
-            raise RuntimeError(f"filename cannot contain path separators, got: {filename}")
-        
+            raise RuntimeError(
+                f"filename cannot contain path separators, got: {filename}"
+            )
+
         if filename and directory:
             # Ignore path
             path = os.path.join(directory, filename)

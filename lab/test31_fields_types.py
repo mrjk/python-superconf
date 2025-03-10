@@ -214,11 +214,11 @@ class AppList(Configuration):
     list_test6 = FieldList(default="item27,item28,item29")
     list_test7 = FieldList()
 
+
 class AppListFail1(AppList):
     "This should fail since zero is not convertible to list ..."
 
     list_test3 = FieldList(default=0)
-
 
 
 app1 = AppList()

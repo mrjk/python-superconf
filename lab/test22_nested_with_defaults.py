@@ -166,7 +166,6 @@ class AppConfig(Configuration):
     )
 
 
-
 # app = Resource2(value={})
 
 # pprint(app.__dict__)
@@ -177,15 +176,17 @@ class AppConfig(Configuration):
 
 
 app = AppConfig(value=CONFIG_MERGED)
-EXPECTED = {'namespace2': NOT_SET, 
-            'namespace': 'default_ns', 
-            'location': 'home2', 
-            'namespace3': 'Absent',
-            'owner': 'MISSING OWNER2', 
-            'extra_field': 'extra_value'}
+EXPECTED = {
+    "namespace2": NOT_SET,
+    "namespace": "default_ns",
+    "location": "home2",
+    "namespace3": "Absent",
+    "owner": "MISSING OWNER2",
+    "extra_field": "extra_value",
+}
 
 out = app.get_value()
-pprint(out["resources"]["wifi-ap"] )
+pprint(out["resources"]["wifi-ap"])
 pprint(EXPECTED)
 assert out["resources"]["wifi-ap"] == EXPECTED
 assert out["resources"]["wifi-ap"]["extra_field"] == "extra_value"

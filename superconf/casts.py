@@ -134,12 +134,11 @@ class AsList(AbstractCast):
 
     def _parse(self, value):
 
-
         # print("CAST___LIST", NOT_SET_LIST, NOT_SET_LIST.type, issubclass(type(value), NOT_SET_LIST.type), value)
         # pprint(type(value).__mro__)
         # pprint(NOT_SET_LIST.type)
         if isinstance(value, NOT_SET.type):
-        # if issubclass(type(value), NOT_SET.type):
+            # if issubclass(type(value), NOT_SET.type):
             # assert False, f"TOFIX: Unsupported type {type(value)}"
             return NOT_SET_LIST
             # assert False, f"TOFIX: Unsupported type {type(value)}"
@@ -164,9 +163,7 @@ class AsList(AbstractCast):
         #     # print ("PARSE AS EMPTY", value)
         #     return self.cast([])
 
-        raise InvalidCastConfiguration(
-            f"Error casting value {value} to list"
-        )
+        raise InvalidCastConfiguration(f"Error casting value {value} to list")
 
         # assert False, f"TOFIX: Unsupported type {type(value)}"
 
@@ -250,7 +247,7 @@ class AsDict(AbstractCast):
         "Internal helper to parse values"
 
         if isinstance(value, NOT_SET.type):
-        # if issubclass(type(value), NOT_SET.type):
+            # if issubclass(type(value), NOT_SET.type):
             # assert False, f"TOFIX: Unsupported type {type(value)}"
             return NOT_SET_DICT
             # assert False, f"TOFIX: Unsupported type {type(value)}"
@@ -259,7 +256,6 @@ class AsDict(AbstractCast):
         if value is None:
             # assert False, f"TOFIX: Unsupported type {type(value)}"
             return NOT_SET_DICT
-
 
         # if not value:
         #     # print ("PARSE AS EMPTY", value)
@@ -411,8 +407,6 @@ class AsBest(AbstractCast):
 
 
 evaluate = ast.literal_eval
-
-
 
 
 # Shortcuts for standard casts
