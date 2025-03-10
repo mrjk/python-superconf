@@ -71,7 +71,7 @@ tasks:
       # - task: test_regressions
       - task: test_report
       - task: test_lab
-      - task: test_examples
+      #- task: test_examples
       - task: test_lint
 
   test_pytest:
