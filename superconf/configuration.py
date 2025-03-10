@@ -248,7 +248,6 @@ class LeafInstance(Node):
         if callable(default_value):
             default_value = default_value(self)
 
-
         # print("RETURN DEFAULT VALUE", default_value)
         return default_value
 
@@ -386,9 +385,7 @@ class ContainerDict(ContainerInstance):
             # if self.__children__ is not NOT_SET:
             #     ret = self.__children__.get(key, None)
             # return ret
-            return self.get_key_value(
-                key, nodefaults=nodefaults, default=default
-            )
+            return self.get_key_value(key, nodefaults=nodefaults, default=default)
 
         if self.__children__ is not NOT_SET:
             ret = {}
