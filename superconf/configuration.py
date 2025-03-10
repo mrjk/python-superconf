@@ -23,7 +23,7 @@ from superconf.casts import (
 from superconf.common import NOT_SET, UNSET_ARG
 from superconf.nodes import BaseNode, Node
 
-# from .fields2 import Field, FieldConf, FieldContainer
+# from .fields2 import Field, FieldConf, BaseFieldContainer
 # from .loaders import Environment
 
 
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 # ====================================
 
 
-class FieldLeaf(BaseNode):
+class BaseFieldLeaf(BaseNode):
     "Represent a configuration leaf"
 
     cast = None
@@ -87,7 +87,7 @@ class FieldLeaf(BaseNode):
     #     return False
 
 
-class FieldContainer(FieldLeaf):
+class BaseFieldContainer(BaseFieldLeaf):
     "Represent a configuration class"
 
     # def __init__(self, key=None, default=NOT_SET, help="", cast=None, child_class=None):
@@ -522,7 +522,7 @@ class DeclarativeValuesMetaclass(type):
                 values.update(base.__fields__)
 
         for attr, value in attrs.items():
-            if isinstance(value, FieldLeaf):
+            if isinstance(value, BaseFieldLeaf):
                 values.update({attr: value})
             elif inspect.isclass(value):
                 # print("SCANNING", attr, value, LeafInstance)
@@ -607,20 +607,23 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
 
         # Assert
         passed = False
-        if isinstance(ret, FieldLeaf):
+        if isinstance(ret, BaseFieldLeaf):
             passed = True
             return ret, ret.instance_class
         elif inspect.isclass(ret):
             if issubclass(ret, LeafInstance):
                 passed = True
-                return FieldLeaf(key=key, attr=attr, instance_class=LeafInstance), ret
+                return (
+                    BaseFieldLeaf(key=key, attr=attr, instance_class=LeafInstance),
+                    ret,
+                )
         elif ret is None:
             passed = True
             return None, None
 
         if not passed:
             raise exceptions.InvalidField(
-                f"Expected a FieldLeaf or a LeafInstance for {self.fname}.{child_key}, got: {type(ret)}={ret}"
+                f"Expected a BaseFieldLeaf or a LeafInstance for {self.fname}.{child_key}, got: {type(ret)}={ret}"
             )
 
         return ret
@@ -670,14 +673,14 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
 
             if inspect.isclass(field):
                 if issubclass(field, LeafInstance):
-                    field = FieldContainer(field, key=attr)
-                    assert isinstance(field, FieldLeaf)
+                    field = BaseFieldContainer(field, key=attr)
+                    assert isinstance(field, BaseFieldLeaf)
                 else:
                     raise exceptions.InvalidField(
                         f"Expected a LeafInstance for {self.fname}.{attr}, got: {type(field)}={field}"
                     )
 
-            if isinstance(field, FieldLeaf):
+            if isinstance(field, BaseFieldLeaf):
                 field.key = field.key if field.key else attr
                 field.attr = attr
                 _children_classes.append(field)
@@ -733,7 +736,7 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
             if child_field is None:
                 # Skip when None
                 continue
-            # if isinstance(child_field, FieldLeaf):
+            # if isinstance(child_field, BaseFieldLeaf):
             #     # If child field, then grab instance_class
             #     child_cls = child_field.instance_class
 

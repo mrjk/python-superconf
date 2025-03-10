@@ -24,14 +24,12 @@ from superconf.casts import (  # AsBoolean,; AsDict,; AsIdentity,; AsInt,; AsLis
 )
 from superconf.common import FAIL, NOT_SET
 from superconf.configuration import (
+    BaseFieldContainer,
+    BaseFieldLeaf,
     ContainerConf,
     ContainerDict,
     ContainerInstance,
     ContainerList,
-)
-from superconf.configuration import FieldContainer as _FieldContainer
-from superconf.configuration import FieldLeaf as _FieldLeaf
-from superconf.configuration import (
     LeafInstance,
 )
 
@@ -45,14 +43,14 @@ logger = logging.getLogger(__name__)
 # ============================
 
 
-class FieldLeaf(_FieldLeaf):
+class FieldLeaf(BaseFieldLeaf):
     "Represent a configuration leaf"
 
     cast = as_is
     instance_class = LeafInstance
 
 
-class FieldContainer(_FieldContainer):
+class FieldContainer(BaseFieldContainer):
     "Represent a configuration class"
 
     child_class = ContainerInstance
