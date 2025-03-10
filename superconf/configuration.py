@@ -237,23 +237,22 @@ class LeafInstance(Node):
 
     def set_default(self, value):
         "Set default value"
-        self.__default__ = value
-        return value
 
-    def get_default(self, cast=True):
+        self.__default__ = self._cast_value(value)
+        return self.__default__
+
+    def get_default(self):
         "Get default value"
 
         default_value = self.__default__
         if callable(default_value):
             default_value = default_value(self)
 
-        if cast:
-            default_value = self._cast_value(default_value)
 
         # print("RETURN DEFAULT VALUE", default_value)
         return default_value
 
-    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG, cast=True):
+    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
         "Get value"
 
         if key is not None:
@@ -266,13 +265,13 @@ class LeafInstance(Node):
                 return NOT_SET
 
             if default == UNSET_ARG:
-                default = self.get_default(cast=False)
+                default = self.get_default()
             return default
 
         ret = _get_value()
         print("GET VALUE", self.__cast__, ret)
-        if cast:
-            ret = self._cast_value(ret)
+        # if cast:
+        #     ret = self._cast_value(ret)
 
         # if self.__cast__ is not None:
         #     ret = self.__cast__(ret)
@@ -280,9 +279,8 @@ class LeafInstance(Node):
 
     def set_value(self, value):
         "Set value"
-        # value = self._cast_value(value)
-        self.__value__ = value
-        return value
+        self.__value__ = self._cast_value(value)
+        return self.__value__
 
     def _cast_value(self, value):
         "Cast value"
@@ -381,7 +379,7 @@ class ContainerDict(ContainerInstance):
         self._set_children(value)
         return self.get_value()
 
-    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG, cast=True):
+    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
         "Get value"
         if key is not None:
             # ret = None
@@ -389,22 +387,22 @@ class ContainerDict(ContainerInstance):
             #     ret = self.__children__.get(key, None)
             # return ret
             return self.get_key_value(
-                key, nodefaults=nodefaults, default=default, cast=cast
+                key, nodefaults=nodefaults, default=default
             )
 
         if self.__children__ is not NOT_SET:
             ret = {}
             for key, child in self.__children__.items():
-                ret[key] = child.get_value(nodefaults=nodefaults, cast=cast)
+                ret[key] = child.get_value(nodefaults=nodefaults)
 
             return ret
 
         if default == UNSET_ARG:
-            default = super().get_default(cast=cast)
+            default = super().get_default()
 
         return default
 
-    def get_key_value(self, key, nodefaults=False, default=UNSET_ARG, cast=True):
+    def get_key_value(self, key, nodefaults=False, default=UNSET_ARG):
         "Get value"
         # print("GET KEY VALUE", self, key, default, self.__children__)
 
@@ -416,10 +414,10 @@ class ContainerDict(ContainerInstance):
                         f"Key {key} not found in {self.fname}"
                     )
                 return default
-            return child.get_value(nodefaults=nodefaults, cast=cast)
+            return child.get_value(nodefaults=nodefaults)
 
         if default == UNSET_ARG:
-            default = super().get_default(cast=cast)
+            default = super().get_default()
 
         return default.get(key, UNSET_ARG)
 

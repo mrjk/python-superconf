@@ -86,6 +86,10 @@ NOT_SET_DICT = NotSetDict()
 UNSET_ARG = UnSetArg()
 FAIL = UnSetArg()
 DEFAULT = Default()
+assert not NOT_SET
+assert not NOT_SET_LIST
+assert not NOT_SET_DICT
+assert not UNSET_ARG
 assert UNSET_ARG is not NOT_SET
 assert NOT_SET is not UNSET_ARG
 assert not isinstance(UNSET_ARG, str)
