@@ -3,7 +3,7 @@
 import os
 from pprint import pprint
 
-from superconf.anchors2 import FileAnchor, PathAnchor
+from superconf.anchors import FileAnchor, PathAnchor
 
 # project_dir = "/fake_root/absolute/test/project"
 
