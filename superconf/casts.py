@@ -270,7 +270,13 @@ class AsDict(AbstractCast):
             # print ("PARSE AS LIST", value)
             return self.cast(value)
         if isinstance(value, Sequence):
-            assert False, f"TOFIX: Unsupported type list, {value}"
+            # assert False, f"TOFIX: Unsupported type list, {value}"
+
+            out = {}
+            for val in value:
+                out[val] = None
+
+            return self.cast(out)
 
         assert False
 

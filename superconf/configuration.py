@@ -240,13 +240,13 @@ class LeafInstance(Node):
         "Set default value"
 
         self.__default__ = self._cast_value(value)
-        logger.info("Set default for %s: %s", self.fname, self.__default__)
+        logger.debug("Set default for %s: %s", self.fname, self.__default__)
         return self.__default__
 
     def set_value(self, value):
         "Set value"
         self.__value__ = self._cast_value(value)
-        logger.info("Set value for %s: %s (VS %s)", self.fname, self.__value__, value)
+        logger.debug("Set value for %s: %s (VS %s)", self.fname, self.__value__, value)
         return self.__value__
 
     def _cast_value(self, value):
@@ -255,21 +255,16 @@ class LeafInstance(Node):
         # print("CAST VALUE", self.__class__, self.fname, self.__cast__, value)
 
         def _cast(value):
-            # pprint(self.__class__.__dict__)
-            # pprint(self.__class__.__mro__)
+            # If there is no cast callable, then return directly the value
             if self.__cast__ is None:
                 return value
-            # if value in [UNSET_ARG, NOT_SET]:
-            # if value is UNSET_ARG:
-            #     return value
 
-            # print("CAST VALUE", self.fname, self.__cast__, value)
-
+            # Otherwise, try to cast the value
             try:
                 value = self.__cast__(value)
-            except Exception as e:
+            except Exception as err:
                 raise exceptions.InvalidCastConfiguration(
-                    f"Invalid cast for {self.fname}: {e}"
+                    f"Invalid cast {self.__cast__} for {self.fname}: {err}"
                 )
 
             return value
@@ -809,15 +804,15 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
                 #     child_field = node_children_class
                 # print("CHILD FIELD", key, val, child_field)
                 # pprint(self.__dict__)
-                print(
-                    "CHILD CLASS",
-                    self._children_class,
-                    self.fname,
-                    key,
-                    extra_fields,
-                    child_field,
-                    child_cls,
-                )
+                # print(
+                #     "CHILD CLASS",
+                #     self._children_class,
+                #     self.fname,
+                #     key,
+                #     extra_fields,
+                #     child_field,
+                #     child_cls,
+                # )
                 assert child_cls is not None, "WIP"
                 if child_cls:
                     logger.info("Instanciate child %s: %s", key, val)
