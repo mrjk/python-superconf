@@ -5,6 +5,9 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
+from superconf.configuration import Configuration, ConfigurationDict
+from superconf.fields import Field, FieldConf
+
 # from superconf.configuration import (
 #     Configuration,
 #     ConfigurationDict,
@@ -15,8 +18,6 @@ import superconf.exceptions
 # from superconf.loaders import Dict
 
 
-from superconf.configuration import Configuration, ConfigurationDict
-from superconf.fields import Field, FieldConf
 
 
 # This test explore the nested use cases

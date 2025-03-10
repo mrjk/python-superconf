@@ -5,11 +5,12 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
+from superconf.configuration import Configuration
+from superconf.fields import Field, FieldConf
+
 # from superconf.configuration import Configuration, Environment, Field, FieldConf
 # from superconf.loaders import Dict
 
-from superconf.configuration import Configuration
-from superconf.fields import Field, FieldConf
 
 # This test explore the default specificities of classyconf
 # We want to keep this API compatible

@@ -6,9 +6,9 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
-
-from superconf.configuration import Configuration, ConfigurationDict, NOT_SET
+from superconf.configuration import NOT_SET, Configuration, ConfigurationDict
 from superconf.fields import Field, FieldConf
+
 # This test explore the nested use cases, WITHOUT defaults
 
 

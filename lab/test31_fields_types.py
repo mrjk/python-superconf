@@ -6,7 +6,7 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
-from superconf.common import DEFAULT, FAIL, NOT_SET, NOT_SET_LIST, NOT_SET_DICT
+from superconf.common import DEFAULT, FAIL, NOT_SET, NOT_SET_DICT, NOT_SET_LIST
 from superconf.configuration import Configuration, ConfigurationDict
 from superconf.fields import (
     Field,
@@ -20,6 +20,7 @@ from superconf.fields import (
     FieldString,
     FieldTuple,
 )
+
 # from superconf.loaders import Dict
 
 # This test explore the nested use cases, WITH defaults
