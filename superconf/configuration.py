@@ -15,8 +15,13 @@ from collections.abc import Mapping, Sequence
 from pprint import pprint
 
 from superconf import exceptions
+from superconf.casts import (
+    as_dict,
+    as_is,
+    as_list,
+)
 from superconf.common import NOT_SET, UNSET_ARG
-from superconf.nodes import Node, BaseNode
+from superconf.nodes import BaseNode, Node
 
 # from .fields2 import Field, FieldConf, FieldContainer
 # from .loaders import Environment
@@ -276,9 +281,12 @@ class LeafInstance(Node):
             return value
         
 
-        print("CAST VALUE", self.__cast__, value)
-
-        value = self.__cast__(value)
+        print("CAST VALUE", self.fname , self.__cast__, value)
+        
+        try:
+            value = self.__cast__(value)
+        except Exception as e:
+            raise exceptions.InvalidCastConfiguration(f"Invalid cast for {self.fname}: {e}")
         
         return value
 
@@ -298,6 +306,8 @@ class ContainerInstance(LeafInstance):
 
 class ContainerDict(ContainerInstance):
     "Dict container configuration"
+
+    __cast__ = as_dict
 
     def configure(self, children_class=UNSET_ARG, meta=None, **kwargs):
 
@@ -829,6 +839,8 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
 
 class ContainerList(ContainerInstance):
     "List container configuration"
+
+    __cast__ = as_list
 
 
 # Compat layer:

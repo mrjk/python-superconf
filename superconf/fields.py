@@ -12,15 +12,15 @@ from types import SimpleNamespace
 from typing import Callable
 
 from superconf import exceptions
-from superconf.casts import (
-    AsBoolean,
-    AsDict,
-    AsIdentity,
-    AsInt,
-    AsList,
-    AsOption,
-    AsString,
-    AsTuple,
+from superconf.casts import (  # AsBoolean,; AsDict,; AsIdentity,; AsInt,; AsList,; AsOption,; AsString,; AsTuple,
+    as_boolean,
+    as_dict,
+    as_int,
+    as_is,
+    as_list,
+    as_option,
+    as_string,
+    as_tuple,
 )
 from superconf.common import FAIL, NOT_SET
 from superconf.configuration import (
@@ -38,15 +38,8 @@ from superconf.configuration import (
 # from superconf.loaders import _Value
 
 
-# Shortcuts for standard casts
-as_string = AsString()
-as_boolean = AsBoolean()
-as_int = AsInt()
-as_list = AsList()
-as_dict = AsDict()
-as_tuple = AsTuple()
-as_option = AsOption
-as_is = AsIdentity()
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +215,7 @@ class FieldConf(FieldContainer):
         children_class: The configuration class to use for nested values.
     """
 
-    cast = dict
+    # cast = as_dict
     instance_class = None
     children_class = LeafInstance
     children_classes = None

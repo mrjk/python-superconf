@@ -6,8 +6,7 @@ import ast
 from collections.abc import Mapping, Sequence
 from pprint import pprint
 
-
-from .common import FAIL, NOT_SET, UNSET_ARG, NOT_SET_LIST, NOT_SET_DICT
+from .common import FAIL, NOT_SET, NOT_SET_DICT, NOT_SET_LIST, UNSET_ARG
 from .exceptions import InvalidCastConfiguration
 
 
@@ -412,3 +411,16 @@ class AsBest(AbstractCast):
 
 
 evaluate = ast.literal_eval
+
+
+
+
+# Shortcuts for standard casts
+as_string = AsString()
+as_boolean = AsBoolean()
+as_int = AsInt()
+as_list = AsList()
+as_dict = AsDict()
+as_tuple = AsTuple()
+as_option = AsOption
+as_is = AsIdentity()
