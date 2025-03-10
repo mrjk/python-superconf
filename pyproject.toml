@@ -59,6 +59,8 @@ pylint = "^3.3.3"
 # Pytest config
 # ========================
 [tool.pytest.ini_options]
+log_cli_level = "DEBUG"
+log_format = "%(asctime)s %(levelname)s %(message)s"
 pythonpath = [
   "."
 ]

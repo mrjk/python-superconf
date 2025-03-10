@@ -136,6 +136,8 @@ def test_value_overrides_meta_default():
     config = DefaultValueConfig(value=OVERRIDE_CONFIG)
     assert config.field1 is True  # From OVERRIDE_CONFIG
 
+    print("YOOO")
+
     # print("===========")
     # pprint(config.__dict__)
     # pprint(config.__children__["field2"].__dict__)

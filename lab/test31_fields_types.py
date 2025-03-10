@@ -1,5 +1,6 @@
 # pylint: skip-file
 
+import logging
 import sys
 from pprint import pprint
 
@@ -20,6 +21,14 @@ from superconf.fields import (
     FieldString,
     FieldTuple,
 )
+
+# Configure logging to show all logs
+logging.basicConfig(
+    level=logging.DEBUG,
+    # format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    # stream=sys.stdout
+)
+
 
 # from superconf.loaders import Dict
 
@@ -49,6 +58,7 @@ class AppBools(Configuration):
     bool_test2 = FieldBool(default="off")
 
 
+print("INIT INSTANCE")
 app1 = AppBools()
 
 EXPECTED = {"bool_test1": True, "bool_test2": False, "is_online": False}

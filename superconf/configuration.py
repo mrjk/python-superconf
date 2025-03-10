@@ -184,6 +184,8 @@ class LeafInstance(Node):
     ):
         super().__init__(**kwargs)
 
+        logger.info("Init node %s: %s, value=%s", self.__class__, self.fname, value)
+
         self.configure(value=value, default=default, meta=meta, cast=cast, field=field)
 
     def is_container(self):
@@ -214,7 +216,6 @@ class LeafInstance(Node):
             }
         )
 
-        # pprint(override.cfg)
         report = []
         default = self.query_inst_cfg(
             "default",
@@ -239,7 +240,46 @@ class LeafInstance(Node):
         "Set default value"
 
         self.__default__ = self._cast_value(value)
+        logger.info("Set default for %s: %s", self.fname, self.__default__)
         return self.__default__
+
+    def set_value(self, value):
+        "Set value"
+        self.__value__ = self._cast_value(value)
+        logger.info("Set value for %s: %s (VS %s)", self.fname, self.__value__, value)
+        return self.__value__
+
+    def _cast_value(self, value):
+        "Cast value"
+
+        # print("CAST VALUE", self.__class__, self.fname, self.__cast__, value)
+
+        def _cast(value):
+            # pprint(self.__class__.__dict__)
+            # pprint(self.__class__.__mro__)
+            if self.__cast__ is None:
+                return value
+            # if value in [UNSET_ARG, NOT_SET]:
+            # if value is UNSET_ARG:
+            #     return value
+
+            # print("CAST VALUE", self.fname, self.__cast__, value)
+
+            try:
+                value = self.__cast__(value)
+            except Exception as e:
+                raise exceptions.InvalidCastConfiguration(
+                    f"Invalid cast for {self.fname}: {e}"
+                )
+
+            return value
+
+        new_val = _cast(value)
+        if new_val != value:
+            msg = f"Cast value {self.fname}: {value} -> {new_val}"
+            logger.info(msg)
+
+        return new_val
 
     def get_default(self):
         "Get default value"
@@ -268,38 +308,7 @@ class LeafInstance(Node):
             return default
 
         ret = _get_value()
-        # print("GET VALUE", self.__cast__, ret)
-        # if cast:
-        #     ret = self._cast_value(ret)
-
-        # if self.__cast__ is not None:
-        #     ret = self.__cast__(ret)
         return ret
-
-    def set_value(self, value):
-        "Set value"
-        self.__value__ = self._cast_value(value)
-        return self.__value__
-
-    def _cast_value(self, value):
-        "Cast value"
-
-        if self.__cast__ is None:
-            return value
-        # if value in [UNSET_ARG, NOT_SET]:
-        if value is UNSET_ARG:
-            return value
-
-        # print("CAST VALUE", self.fname, self.__cast__, value)
-
-        try:
-            value = self.__cast__(value)
-        except Exception as e:
-            raise exceptions.InvalidCastConfiguration(
-                f"Invalid cast for {self.fname}: {e}"
-            )
-
-        return value
 
 
 class ContainerInstance(LeafInstance):
@@ -312,6 +321,10 @@ class ContainerInstance(LeafInstance):
 
     def __init__(self, **kwargs):
 
+        # print("\n\n\nINIT CONTAINER", self.fname, kwargs)
+        # pprint(self.__class__.__dict__)
+        # pprint(self.__class__.__mro__)
+
         self.__children__ = NOT_SET
         super().__init__(**kwargs)
 
@@ -319,7 +332,8 @@ class ContainerInstance(LeafInstance):
 class ContainerDict(ContainerInstance):
     "Dict container configuration"
 
-    __cast__ = as_dict
+    # __cast__ = as_dict
+    meta__cast = as_dict
 
     def configure(self, children_class=UNSET_ARG, meta=None, **kwargs):
 
@@ -340,13 +354,24 @@ class ContainerDict(ContainerInstance):
         )
         super().configure(meta=meta, **kwargs)
 
+    def set_value(self, value):
+        "Set value"
+        # print("SET VALUE1", self.fname, value)
+        value = super().set_value(value)
+        # value = self.get_value()
+        # print("SET VALUE2", self.fname, value)
+        self._set_children(value)
+        return value
+
     def _set_children(self, value):
         "Set children"
 
-        if value is None:
-            value = {}
-        if value is NOT_SET:
-            value = {}
+        logger.info("Set children for ContainerDict %s: %s", self.fname, value)
+
+        # if value is None:
+        #     value = {}
+        # if value is NOT_SET:
+        #     value = {}
 
         assert isinstance(
             value, dict
@@ -361,6 +386,7 @@ class ContainerDict(ContainerInstance):
         # Instanciate children
         children = {}
         for key, val in value.items():
+            logger.info("Instanciate child %s: %s", key, val)
             child = children_class(parent=self, key=key, value=val)
             children[key] = child
 
@@ -371,12 +397,6 @@ class ContainerDict(ContainerInstance):
         if isinstance(self.__children__, dict):
             return self.__children__
         return {}
-
-    def set_value(self, value):
-        "Set value"
-        value = super().set_value(value)
-        self._set_children(value)
-        return self.get_value()
 
     def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
         "Get value"
@@ -417,21 +437,6 @@ class ContainerDict(ContainerInstance):
             default = super().get_default()
 
         return default.get(key, UNSET_ARG)
-
-    # def set_key_value(self, key, value):
-    #     "Set value"
-
-    #     assert isinstance(
-    #         key, str
-    #     ), f"Expected a str for {self.fname}, got: {type(key)}={key}"
-
-    #     children = self.__children__ or {}
-
-    #     if key in children:
-    #         child = children[key].set_value(value)
-    #         child.set_value(value)
-    #     else:
-    #         raise exceptions.InvalidField(f"Key {key} not found in {self.fname}")
 
     def __contains__(self, key):
         "Check if key is in children"
@@ -692,12 +697,14 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
     def _set_children(self, value):
         "Set children"
 
+        logger.info("Set children for ContainerConf %s: %s", self.fname, value)
+
         # WAht does ahappend to parent
 
-        if value is None:
-            value = {}
-        if value is NOT_SET:
-            value = {}
+        # if value is None:
+        #     value = {}
+        # if value is NOT_SET:
+        #     value = {}
 
         assert isinstance(
             value, dict
@@ -813,6 +820,7 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
                 )
                 assert child_cls is not None, "WIP"
                 if child_cls:
+                    logger.info("Instanciate child %s: %s", key, val)
                     child = child_cls(
                         parent=self, key=key, value=val, field=child_field
                     )

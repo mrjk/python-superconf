@@ -19,7 +19,7 @@ from superconf.casts import (  # as_string,
     as_option,
     as_tuple,
 )
-from superconf.common import FAIL, NOT_SET
+from superconf.common import FAIL, NOT_SET, UNSET_ARG
 from superconf.configuration import (  # ContainerConf,; ContainerDict,; ContainerList,
     BaseFieldContainer,
     BaseFieldLeaf,
@@ -51,6 +51,7 @@ class FieldLeaf(BaseFieldLeaf):
 class FieldContainer(BaseFieldContainer):
     "Represent a configuration class"
 
+    cast = UNSET_ARG
     child_class = ContainerInstance
     instance_class = None
 

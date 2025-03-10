@@ -1,5 +1,6 @@
 # pylint: skip-file
 
+import logging
 from pprint import pprint
 
 import pytest
@@ -11,9 +12,12 @@ from superconf.fields import Field, FieldConf
 # from superconf.configuration import Configuration, Environment, Field, FieldConf
 # from superconf.loaders import Dict
 
-
 # This test explore the default specificities of classyconf
 # We want to keep this API compatible
+
+logging.basicConfig(
+    level=logging.DEBUG,
+)
 
 
 example_dict = {
