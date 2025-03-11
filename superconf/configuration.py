@@ -419,13 +419,15 @@ class ContainerDict(ContainerInstance):
             return self.__children__
         return {}
 
+    def get_child(self, key):
+        "Get child"
+        if self.__children__ is not NOT_SET:
+            return self.__children__.get(key, None)
+        return None
+
     def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
         "Get value"
         if key is not None:
-            # ret = None
-            # if self.__children__ is not NOT_SET:
-            #     ret = self.__children__.get(key, None)
-            # return ret
             return self.get_key_value(key, nodefaults=nodefaults, default=default)
 
         if self.__children__ is not NOT_SET:
@@ -442,7 +444,6 @@ class ContainerDict(ContainerInstance):
 
     def get_key_value(self, key, nodefaults=False, default=UNSET_ARG):
         "Get value"
-        # print("GET KEY VALUE", self, key, default, self.__children__)
 
         if self.__children__ is not NOT_SET:
             child = self.__children__.get(key, UNSET_ARG)
@@ -475,45 +476,94 @@ class ContainerDict(ContainerInstance):
 
     def __call__(self, key):
         "Call"
-        return self.get_children()[key]
+        return self.get(key, mode="node")
 
     def __getitem__(self, key):
         "Get item. always return value"
 
-        child = self.get_children()[key]
+        try:
+            return self.get(key, mode="value")
+        except exceptions.UnknownChild:
+            raise KeyError(f"{self.__class__.__name__} has no children {key}") from None
 
-        if child.is_container():
-            ret = child
-        else:
-            ret = child.get_value()
+        # child = self.get_child(key)
+        # if child is None:
+        #     raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
 
-        return ret
+        # if child.is_container():
+        #     ret = child
+        # else:
+        #     ret = child.get_value()
+
+        # return ret
 
     def __getattr__(self, key):
         "Get attribute, return value on leaf, return container otherwise"
 
-        ret = UNSET_ARG
+        try:
+            return self.get(key, mode="auto")
+        except exceptions.UnknownChild:
+            raise AttributeError(
+                f"{self.__class__.__name__} has no attribute {key}"
+            ) from None
+
+        # child = self.get_child(key)
+        # if child is None:
+        #     raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
+
+        # ret = UNSET_ARG
+        # if self.__children__ and key in self.__children__:
+        #     child = self.get_children()[key]
+        #     if child.is_container():
+        #         ret = child
+        #     else:
+        #         ret = child.get_value()
+
+        # if ret == UNSET_ARG:
+        #     raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
+
+        # return ret
+
+    # def V1__getattr__(self, key):
+    #     "Get attribute, return value on leaf, return container otherwise"
+
+    #     ret = UNSET_ARG
+    #     if self.__children__ and key in self.__children__:
+    #         child = self.get_children()[key]
+    #         if child.is_container():
+    #             ret = child
+    #         else:
+    #             ret = child.get_value()
+
+    #     if ret == UNSET_ARG:
+    #         raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
+
+    #     return ret
+
+    def get(self, key, default=UNSET_ARG, mode="auto"):
+        "Get a children node or an object"
+
         if self.__children__ and key in self.__children__:
-            child = self.get_children()[key]
-            if child.is_container():
-                ret = child
-            else:
-                ret = child.get_value()
-
-        if ret == UNSET_ARG:
-            raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
-
-        return ret
-        # return copy.deepcopy(ret)
-
-    def get(self, key, default=UNSET_ARG):
-        "Get"
-        if key in self.__children__:
             match = self.__children__[key]
-            if match.is_container():
+
+            if not mode or mode == "auto":
+                mode = "value"
+                if match.is_container():
+                    mode = "node"
+
+            if mode == "value":
+                return match.get_value()
+            if mode == "node":
                 return match
-            return match.get_value()
-        return default
+
+            raise ValueError(f"Invalid mode {mode} for {self.__class__.__name__}.{key}")
+
+        if default is not UNSET_ARG:
+            return default
+
+        raise exceptions.UnknownChild(
+            f"{self.__class__.__name__} has no children {key}"
+        )
 
     def items(self):
         "Items"
@@ -530,9 +580,8 @@ class ContainerDict(ContainerInstance):
     def merge(self, other):
         "Merge and override object with other"
 
-        logger.info(
-            f"Merge Container {self.__class__.__name__}({self.fname}) with {other.__class__.__name__}({other.fname})"
-        )
+        msg = f"Merge Container {self.__class__.__name__}({self.fname}) with {other.__class__.__name__}({other.fname})"
+        logger.info(msg)
 
         if not isinstance(other, LeafInstance):
             raise ValueError("Cannot merge non-LeafInstance")

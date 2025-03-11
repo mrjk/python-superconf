@@ -221,7 +221,7 @@ assert app.get_value() == EXPECTED
 
 
 print("=============== RESOURCES")
-res = app["resources"]
+res = app.get("resources")
 # pprint(res.__dict__)
 pprint(res.get_value())
 EXPECTED = {
@@ -237,7 +237,7 @@ assert res.get_value() == EXPECTED
 
 
 print("=============== RESOURCES.res33")
-res1 = res["res33"]
+res1 = res.get("res33")
 # pprint(res1.__dict__)
 # pprint(res1.get_value())
 

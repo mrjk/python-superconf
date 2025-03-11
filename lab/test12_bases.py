@@ -150,7 +150,7 @@ app = TopConfig(value=TOP_CONFIG)
 
 # Test child access
 
-val1 = app["top2"].get_value()
+val1 = app.top2.get_value()
 # print("===========")
 # pprint(app.get_value())
 # print("===========")

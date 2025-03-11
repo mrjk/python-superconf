@@ -38,5 +38,9 @@ class UnknownSetting(ConfigurationException):
     "Raised when an unexpected field is met. Enable extra_fields=True to disable this error"
 
 
+class UnknownChild(ConfigurationException):
+    "Raised when a child is not found"
+
+
 class InvalidField(ConfigurationException):
     "Raised when an invalid field is found"
