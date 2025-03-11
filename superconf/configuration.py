@@ -20,7 +20,7 @@ from superconf.casts import (
     as_is,
     as_list,
 )
-from superconf.common import NOT_SET, UNSET_ARG
+from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST, UNSET_ARG, truncate
 from superconf.nodes import BaseNode, Node
 
 # from .fields2 import Field, FieldConf, BaseFieldContainer
@@ -184,7 +184,7 @@ class LeafInstance(Node):
     ):
         super().__init__(**kwargs)
 
-        logger.info("Init node %s: %s, value=%s", self.__class__, self.fname, value)
+        logger.debug("Init node %s: %s, value=%s", self.__class__, self.fname, value)
 
         self.configure(value=value, default=default, meta=meta, cast=cast, field=field)
 
@@ -261,18 +261,20 @@ class LeafInstance(Node):
 
             # Otherwise, try to cast the value
             try:
+                # msg = f"Cast value {self.fname} with {self.__cast__}: {value}"
+                # logger.debug(msg)
                 value = self.__cast__(value)
             except Exception as err:
                 raise exceptions.InvalidCastConfiguration(
-                    f"Invalid cast {self.__cast__} for {self.fname}: {err}"
+                    f"Invalid cast {self.__cast__} for {self.fname} for value: {value}, got error: {type(err).__name__} {err}"
                 )
 
             return value
 
         new_val = _cast(value)
         if new_val != value:
-            msg = f"Cast value {self.fname}: {value} -> {new_val}"
-            logger.info(msg)
+            msg = f"Cast value {self.fname} with {self.__cast__}: {value} -> {new_val}"
+            logger.debug(msg)
 
         return new_val
 
@@ -304,6 +306,28 @@ class LeafInstance(Node):
 
         ret = _get_value()
         return ret
+
+    def merge(self, other):
+        "Merge and override object with other"
+
+        # print (" LEAF Merge", self, " AND ", other)
+
+        if not isinstance(other, LeafInstance):
+            raise ValueError("Cannot merge non-LeafInstance")
+
+        other_val = other.get_value(nodefaults=True)
+        # print("NEW VALUE", self.key, other_val)
+        # if other_val is not NOT_SET:
+        if not isinstance(other_val, NOT_SET.type):
+            msg = f"Override Leaf {self.__class__.__name__}({self.fname}) with {other.__class__.__name__}({other.fname})"
+            logger.info(msg)
+            return other
+            # return other_val
+
+        msg = f"Keep Leaf {self.__class__.__name__}({self.fname}) over {other.__class__.__name__}({other.fname})"
+        logger.info(msg)
+        return self
+        # return self.get_value()
 
 
 class ContainerInstance(LeafInstance):
@@ -361,7 +385,9 @@ class ContainerDict(ContainerInstance):
     def _set_children(self, value):
         "Set children"
 
-        logger.info("Set children for ContainerDict %s: %s", self.fname, value)
+        logger.info(
+            "Set children for ContainerDict %s: %s", self.fname, truncate(value)
+        )
 
         # if value is None:
         #     value = {}
@@ -381,7 +407,7 @@ class ContainerDict(ContainerInstance):
         # Instanciate children
         children = {}
         for key, val in value.items():
-            logger.info("Instanciate child %s: %s", key, val)
+            logger.info("Instanciate child %s: %s", key, truncate(val))
             child = children_class(parent=self, key=key, value=val)
             children[key] = child
 
@@ -483,7 +509,10 @@ class ContainerDict(ContainerInstance):
     def get(self, key, default=UNSET_ARG):
         "Get"
         if key in self.__children__:
-            return self.__children__[key]
+            match = self.__children__[key]
+            if match.is_container():
+                return match
+            return match.get_value()
         return default
 
     def items(self):
@@ -497,6 +526,53 @@ class ContainerDict(ContainerInstance):
     def keys(self):
         "Keys"
         return self.get_children().keys()
+
+    def merge(self, other):
+        "Merge and override object with other"
+
+        logger.info(
+            f"Merge Container {self.__class__.__name__}({self.fname}) with {other.__class__.__name__}({other.fname})"
+        )
+
+        if not isinstance(other, LeafInstance):
+            raise ValueError("Cannot merge non-LeafInstance")
+
+        keys = list(self.get_children().keys())
+        keys.extend(list(other.get_children().keys()))
+        keys = list(set(keys))
+
+        new_instance = type(self)(key=self.key)
+
+        out = {}
+        for key in keys:
+
+            base_child = self.__children__.get(key, UNSET_ARG)
+            other_child = other.__children__.get(key, UNSET_ARG)
+
+            if base_child is not UNSET_ARG and other_child is not UNSET_ARG:
+                msg = f"Merge child {key} {base_child.fname} and {other_child.fname}"
+                logger.info(msg)
+                tmp = base_child.merge(other_child)
+                out[key] = tmp
+
+            elif base_child is UNSET_ARG and other_child is not UNSET_ARG:
+                logger.info("Add child %s %s", key, other_child.fname)
+                out[key] = other_child
+            elif base_child is not UNSET_ARG and other_child is UNSET_ARG:
+                logger.info("Keep child %s %s", key, base_child.fname)
+                out[key] = base_child
+            else:
+                assert False, f"Unexpected case: {key} {base_child} and {other_child}"
+
+        for key, child in out.items():
+            child.parent = new_instance
+
+        out = {key: child.get_value() for key, child in out.items()}
+
+        # print("\n\nNEW VALUE FOR", type(self), self.key)
+        # pprint(out  )
+        new_instance = type(self)(value=out, key=self.key)
+        return new_instance
 
 
 ##################
@@ -692,7 +768,9 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
     def _set_children(self, value):
         "Set children"
 
-        logger.info("Set children for ContainerConf %s: %s", self.fname, value)
+        logger.info(
+            "Set children for ContainerConf %s: %s", self.fname, truncate(value)
+        )
 
         # WAht does ahappend to parent
 

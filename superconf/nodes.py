@@ -100,6 +100,7 @@ class BaseNode:
     @property
     def name(self) -> str:
         """The display name - either the key or class name."""
+        # print("PRE YOOO", self.key, self.__class__.__name__)
         return self.key or self.__class__.__name__
 
     @property
@@ -108,7 +109,12 @@ class BaseNode:
         curr = self
         out = []
         while curr is not None:
-            out.append(curr.name)
+            # print("WIPPP", curr, type(curr.name), curr.name)
+            name = curr.name
+            assert isinstance(
+                name, str
+            ), f"Object {curr} does not have a valid name, got: {name}"
+            out.append(name)
             curr = curr.parent
         out.reverse()
         return ".".join(out)

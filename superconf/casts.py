@@ -269,16 +269,33 @@ class AsDict(AbstractCast):
         if isinstance(value, Mapping):
             # print ("PARSE AS LIST", value)
             return self.cast(value)
+
         if isinstance(value, Sequence):
-            # assert False, f"TOFIX: Unsupported type list, {value}"
+            # Support for dict defined as list of single key/value
+            print("DEBUG SEQUENCE", type(value), value)
 
             out = {}
             for val in value:
-                out[val] = None
+                if isinstance(val, str):
+                    # Just a key
+                    out[val] = None
+                elif isinstance(val, dict):
+                    # If it's a dict, ensure it have only one key
+                    key_count = len(val)
+                    assert key_count == 1
+                    key = list(val.keys())[0]
+                    out[key] = val[key]
+                else:
+                    assert False, "BUG"
+                    out[val] = val
+
+            # pprint(out)
+            # pprint(self.cast(out))
+            # assert False, f"TOFIX: Unsupported type list, {type(value)}: {value}"
 
             return self.cast(out)
 
-        assert False
+        assert False, f"TOFIX: Unsupported type {type(value)}"
 
 
 class AsOption(AbstractCast):
