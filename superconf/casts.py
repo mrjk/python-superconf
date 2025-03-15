@@ -2,6 +2,10 @@
 
 # pylint: disable=too-few-public-methods, too-many-return-statements
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 import ast
 from collections.abc import Mapping, Sequence
 from pprint import pprint
@@ -137,6 +141,7 @@ class AsList(AbstractCast):
         # print("CAST___LIST", NOT_SET_LIST, NOT_SET_LIST.type, issubclass(type(value), NOT_SET_LIST.type), value)
         # pprint(type(value).__mro__)
         # pprint(NOT_SET_LIST.type)
+        # print("CAST LIST", value)
         if isinstance(value, NOT_SET.type):
             # if issubclass(type(value), NOT_SET.type):
             # assert False, f"TOFIX: Unsupported type {type(value)}"
@@ -148,11 +153,15 @@ class AsList(AbstractCast):
             # assert False, f"TOFIX: Unsupported type {type(value)}"
             return NOT_SET_LIST
 
-        if isinstance(value, str):
-            # print ("PARSE AS STRING", value)
-            return self._parse_string(value)
+        # if isinstance(value, str):  # (str, int, float)):
+        if isinstance(value, (str, int, float, bool)):
+            logger.info("Embed %s value into list: [%s]", type(value), value)
+            return [value]
 
-        if isinstance(value, Sequence):
+        # if isinstance(value, str):
+        #     raise InvalidCastConfiguration(f"Error casting invalid type string '{value}' to list")
+
+        if isinstance(value, Sequence):  # and not isinstance(value, str):
             # print ("PARSE AS LIST", value)
             return self.cast(value)
         if isinstance(value, Mapping):
@@ -163,7 +172,7 @@ class AsList(AbstractCast):
         #     # print ("PARSE AS EMPTY", value)
         #     return self.cast([])
 
-        raise InvalidCastConfiguration(f"Error casting value {value} to list")
+        raise InvalidCastConfiguration(f"Error casting value '{value}' to list")
 
         # assert False, f"TOFIX: Unsupported type {type(value)}"
 
@@ -261,10 +270,19 @@ class AsDict(AbstractCast):
         #     # print ("PARSE AS EMPTY", value)
         #     return self.cast({})
 
-        if isinstance(value, str):
-            assert False, "String  parsing is not implemeted yet"
-            # print ("PARSE AS STRING", value)
-            # return self._parse_string(value)
+        # Not a good idea, let the user implement this itself
+        # if isinstance(value, str):
+        if isinstance(value, (str, int, float, bool)):
+
+            #     logger.info("Embed %s value into list: [%s]", type(value), value)
+            #     return [value]
+            raise InvalidCastConfiguration(
+                f"Error casting invalid type string '{value}' to dict"
+            )
+
+        #     assert False, "String  parsing is not implemeted yet"
+        # print ("PARSE AS STRING", value)
+        # return self._parse_string(value)
 
         if isinstance(value, Mapping):
             # print ("PARSE AS LIST", value)
@@ -272,7 +290,7 @@ class AsDict(AbstractCast):
 
         if isinstance(value, Sequence):
             # Support for dict defined as list of single key/value
-            print("DEBUG SEQUENCE", type(value), value)
+            # print("DEBUG SEQUENCE", type(value), value)
 
             out = {}
             for val in value:
@@ -295,6 +313,7 @@ class AsDict(AbstractCast):
 
             return self.cast(out)
 
+        raise InvalidCastConfiguration(f"Error casting value '{value}' to dict")
         assert False, f"TOFIX: Unsupported type {type(value)}"
 
 

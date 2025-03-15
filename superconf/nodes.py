@@ -101,7 +101,9 @@ class BaseNode:
     def name(self) -> str:
         """The display name - either the key or class name."""
         # print("PRE YOOO", self.key, self.__class__.__name__)
-        return self.key or self.__class__.__name__
+        if self.key is not None:
+            return str(self.key)
+        return self.__class__.__name__
 
     @property
     def fname(self) -> str:

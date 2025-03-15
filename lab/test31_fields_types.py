@@ -221,7 +221,7 @@ class AppList(Configuration):
     list_test2 = FieldList(default=["item1", "item2", "item3"])
     list_test4 = FieldList(default=None)
     list_test5 = FieldList(default="item26")
-    list_test6 = FieldList(default="item27,item28,item29")
+    # list_test6 = FieldList(default="item27,item28,item29")
     list_test7 = FieldList()
 
 
@@ -238,7 +238,7 @@ EXPECTED = {
     "list_test2": ["item1", "item2", "item3"],
     "list_test4": NOT_SET_LIST,
     "list_test5": ["item26"],
-    "list_test6": ["item27", "item28", "item29"],
+    # "list_test6": ["item27", "item28", "item29"],
     "list_test7": NOT_SET_LIST,
 }
 
@@ -267,7 +267,7 @@ class AppTuple(Configuration):
     # list_test3 = FieldTuple(default=0)
     list_test4 = FieldTuple(default=None)
     list_test5 = FieldTuple(default="item26")
-    list_test6 = FieldTuple(default="item27,item28,item29")
+    # list_test6 = FieldTuple(default="item27,item28,item29")
     list_test7 = FieldTuple()
 
 
@@ -279,7 +279,7 @@ EXPECTED = {
     # "list_test3": (),
     "list_test4": NOT_SET_LIST,
     "list_test5": ("item26",),
-    "list_test6": ("item27", "item28", "item29"),
+    # "list_test6": ("item27", "item28", "item29"),
     "list_test7": NOT_SET_LIST,
 }
 

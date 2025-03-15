@@ -51,15 +51,8 @@ app1 = AppList()
 
 EXPECTED = [{"key1": "item1"}, {"key2": "item2"}, {"key3": "item3"}]
 
-
-# pprint(app1.__dict__)
-
-# pprint(app1.get_values())
-
-
-# pprint(app1[1].get_values())
-
-
+pprint(app1.get_value())
+pprint(EXPECTED)
 assert app1.get_value() == EXPECTED
 
 

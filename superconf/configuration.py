@@ -239,13 +239,21 @@ class LeafInstance(Node):
     def set_default(self, value):
         "Set default value"
 
-        self.__default__ = self._cast_value(value)
+        value = self.pre_load(value)
+        value = self._cast_value(value)
+        value = self.post_load(value)
+        self.__default__ = value
+
         logger.debug("Set default for %s: %s", self.fname, self.__default__)
         return self.__default__
 
     def set_value(self, value):
         "Set value"
-        self.__value__ = self._cast_value(value)
+        value = self.pre_load(value)
+        value = self._cast_value(value)
+        value = self.post_load(value)
+        self.__value__ = value
+
         logger.debug("Set value for %s: %s (VS %s)", self.fname, self.__value__, value)
         return self.__value__
 
@@ -285,7 +293,7 @@ class LeafInstance(Node):
         if callable(default_value):
             default_value = default_value(self)
 
-        # print("RETURN DEFAULT VALUE", default_value)
+        default_value = self.post_dump(default_value)
         return default_value
 
     def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
@@ -305,7 +313,24 @@ class LeafInstance(Node):
             return default
 
         ret = _get_value()
+        ret = self.post_dump(ret)
         return ret
+
+    def pre_load(self, value):
+        "Pre-load value user hook"
+        return value
+
+    def post_load(self, value):
+        "Post-load value user hook"
+        return value
+
+    # def pre_dump(self, value):
+    #     "Pre-dump value user hook"
+    #     return value
+
+    def post_dump(self, value):
+        "Post-dump value user hook"
+        return value
 
     def merge(self, other):
         "Merge and override object with other"
@@ -347,13 +372,6 @@ class ContainerInstance(LeafInstance):
         self.__children__ = NOT_SET
         super().__init__(**kwargs)
 
-
-class ContainerDict(ContainerInstance):
-    "Dict container configuration"
-
-    # __cast__ = as_dict
-    meta__cast = as_dict
-
     def configure(self, children_class=UNSET_ARG, meta=None, **kwargs):
 
         # Fetch settings
@@ -382,6 +400,13 @@ class ContainerDict(ContainerInstance):
         self._set_children(value)
         return value
 
+
+class ContainerDict(ContainerInstance):
+    "Dict container configuration"
+
+    # __cast__ = as_dict
+    meta__cast = as_dict
+
     def _set_children(self, value):
         "Set children"
 
@@ -397,6 +422,8 @@ class ContainerDict(ContainerInstance):
         assert isinstance(
             value, dict
         ), f"Expected a dict for {self.fname}, got: {type(value)}={value}"
+
+        # print("\n\n\nCHILDREN CLASS", self, self._children_class, value)
 
         # Skip if no children requested
         children_class = self._children_class
@@ -486,17 +513,6 @@ class ContainerDict(ContainerInstance):
         except exceptions.UnknownChild:
             raise KeyError(f"{self.__class__.__name__} has no children {key}") from None
 
-        # child = self.get_child(key)
-        # if child is None:
-        #     raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
-
-        # if child.is_container():
-        #     ret = child
-        # else:
-        #     ret = child.get_value()
-
-        # return ret
-
     def __getattr__(self, key):
         "Get attribute, return value on leaf, return container otherwise"
 
@@ -506,39 +522,6 @@ class ContainerDict(ContainerInstance):
             raise AttributeError(
                 f"{self.__class__.__name__} has no attribute {key}"
             ) from None
-
-        # child = self.get_child(key)
-        # if child is None:
-        #     raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
-
-        # ret = UNSET_ARG
-        # if self.__children__ and key in self.__children__:
-        #     child = self.get_children()[key]
-        #     if child.is_container():
-        #         ret = child
-        #     else:
-        #         ret = child.get_value()
-
-        # if ret == UNSET_ARG:
-        #     raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
-
-        # return ret
-
-    # def V1__getattr__(self, key):
-    #     "Get attribute, return value on leaf, return container otherwise"
-
-    #     ret = UNSET_ARG
-    #     if self.__children__ and key in self.__children__:
-    #         child = self.get_children()[key]
-    #         if child.is_container():
-    #             ret = child
-    #         else:
-    #             ret = child.get_value()
-
-    #     if ret == UNSET_ARG:
-    #         raise AttributeError(f"{self.__class__.__name__} has no attribute {key}")
-
-    #     return ret
 
     def get(self, key, default=UNSET_ARG, mode="auto"):
         "Get a children node or an object"
@@ -958,13 +941,65 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
         self.__children__ = children
 
 
-class ContainerList(ContainerInstance):
+# class ContainerList(ContainerInstance):
+class ContainerList(ContainerDict):
     "List container configuration"
 
-    __cast__ = as_list
+    meta__cast = as_list
+
+    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
+        "Get value"
+        if key is not None:
+            return self.get_key_value(key, nodefaults=nodefaults, default=default)
+
+        if self.__children__ is not NOT_SET:
+            ret = []
+            for key, child in self.__children__.items():
+                ret.append(child.get_value(nodefaults=nodefaults))
+
+            return ret
+
+        if default == UNSET_ARG:
+            default = super().get_default()
+
+        return default
+
+    def _set_children(self, value):
+        "Set children"
+
+        logger.info(
+            "Set children for Containerlist %s: %s", self.fname, truncate(value)
+        )
+
+        # if value is None:
+        #     value = {}
+        # if value is NOT_SET:
+        #     value = {}
+
+        assert isinstance(
+            value, list
+        ), f"Expected a list for {self.fname}, got: {type(value)}={value}"
+
+        # print("\n\n\nCHILDREN CLASS", self, self._children_class, value)
+
+        # Skip if no children requested
+        children_class = self._children_class
+        if children_class is None or children_class is False:
+            logger.info("No children class defined for %s, skipping", self)
+            return
+
+        # Instanciate children
+        children = {}
+        for index, val in enumerate(value):
+            logger.info("Instanciate child %s: %s", index, truncate(val))
+            child = children_class(parent=self, key=index, value=val)
+            children[index] = child
+
+        self.__children__ = children
 
 
 # Compat layer:
 Configuration = ContainerConf
+ConfigurationObj = ContainerConf
 ConfigurationDict = ContainerDict
 ConfigurationList = ContainerList
