@@ -236,12 +236,14 @@ class LeafInstance(Node):
             value = self.get_value()
         self.set_value(value)
 
+        # Run post_load hook
+        self.post_load()
+
     def set_default(self, value):
         "Set default value"
 
         value = self.pre_load(value)
         value = self._cast_value(value)
-        value = self.post_load(value)
         self.__default__ = value
 
         logger.debug("Set default for %s: %s", self.fname, self.__default__)
@@ -251,7 +253,6 @@ class LeafInstance(Node):
         "Set value"
         value = self.pre_load(value)
         value = self._cast_value(value)
-        value = self.post_load(value)
         self.__value__ = value
 
         logger.debug("Set value for %s: %s (VS %s)", self.fname, self.__value__, value)
@@ -320,9 +321,9 @@ class LeafInstance(Node):
         "Pre-load value user hook"
         return value
 
-    def post_load(self, value):
+    def post_load(self):
         "Post-load value user hook"
-        return value
+        return
 
     # def pre_dump(self, value):
     #     "Pre-dump value user hook"
