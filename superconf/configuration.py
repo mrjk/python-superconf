@@ -364,16 +364,9 @@ class ContainerInstance(LeafInstance):
 
     meta__children_class = LeafInstance  # Generic children class
 
-    def __init__(self, **kwargs):
-
-        # print("\n\n\nINIT CONTAINER", self.fname, kwargs)
-        # pprint(self.__class__.__dict__)
-        # pprint(self.__class__.__mro__)
+    def __init__(self, children_class=UNSET_ARG, meta=None, **kwargs):
 
         self.__children__ = NOT_SET
-        super().__init__(**kwargs)
-
-    def configure(self, children_class=UNSET_ARG, meta=None, **kwargs):
 
         # Fetch settings
         override = _ArgCfg()
@@ -390,7 +383,8 @@ class ContainerInstance(LeafInstance):
             override=override.cfg,
             report=report,
         )
-        super().configure(meta=meta, **kwargs)
+
+        super().__init__(meta=meta, **kwargs)
 
     def set_value(self, value):
         "Set value"
@@ -400,6 +394,10 @@ class ContainerInstance(LeafInstance):
         # print("SET VALUE2", self.fname, value)
         self._set_children(value)
         return value
+
+    def _set_children(self, value):
+        "Set children"
+        raise NotImplementedError("Subclass must implement this method")
 
 
 class ContainerDict(ContainerInstance):
@@ -435,7 +433,13 @@ class ContainerDict(ContainerInstance):
         # Instanciate children
         children = {}
         for key, val in value.items():
-            logger.info("Instanciate child %s: %s", key, truncate(val))
+            logger.info(
+                "Instanciate child %s: %s(%s)",
+                key,
+                children_class.__name__,
+                truncate(val),
+            )
+
             child = children_class(parent=self, key=key, value=val)
             children[key] = child
 
@@ -926,7 +930,13 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
                 # )
                 assert child_cls is not None, "WIP"
                 if child_cls:
-                    logger.info("Instanciate child %s: %s", key, val)
+                    logger.info(
+                        "Instanciate child %s: %s(%s)",
+                        key,
+                        child_cls.__name__,
+                        truncate(val),
+                    )
+
                     child = child_cls(
                         parent=self, key=key, value=val, field=child_field
                     )
@@ -992,7 +1002,12 @@ class ContainerList(ContainerDict):
         # Instanciate children
         children = {}
         for index, val in enumerate(value):
-            logger.info("Instanciate child %s: %s", index, truncate(val))
+            logger.info(
+                "Instanciate child %s: %s(%s)",
+                index,
+                children_class.__name__,
+                truncate(val),
+            )
             child = children_class(parent=self, key=index, value=val)
             children[index] = child
 
