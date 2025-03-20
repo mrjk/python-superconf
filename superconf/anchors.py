@@ -50,8 +50,8 @@ Examples:
 """
 
 import os
-from pprint import pprint
-from typing import List, Optional
+import sys
+from typing import Any, Dict, List, Optional, Union
 
 UNSET = None
 RELATIVE = "rel"
@@ -363,7 +363,8 @@ class FileAnchor(PathAnchor):
         """
         if filename and directory and path:
             raise RuntimeError("filename, directory and path cannot be provided")
-        elif filename and os.path.sep in filename:
+
+        if filename and os.path.sep in filename:
             raise RuntimeError(
                 f"filename cannot contain path separators, got: {filename}"
             )

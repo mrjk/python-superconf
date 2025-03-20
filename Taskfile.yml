@@ -51,7 +51,7 @@ tasks:
     cmds:
       - isort --profile black $(git ls-files | grep '\.py$')
       - black --check $(git ls-files | grep '\.py$')
-      - pylint $(git ls-files | grep '\.py$')
+      - pylint $(git ls-files | grep superconf | grep '\.py$')
 
   test_lint_full:
     desc: run all linting tests

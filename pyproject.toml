@@ -44,6 +44,7 @@ pytest-clarity = "^1.0.1"
 pylint = "^3.3.3"
 yamllint = "^1.35.1"
 pymarkdownlnt = "^0.9.26"
+pytest-benchmark = "^5.1.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.49"
@@ -59,8 +60,8 @@ pylint = "^3.3.3"
 # Pytest config
 # ========================
 [tool.pytest.ini_options]
-log_cli_level = "DEBUG"
-log_format = "%(asctime)s %(levelname)s %(message)s"
+# log_cli_level = "DEBUG"
+# log_format = "%(asctime)s %(levelname)s %(message)s"
 pythonpath = [
   "."
 ]
