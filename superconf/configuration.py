@@ -297,7 +297,7 @@ class LeafInstance(Node):
         default_value = self.post_dump(default_value)
         return default_value
 
-    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
+    def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
 
         if key is not None:
@@ -451,16 +451,24 @@ class ContainerDict(ContainerInstance):
             return self.__children__
         return {}
 
-    def get_child(self, key):
+    def get_child(self, key, noexceptions=False):
         "Get child"
+        ret = None
         if self.__children__ is not NOT_SET:
-            return self.__children__.get(key, None)
-        return None
+            ret = self.__children__.get(key, None)
 
-    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
+        if ret is not None:
+            return ret
+
+        if noexceptions is True:
+            return None
+        raise exceptions.UndeclaredField(f"Child {key} not found in {self.fname}")
+
+    def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
+
         if key is not None:
-            return self.get_key_value(key, nodefaults=nodefaults, default=default)
+            return self.get_key_value(key, default=default, nodefaults=nodefaults)
 
         if self.__children__ is not NOT_SET:
             ret = {}
@@ -474,18 +482,15 @@ class ContainerDict(ContainerInstance):
 
         return default
 
-    def get_key_value(self, key, nodefaults=False, default=UNSET_ARG):
+    def get_key_value(self, key, default=UNSET_ARG, nodefaults=False):
         "Get value"
 
         if self.__children__ is not NOT_SET:
-            child = self.__children__.get(key, UNSET_ARG)
-            if child is UNSET_ARG:
-                if default == UNSET_ARG:
-                    raise exceptions.UndeclaredField(
-                        f"Key {key} not found in {self.fname}"
-                    )
+            noexceptions = True if default != UNSET_ARG else False
+            child = self.get_child(key, noexceptions=noexceptions)
+            if child is None and default != UNSET_ARG:
                 return default
-            return child.get_value(nodefaults=nodefaults)
+            return child.get_value(default=default, nodefaults=nodefaults)
 
         if default == UNSET_ARG:
             default = super().get_default()
@@ -958,7 +963,7 @@ class ContainerList(ContainerDict):
 
     meta__cast = as_list
 
-    def get_value(self, key=None, nodefaults=False, default=UNSET_ARG):
+    def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
         if key is not None:
             return self.get_key_value(key, nodefaults=nodefaults, default=default)
@@ -1016,6 +1021,8 @@ class ContainerList(ContainerDict):
 
 # Compat layer:
 Configuration = ContainerConf
+
+Leaf = LeafInstance
 ConfigurationObj = ContainerConf
 ConfigurationDict = ContainerDict
 ConfigurationList = ContainerList
