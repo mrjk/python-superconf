@@ -173,7 +173,7 @@ print(f"Missing value without fallback: {missing_value}")
 # Get value with a fallback for a non-existent field
 missing_value = app.get_value("field6", "fallback")
 print(f"Missing value with fallback: {missing_value}")
-assert False, "BUG HERE, missing .get_value(FIELD, DEFAULT)"
+
 ```
 
 ### 4. Accessing Field Objects

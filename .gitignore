@@ -2,3 +2,5 @@
 .coverage
 dist/*
 .vscode/*
+
+.ipynb_checkpoints/*
