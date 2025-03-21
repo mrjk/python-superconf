@@ -192,15 +192,12 @@ debug_enabled = field_obj.get_value()
 default_value = field_obj.get_default()
 
 # Or get its help text
-# help_text = field_obj.help
+help_text = field_obj.get_help()
 
 print("\nAccessing field objects:")
 print(f"Field value: {debug_enabled}")
 print(f"Field default: {default_value}")
-# print(f"Field help: {help_text}")
-
-assert False, "BUG HERE, missing get_child()"
-
+print(f"Field help: {help_text}")
 ```
 
 The call syntax (`app("field1")` or `app.get_child("field1")`) always returns the field object, not the value.

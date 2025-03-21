@@ -355,6 +355,14 @@ class LeafInstance(Node):
         return self
         # return self.get_value()
 
+    def get_help(self) -> str:
+        "Get leaf help message"
+
+        if self.__field__ is not None and self.__field__.help:
+            return self.__field__.help
+
+        return self.__doc__ or "<NO_HELP>"
+
 
 class ContainerInstance(LeafInstance):
     "Container instance, either a dict or a list"
