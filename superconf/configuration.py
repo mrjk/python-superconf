@@ -66,11 +66,6 @@ class BaseFieldLeaf(BaseNode):
             Leaf in self.instance_class.__mro__
         ), f"Got: {self.instance_class.__mro__}"
 
-    # @classmethod
-    # def get_default(self):
-    #     "Get default value"
-    #     return self.default
-
     @property
     def attr(self):
         "Attribute"
@@ -82,15 +77,9 @@ class BaseFieldLeaf(BaseNode):
     def attr(self, value):
         self._attr = value
 
-    # def is_container(self):
-    #     "This kind of field is never a container"
-    #     return False
-
 
 class BaseFieldContainer(BaseFieldLeaf):
     "Represent a configuration class"
-
-    # def __init__(self, key=None, default=NOT_SET, help="", cast=None, child_class=None):
 
     instance_class = None
     children_class = None
@@ -109,33 +98,9 @@ class BaseFieldContainer(BaseFieldLeaf):
         self.children_classes = children_classes or {}
         super().__init__(key=key, **kwargs)
 
-        # Validate input
-        # assert isinstance(self.child_class, ContainerInstance)
-        # assert not isinstance(self.child_class, Leaf)
-
-        # assert not Leaf in self.child_class.__mro__, f"Got: {self.child_class.__mro__}"
-        # assert ContainerInstance in self.child_class.__mro__, f"Got: {self.child_class.__mro__}"
-
-        # print("CHILDREN CLASS", self.children_class)
-        # pprint(self.children_class.__mro__)
         assert issubclass(
             self.instance_class, Leaf
         ), f"Expected a Leaf for {self.fname}, got: {type(self.children_class)}={self.children_class}"
-        # assert issubclass(self.children_class, (Leaf, type(None))), f"Expected a Leaf for {self.fname}, got: {type(self.children_class)}={self.children_class}"
-        # assert not isinstance(self.children_class, Leaf)
-
-    # def is_container(self):
-    #     """Check if this field is a container type.
-
-    #     Returns:
-    #         bool: True if this field has a children_class attribute,
-    #         indicating it can contain nested configuration values.
-    #     """
-    #     # children_class = getattr(self, "children_class", None)
-    #     children_class = self.children_class
-    #     if children_class is not None:
-    #         return True
-    #     return False
 
 
 # ====================================
@@ -261,8 +226,6 @@ class Leaf(Node):
     def _cast_value(self, value):
         "Cast value"
 
-        # print("CAST VALUE", self.__class__, self.fname, self.__cast__, value)
-
         def _cast(value):
             # If there is no cast callable, then return directly the value
             if self.__cast__ is None:
@@ -325,10 +288,6 @@ class Leaf(Node):
         "Post-load value user hook"
         return
 
-    # def pre_dump(self, value):
-    #     "Pre-dump value user hook"
-    #     return value
-
     def post_dump(self, value):
         "Post-dump value user hook"
         return value
@@ -336,24 +295,18 @@ class Leaf(Node):
     def merge(self, other):
         "Merge and override object with other"
 
-        # print (" LEAF Merge", self, " AND ", other)
-
         if not isinstance(other, Leaf):
             raise ValueError("Cannot merge non-Leaf")
 
         other_val = other.get_value(nodefaults=True)
-        # print("NEW VALUE", self.key, other_val)
-        # if other_val is not NOT_SET:
         if not isinstance(other_val, NOT_SET.type):
             msg = f"Override Leaf {self.__class__.__name__}({self.fname}) with {other.__class__.__name__}({other.fname})"
             logger.info(msg)
             return other
-            # return other_val
 
         msg = f"Keep Leaf {self.__class__.__name__}({self.fname}) over {other.__class__.__name__}({other.fname})"
         logger.info(msg)
         return self
-        # return self.get_value()
 
     def get_help(self) -> str:
         "Get leaf help message"
@@ -396,10 +349,7 @@ class ContainerInstance(Leaf):
 
     def set_value(self, value):
         "Set value"
-        # print("SET VALUE1", self.fname, value)
         value = super().set_value(value)
-        # value = self.get_value()
-        # print("SET VALUE2", self.fname, value)
         self._set_children(value)
         return value
 
@@ -411,7 +361,6 @@ class ContainerInstance(Leaf):
 class ConfigurationDict(ContainerInstance):
     "Dict container configuration"
 
-    # __cast__ = as_dict
     meta__cast = as_dict
 
     def _set_children(self, value):
@@ -421,16 +370,9 @@ class ConfigurationDict(ContainerInstance):
             "Set children for ConfigurationDict %s: %s", self.fname, truncate(value)
         )
 
-        # if value is None:
-        #     value = {}
-        # if value is NOT_SET:
-        #     value = {}
-
         assert isinstance(
             value, dict
         ), f"Expected a dict for {self.fname}, got: {type(value)}={value}"
-
-        # print("\n\n\nCHILDREN CLASS", self, self._children_class, value)
 
         # Skip if no children requested
         children_class = self._children_class
@@ -625,9 +567,6 @@ class ConfigurationDict(ContainerInstance):
             child.parent = new_instance
 
         out = {key: child.get_value() for key, child in out.items()}
-
-        # print("\n\nNEW VALUE FOR", type(self), self.key)
-        # pprint(out  )
         new_instance = type(self)(value=out, key=self.key)
         return new_instance
 
@@ -653,11 +592,7 @@ class DeclarativeValuesMetaclass(type):
             if isinstance(value, BaseFieldLeaf):
                 values.update({attr: value})
             elif inspect.isclass(value):
-                # print("SCANNING", attr, value, Leaf)
-                # pprint(value.__mro__)
                 if issubclass(value, Leaf):
-                    # assert False, f"WIP, {attr} is a class, {value}"
-                    print("UPDATE VALUES", attr, value)
                     values.update({attr: value})
 
         attrs["__fields__"] = values
@@ -672,7 +607,6 @@ class DeclarativeValuesMetaclass(type):
         # if "Meta" in attrs:
         #     attrs["__meta__"] = attrs.pop("Meta")
 
-        # print("METACLASS", mcs, class_name, bases, attrs)
         return super(DeclarativeValuesMetaclass, mcs).__new__(
             mcs, class_name, bases, attrs
         )
@@ -689,9 +623,8 @@ class DeclarativeValuesMetaclass(type):
 class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     "Keyed dict container configuration"
 
-    meta__extra_fields = (
-        False  # If True, allow unknown children, transformed into meta__children_class
-    )
+    # If True, allow unknown children, transformed into meta__children_class
+    meta__extra_fields = False
     meta__children_classes = None
 
     def _get_child_field(self, key=None, attr=None, extra_fields=False):
@@ -731,7 +664,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                     f"Key {child_key} is not declared in {self.fname}, use extra_fields=True to allow unknown keys"
                 )
             ret = _children_class
-        # print("DEBUG RET", type(ret), ret)
 
         # Assert
         passed = False
@@ -759,16 +691,12 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     def _get_child_keys(self, attr=False):
         "Get child keys"
         _children_classes = self._children_classes or []
-        # print("GET CHILD KEYS", self)
-        # pprint(_children_classes)
 
         if attr:
             ret = [field.attr for field in _children_classes]
         else:
             ret = [field.key for field in _children_classes]
 
-        # print("GET CHILD KEYS", ret)
-        # pprint(self._children_classes)
         return ret
 
     def configure(self, meta=None, **kwargs):
@@ -814,12 +742,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 _children_classes.append(field)
         self._children_classes = _children_classes
 
-        # print("CHILD FIELDS")
-        # pprint({(v.key, v.attr, v) for v in _children_classes})
-        # self._child_fields = None
-
-        # pprint(report)
-
         super().configure(meta=meta, **kwargs)
 
     def _set_children(self, value):
@@ -829,21 +751,12 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
             "Set children for ConfigurationObj %s: %s", self.fname, truncate(value)
         )
 
-        # WAht does ahappend to parent
-
-        # if value is None:
-        #     value = {}
-        # if value is NOT_SET:
-        #     value = {}
-
         assert isinstance(
             value, dict
         ), f"Expected a dict for {self.fname}, got: {type(value)}={value}"
 
         # Prepare node elements
         node_default_dict = self.get_default() or {}
-        # node_child_classes = self._get_child_keys()
-        # node_children_class = self._children_class or None
         extra_fields = self._extra_fields
 
         # Build children keys
@@ -868,19 +781,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
             if child_field is None:
                 # Skip when None
                 continue
-            # if isinstance(child_field, BaseFieldLeaf):
-            #     # If child field, then grab instance_class
-            #     child_cls = child_field.instance_class
-
-            # elif inspect.isclass(child_field):
-            #     if not issubclass(child_field, Leaf):
-            #         raise exceptions.InvalidField(
-            #             f"Expected a Leaf for {self.fname}.{child_key}, got: {type(child_field)}={child_field}"
-            #         )
-            #     child_cls = child_field
-            #     child_field = None
-            # else:
-            #     assert False, f"Unexpected child field type: {type(child_field)}={child_field}"
 
             assert inspect.isclass(
                 child_cls
@@ -893,10 +793,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
             if child_default == UNSET_ARG:
                 if child_field is not None:
                     child_default = child_field.default
-                # else:
-                #     child_default = child_field.
-
-            # print("REPROCESSING", child_key, child_field, child_default)
 
             # Generate child instance
             child = child_cls(
@@ -904,19 +800,12 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
             )
             default_children[child_key] = child
 
-        # print("DEFAULT CHILDREN vvv", self)
-        # pprint(default_children)
-        # print("DEFAULT CHILDREN ^^^")
-
         # Instanciate children
         children = {}
         children = default_children
         for key, val in value.items():
 
-            # print("REPROCESSING22", key, val)
-
             if key in children:
-                # child =
                 children[key].set_value(val)
             else:
                 if extra_fields == "warn":
@@ -934,20 +823,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 child_field, child_cls = self._get_child_field(
                     key=key, extra_fields=extra_fields
                 )
-                # if not child_field:
-                #     assert False, f"TO DEPRECATED, {type(child_field)}={child_field}"
-                #     child_field = node_children_class
-                # print("CHILD FIELD", key, val, child_field)
-                # pprint(self.__dict__)
-                # print(
-                #     "CHILD CLASS",
-                #     self._children_class,
-                #     self.fname,
-                #     key,
-                #     extra_fields,
-                #     child_field,
-                #     child_cls,
-                # )
+
                 assert child_cls is not None, "WIP"
                 if child_cls:
                     logger.info(
@@ -961,7 +837,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                         parent=self, key=key, value=val, field=child_field
                     )
 
-                    # assert False, "WIP undeclared children"
                     children[key] = child
 
         for key, child in children.items():
@@ -972,7 +847,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         self.__children__ = children
 
 
-# class ConfigurationList(ContainerInstance):
 class ConfigurationList(ConfigurationDict):
     "List container configuration"
 
@@ -1002,16 +876,9 @@ class ConfigurationList(ConfigurationDict):
             "Set children for Containerlist %s: %s", self.fname, truncate(value)
         )
 
-        # if value is None:
-        #     value = {}
-        # if value is NOT_SET:
-        #     value = {}
-
         assert isinstance(
             value, list
         ), f"Expected a list for {self.fname}, got: {type(value)}={value}"
-
-        # print("\n\n\nCHILDREN CLASS", self, self._children_class, value)
 
         # Skip if no children requested
         children_class = self._children_class
