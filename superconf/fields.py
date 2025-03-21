@@ -24,7 +24,7 @@ from superconf.configuration import (  # ContainerConf,; ContainerDict,; Contain
     BaseFieldContainer,
     BaseFieldLeaf,
     ContainerInstance,
-    LeafInstance,
+    Leaf,
 )
 
 # from types import SimpleNamespace
@@ -45,7 +45,7 @@ class FieldLeaf(BaseFieldLeaf):
     "Represent a configuration leaf"
 
     cast = as_is
-    instance_class = LeafInstance
+    instance_class = Leaf
 
 
 class FieldContainer(BaseFieldContainer):
@@ -211,7 +211,7 @@ class FieldConf(FieldContainer):
 
     # cast = as_dict
     instance_class = None
-    children_class = LeafInstance
+    children_class = Leaf
     children_classes = None
 
     # def __init__(

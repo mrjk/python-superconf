@@ -10,7 +10,7 @@ import tempfile
 import pytest
 import yaml
 
-from superconf.configuration import Configuration
+from superconf.configuration import ConfigurationObj
 from superconf.exceptions import UndeclaredField
 from superconf.fields import Field
 

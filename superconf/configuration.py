@@ -63,7 +63,7 @@ class BaseFieldLeaf(BaseNode):
         # Validate input
         assert self.instance_class is not None, "Instance class is required"
         assert (
-            LeafInstance in self.instance_class.__mro__
+            Leaf in self.instance_class.__mro__
         ), f"Got: {self.instance_class.__mro__}"
 
     # @classmethod
@@ -111,18 +111,18 @@ class BaseFieldContainer(BaseFieldLeaf):
 
         # Validate input
         # assert isinstance(self.child_class, ContainerInstance)
-        # assert not isinstance(self.child_class, LeafInstance)
+        # assert not isinstance(self.child_class, Leaf)
 
-        # assert not LeafInstance in self.child_class.__mro__, f"Got: {self.child_class.__mro__}"
+        # assert not Leaf in self.child_class.__mro__, f"Got: {self.child_class.__mro__}"
         # assert ContainerInstance in self.child_class.__mro__, f"Got: {self.child_class.__mro__}"
 
         # print("CHILDREN CLASS", self.children_class)
         # pprint(self.children_class.__mro__)
         assert issubclass(
-            self.instance_class, LeafInstance
-        ), f"Expected a LeafInstance for {self.fname}, got: {type(self.children_class)}={self.children_class}"
-        # assert issubclass(self.children_class, (LeafInstance, type(None))), f"Expected a LeafInstance for {self.fname}, got: {type(self.children_class)}={self.children_class}"
-        # assert not isinstance(self.children_class, LeafInstance)
+            self.instance_class, Leaf
+        ), f"Expected a Leaf for {self.fname}, got: {type(self.children_class)}={self.children_class}"
+        # assert issubclass(self.children_class, (Leaf, type(None))), f"Expected a Leaf for {self.fname}, got: {type(self.children_class)}={self.children_class}"
+        # assert not isinstance(self.children_class, Leaf)
 
     # def is_container(self):
     #     """Check if this field is a container type.
@@ -161,7 +161,7 @@ class _ArgCfg:
     #     return self.cfg[key]
 
 
-class LeafInstance(Node):
+class Leaf(Node):
     "Leaf instance, representing a value"
 
     __value__ = NOT_SET
@@ -338,8 +338,8 @@ class LeafInstance(Node):
 
         # print (" LEAF Merge", self, " AND ", other)
 
-        if not isinstance(other, LeafInstance):
-            raise ValueError("Cannot merge non-LeafInstance")
+        if not isinstance(other, Leaf):
+            raise ValueError("Cannot merge non-Leaf")
 
         other_val = other.get_value(nodefaults=True)
         # print("NEW VALUE", self.key, other_val)
@@ -364,13 +364,13 @@ class LeafInstance(Node):
         return self.__doc__ or "<NO_HELP>"
 
 
-class ContainerInstance(LeafInstance):
+class ContainerInstance(Leaf):
     "Container instance, either a dict or a list"
 
     __fields__ = {}
     __children__ = None
 
-    meta__children_class = LeafInstance  # Generic children class
+    meta__children_class = Leaf  # Generic children class
 
     def __init__(self, children_class=UNSET_ARG, meta=None, **kwargs):
 
@@ -408,7 +408,7 @@ class ContainerInstance(LeafInstance):
         raise NotImplementedError("Subclass must implement this method")
 
 
-class ContainerDict(ContainerInstance):
+class ConfigurationDict(ContainerInstance):
     "Dict container configuration"
 
     # __cast__ = as_dict
@@ -418,7 +418,7 @@ class ContainerDict(ContainerInstance):
         "Set children"
 
         logger.info(
-            "Set children for ContainerDict %s: %s", self.fname, truncate(value)
+            "Set children for ConfigurationDict %s: %s", self.fname, truncate(value)
         )
 
         # if value is None:
@@ -541,6 +541,13 @@ class ContainerDict(ContainerInstance):
                 f"{self.__class__.__name__} has no attribute {key}"
             ) from None
 
+    def __setattr__(self, key, value):
+        "Set attribute"
+        if self.__children__ and key in self.__children__:
+            self.__children__[key].set_value(value)
+        else:
+            super().__setattr__(key, value)
+
     def get(self, key, default=UNSET_ARG, mode="auto"):
         "Get a children node or an object"
 
@@ -584,8 +591,8 @@ class ContainerDict(ContainerInstance):
         msg = f"Merge Container {self.__class__.__name__}({self.fname}) with {other.__class__.__name__}({other.fname})"
         logger.info(msg)
 
-        if not isinstance(other, LeafInstance):
-            raise ValueError("Cannot merge non-LeafInstance")
+        if not isinstance(other, Leaf):
+            raise ValueError("Cannot merge non-Leaf")
 
         keys = list(self.get_children().keys())
         keys.extend(list(other.get_children().keys()))
@@ -646,9 +653,9 @@ class DeclarativeValuesMetaclass(type):
             if isinstance(value, BaseFieldLeaf):
                 values.update({attr: value})
             elif inspect.isclass(value):
-                # print("SCANNING", attr, value, LeafInstance)
+                # print("SCANNING", attr, value, Leaf)
                 # pprint(value.__mro__)
-                if issubclass(value, LeafInstance):
+                if issubclass(value, Leaf):
                     # assert False, f"WIP, {attr} is a class, {value}"
                     print("UPDATE VALUES", attr, value)
                     values.update({attr: value})
@@ -679,7 +686,7 @@ class DeclarativeValuesMetaclass(type):
 ###################
 
 
-class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
+class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     "Keyed dict container configuration"
 
     meta__extra_fields = (
@@ -732,10 +739,10 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
             passed = True
             return ret, ret.instance_class
         elif inspect.isclass(ret):
-            if issubclass(ret, LeafInstance):
+            if issubclass(ret, Leaf):
                 passed = True
                 return (
-                    BaseFieldLeaf(key=key, attr=attr, instance_class=LeafInstance),
+                    BaseFieldLeaf(key=key, attr=attr, instance_class=Leaf),
                     ret,
                 )
         elif ret is None:
@@ -744,7 +751,7 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
 
         if not passed:
             raise exceptions.InvalidField(
-                f"Expected a BaseFieldLeaf or a LeafInstance for {self.fname}.{child_key}, got: {type(ret)}={ret}"
+                f"Expected a BaseFieldLeaf or a Leaf for {self.fname}.{child_key}, got: {type(ret)}={ret}"
             )
 
         return ret
@@ -793,12 +800,12 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
         for attr, field in _children_raw_classes.items():
 
             if inspect.isclass(field):
-                if issubclass(field, LeafInstance):
+                if issubclass(field, Leaf):
                     field = BaseFieldContainer(field, key=attr)
                     assert isinstance(field, BaseFieldLeaf)
                 else:
                     raise exceptions.InvalidField(
-                        f"Expected a LeafInstance for {self.fname}.{attr}, got: {type(field)}={field}"
+                        f"Expected a Leaf for {self.fname}.{attr}, got: {type(field)}={field}"
                     )
 
             if isinstance(field, BaseFieldLeaf):
@@ -819,7 +826,7 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
         "Set children"
 
         logger.info(
-            "Set children for ContainerConf %s: %s", self.fname, truncate(value)
+            "Set children for ConfigurationObj %s: %s", self.fname, truncate(value)
         )
 
         # WAht does ahappend to parent
@@ -857,7 +864,7 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
             # Note: child_field can be one of:
             #  - None, disabled
             #  - Field instance, then we use instance_class attribute
-            #  - Children class of LeafInstance or ContainerInstance
+            #  - Children class of Leaf or ContainerInstance
             if child_field is None:
                 # Skip when None
                 continue
@@ -866,9 +873,9 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
             #     child_cls = child_field.instance_class
 
             # elif inspect.isclass(child_field):
-            #     if not issubclass(child_field, LeafInstance):
+            #     if not issubclass(child_field, Leaf):
             #         raise exceptions.InvalidField(
-            #             f"Expected a LeafInstance for {self.fname}.{child_key}, got: {type(child_field)}={child_field}"
+            #             f"Expected a Leaf for {self.fname}.{child_key}, got: {type(child_field)}={child_field}"
             #         )
             #     child_cls = child_field
             #     child_field = None
@@ -959,14 +966,14 @@ class ContainerConf(ContainerDict, metaclass=DeclarativeValuesMetaclass):
 
         for key, child in children.items():
             assert isinstance(
-                child, LeafInstance
-            ), f"Expected a LeafInstance for {self.fname}.{key}, got: {type(child)}={child}"
+                child, Leaf
+            ), f"Expected a Leaf for {self.fname}.{key}, got: {type(child)}={child}"
 
         self.__children__ = children
 
 
-# class ContainerList(ContainerInstance):
-class ContainerList(ContainerDict):
+# class ConfigurationList(ContainerInstance):
+class ConfigurationList(ConfigurationDict):
     "List container configuration"
 
     meta__cast = as_list
@@ -1026,11 +1033,3 @@ class ContainerList(ContainerDict):
 
         self.__children__ = children
 
-
-# Compat layer:
-Configuration = ContainerConf
-
-Leaf = LeafInstance
-ConfigurationObj = ContainerConf
-ConfigurationDict = ContainerDict
-ConfigurationList = ContainerList

@@ -6,7 +6,7 @@ with different inputs to efficiently test multiple scenarios.
 
 import pytest
 
-from superconf.configuration import Configuration
+from superconf.configuration import ConfigurationObj
 from superconf.exceptions import CastValueFailure, InvalidField
 from superconf.fields import Field, FieldConf
 
@@ -35,7 +35,7 @@ DEFAULT_VALUE_TEST_CASES = [
 ]
 
 
-# class TestConfig(Configuration):
+# class TestConfig(ConfigurationObj):
 #     """Test configuration class."""
 
 #     test_field = Field(default=None, help="Test field")
@@ -49,7 +49,7 @@ def test_field_default_values(default_value, expected_type):
     field = Field(default=default_value, help="Test field")
 
     # Create a configuration class with the field
-    class DefaultConfig(Configuration):
+    class DefaultConfig(ConfigurationObj):
         test_field = field
 
     # Initialize the configuration without providing a value
@@ -81,9 +81,9 @@ def test_field_metadata(field_name, field_help):
     field_instance = Field(default=None, help=field_help)
 
     # Create a configuration class using the regular class definition approach
-    # This way, fields should be properly registered with the Configuration system
+    # This way, fields should be properly registered with the ConfigurationObj system
     test_dict = {field_name: field_instance}
-    ConfigClass = type("DynamicConfig", (Configuration,), test_dict)
+    ConfigClass = type("DynamicConfig", (ConfigurationObj,), test_dict)
 
     # Initialize an instance of our configuration
     config = ConfigClass()
@@ -134,7 +134,7 @@ def test_field_value_updates(initial_value, updated_value):
     field = Field(default=initial_value, help="Test field")
 
     # Create a configuration class with the field
-    class UpdateConfig(Configuration):
+    class UpdateConfig(ConfigurationObj):
         test_field = field
 
     # Initialize the configuration with the initial value

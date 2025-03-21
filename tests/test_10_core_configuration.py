@@ -1,12 +1,12 @@
-"""Unit tests for core Configuration functionality.
+"""Unit tests for core ConfigurationObj functionality.
 
-This module contains unit tests for the Configuration class, testing basic configuration
+This module contains unit tests for the ConfigurationObj class, testing basic configuration
 operations, field access, and configuration behavior.
 """
 
 import pytest
 
-from superconf.configuration import Configuration
+from superconf.configuration import ConfigurationObj
 from superconf.exceptions import UndeclaredField
 from superconf.fields import Field
 
@@ -40,7 +40,7 @@ EXTRA_CONFIG = {
 def base_config_class():
     """Create a basic configuration class for testing."""
 
-    class TestConfig(Configuration):
+    class TestConfig(ConfigurationObj):
         """Test configuration class."""
 
         field1 = Field(default=False, help="Toggle debugging on/off.")
@@ -82,7 +82,7 @@ def meta_default_config_class(base_config_class):
     """Create a configuration class with Meta defaults."""
 
     class DefaultConfig(base_config_class):
-        """Configuration with Meta defaults."""
+        """ConfigurationObj with Meta defaults."""
 
         class Meta:
             default = {

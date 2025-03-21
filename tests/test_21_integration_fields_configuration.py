@@ -1,12 +1,12 @@
-"""Integration tests for Fields and Configuration interaction.
+"""Integration tests for Fields and ConfigurationObj interaction.
 
-This module tests how different Field types interact with the Configuration class,
+This module tests how different Field types interact with the ConfigurationObj class,
 including field validation, type casting, and complex field structures.
 """
 
 import pytest
 
-from superconf.configuration import Configuration
+from superconf.configuration import ConfigurationObj
 from superconf.exceptions import (
     CastValueFailure,
     InvalidCastConfiguration,
@@ -52,8 +52,8 @@ INVALID_TYPES_CONFIG = {
 def typed_config_class():
     """Fixture providing a configuration class with typed fields."""
 
-    class TypedConfig(Configuration):
-        """Configuration with strictly typed fields."""
+    class TypedConfig(ConfigurationObj):
+        """ConfigurationObj with strictly typed fields."""
 
         string_field = FieldString(default="default", help="String field")
         int_field = FieldInt(default=0, help="Integer field")
@@ -69,8 +69,8 @@ def typed_config_class():
 def validated_config_class():
     """Fixture providing a configuration class with specialized field types."""
 
-    class SpecializedConfig(Configuration):
-        """Configuration with specialized field types."""
+    class SpecializedConfig(ConfigurationObj):
+        """ConfigurationObj with specialized field types."""
 
         number = FieldInt(default=1, help="A number field")
 
@@ -85,7 +85,7 @@ def validated_config_class():
 def nested_config_class():
     """Fixture providing a configuration class with nested configurations."""
 
-    class DatabaseConfig(Configuration):
+    class DatabaseConfig(ConfigurationObj):
         """Database configuration section."""
 
         host = FieldString(default="localhost", help="Database host")
@@ -93,14 +93,14 @@ def nested_config_class():
         user = FieldString(default="admin", help="Database user")
         password = FieldString(default="password", help="Database password")
 
-    class APIConfig(Configuration):
+    class APIConfig(ConfigurationObj):
         """API configuration section."""
 
         enabled = FieldBool(default=True, help="Enable API")
         url = FieldString(default="/api", help="API base URL")
         version = FieldString(default="v1", help="API version")
 
-    class AppConfig(Configuration):
+    class AppConfig(ConfigurationObj):
         """Application configuration with nested configs."""
 
         debug = FieldBool(default=False, help="Debug mode")

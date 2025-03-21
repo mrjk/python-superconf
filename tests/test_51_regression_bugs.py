@@ -6,7 +6,7 @@ in future versions of the code.
 
 import pytest
 
-from superconf.configuration import Configuration
+from superconf.configuration import ConfigurationObj
 from superconf.exceptions import InvalidCastConfiguration, UndeclaredField
 from superconf.fields import Field
 
@@ -20,8 +20,8 @@ def test_regression_dict_field_mutation():
     # Setup initial default dictionary
     default_dict = {"key1": "value1", "key2": "value2"}
 
-    class DictConfig(Configuration):
-        """Configuration with dictionary field."""
+    class DictConfig(ConfigurationObj):
+        """ConfigurationObj with dictionary field."""
 
         settings = Field(default=default_dict, help="Settings dictionary")
 
@@ -57,7 +57,7 @@ def test_regression_field_overriding_in_subclass():
     fields with the same name from the parent class.
     """
 
-    class ParentConfig(Configuration):
+    class ParentConfig(ConfigurationObj):
         """Parent configuration."""
 
         field1 = Field(default="parent_default", help="Parent field")
@@ -92,8 +92,8 @@ def test_regression_duplicate_field_definitions():
     field_instance = Field(default="default", help="Field help")
 
     # Define a config class that uses the same field instance twice
-    class DuplicateConfig(Configuration):
-        """Configuration with duplicate field instances."""
+    class DuplicateConfig(ConfigurationObj):
+        """ConfigurationObj with duplicate field instances."""
 
         field1 = field_instance
         field2 = field_instance  # Same instance used twice

@@ -17,7 +17,7 @@ try:
 except ImportError:
     BENCHMARK_AVAILABLE = False
 
-from superconf.configuration import Configuration
+from superconf.configuration import ConfigurationObj
 from superconf.fields import Field
 
 # Skip all tests if pytest-benchmark is not available
@@ -73,7 +73,7 @@ def large_config_class():
             fields[field_name] = Field(default={}, help=f"Field {i}")
 
     # Create a dynamic configuration class with the generated fields
-    LargeConfig = type("LargeConfig", (Configuration,), fields)
+    LargeConfig = type("LargeConfig", (ConfigurationObj,), fields)
     return LargeConfig
 
 
@@ -153,7 +153,7 @@ def test_benchmark_many_small_configs(benchmark):
         configs = []
         for i in range(30):
 
-            class SmallConfig(Configuration):
+            class SmallConfig(ConfigurationObj):
                 test_field = Field(default=f"value_{i}")
 
             configs.append(SmallConfig())
@@ -164,4 +164,4 @@ def test_benchmark_many_small_configs(benchmark):
 
     # Basic validation
     assert len(result) == 30
-    assert all(isinstance(cfg, Configuration) for cfg in result)
+    assert all(isinstance(cfg, ConfigurationObj) for cfg in result)

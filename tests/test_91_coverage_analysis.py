@@ -159,7 +159,7 @@ def test_module_has_tests():
 
 
 def test_configuration_methods_coverage():
-    """Test that essential Configuration methods have tests."""
+    """Test that essential ConfigurationObj methods have tests."""
     # Convert assertions to warnings instead of skipping
 
     critical_methods = [
@@ -172,15 +172,15 @@ def test_configuration_methods_coverage():
 
     module_objects, tests = get_tests_for_module("superconf.configuration")
 
-    # Find the Configuration class
+    # Find the ConfigurationObj class
     config_class = None
     for name, obj in module_objects.items():
-        if name == "Configuration" and inspect.isclass(obj):
+        if name == "ConfigurationObj" and inspect.isclass(obj):
             config_class = obj
             break
 
     if config_class is None:
-        print("WARNING: Configuration class not found")
+        print("WARNING: ConfigurationObj class not found")
         return
 
     # Check that critical methods have tests
@@ -190,7 +190,7 @@ def test_configuration_methods_coverage():
             continue
 
         # Create the full name of the method (Class.method)
-        full_method_name = f"Configuration.{method_name}"
+        full_method_name = f"ConfigurationObj.{method_name}"
 
         # Check if we have tests for this method
         has_tests = False
@@ -208,7 +208,7 @@ def test_fields_types_coverage():
     # Convert assertions to warnings instead of skipping
 
     # List of field types that should be tested
-    field_types = ["str", "int", "float", "bool", "list", "dict", "Configuration"]
+    field_types = ["str", "int", "float", "bool", "list", "dict", "ConfigurationObj"]
 
     test_files = []
     for filename in os.listdir("tests"):

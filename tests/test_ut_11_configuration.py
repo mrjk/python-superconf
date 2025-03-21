@@ -1,11 +1,11 @@
-"""Unit tests for basic Configuration functionality."""
+"""Unit tests for basic ConfigurationObj functionality."""
 
 from pprint import pprint
 
 import pytest
 
 import superconf.exceptions
-from superconf.configuration import Configuration
+from superconf.configuration import ConfigurationObj
 from superconf.fields import Field
 
 EXAMPLE_DICT = {
@@ -33,7 +33,7 @@ OVERRIDE_CONFIG = {
 }
 
 
-class BaseAppConfig(Configuration):
+class BaseAppConfig(ConfigurationObj):
     """Base configuration class for tests."""
 
     field1 = Field(default=False, help="Toggle debugging on/off.")
@@ -44,27 +44,27 @@ class BaseAppConfig(Configuration):
 
 
 class DefaultAppConfig(BaseAppConfig):
-    """Configuration with default Meta settings."""
+    """ConfigurationObj with default Meta settings."""
 
     pass
 
 
 class StrictAppConfig(BaseAppConfig):
-    """Configuration with strict settings."""
+    """ConfigurationObj with strict settings."""
 
     class Meta:
         extra_fields = False
 
 
 class AllowExtraAppConfig(BaseAppConfig):
-    """Configuration allowing extra fields."""
+    """ConfigurationObj allowing extra fields."""
 
     class Meta:
         extra_fields = True
 
 
 class DefaultValueConfig(BaseAppConfig):
-    """Configuration with Meta.default values."""
+    """ConfigurationObj with Meta.default values."""
 
     class Meta:
         default = {
