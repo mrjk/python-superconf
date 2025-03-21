@@ -4,99 +4,258 @@ from pprint import pprint
 
 import pytest
 
-import superconf.exceptions
-from superconf.configuration import Configuration
-from superconf.fields import Field, FieldConf
+from superconf import ConfigurationObj, Field, Leaf, UndeclaredField, UnknownChild
 
-# from superconf.loaders import Dict
-
-# This test explore the default specificities of classyconf
-# We want to keep this API compatible
+# This test explore the default specificities of superconf
 
 
-example_dict = {
+# Base configurations
+# ==============================
+
+# Create a base configuration
+CONFIG_BASE = {
     "item1": True,
     "item2": 4333,
 }
 
-FULL_CONFIG = {
-    "field1": False,
-    "field2": "Default value",
-    "field3": 42,
-    "field4": example_dict,
-    "field5": example_dict,
+CONFIG_OVERRIDE = {
+    "item1": "yeah",
+    "item2": 777,
 }
-CHILDREN_COUNT = len(FULL_CONFIG)
+
+# Create a more moplete configuration
+CONFIG_FULL1 = {
+    "field1": True,
+    "field2": "Custom value",
+    "field3": 51,
+    "field4": CONFIG_OVERRIDE,
+}
+
+CONFIG_FULL2 = {
+    "field1": True,
+    "field2": "config2 value",
+    "field3": 3.1416,
+    "field4": {
+        "other1": "anything",
+        "other2": None,
+    },
+}
 
 
-class AppConfig(Configuration):
+# I. Configuration Object model declaration
+# ==============================
 
-    class Meta:
-        # loaders = [Environment()]
-        cache = False
+# We declare a simple ConfigurationObj model with fields we know in advance. We will
+# introduce later ConfigurationDict or ConfigurationList, that handle unknown fields.
+
+
+class AppConfig(ConfigurationObj):
+    """Model with defaults values and help messages"""
 
     field1 = Field(default=False, help="Toggle debugging on/off.")
     field2 = Field(default="Default value", help="Another field")
     field3 = Field(default=42, help="Another field")
-    field4 = Field(default=example_dict, help="Another dict field")
-    field5 = Field(default=example_dict, help="Another dict field")
+    field4 = Field(default=CONFIG_BASE, help="Another dict field")
 
 
-app = AppConfig(value=FULL_CONFIG)
+# II. Model instanciation without configuration
+# ==============================
 
-# We check here we can access via attributes and items
+# This explains how to access the model fields, by different methods.
+
+app = AppConfig()
+
+
+# Feature - String field
+# ------------------------------
+
+# We check here we can access via attributes
 assert app.field1 is False
 assert isinstance(app.field1, bool)
+
+# We check here we can access via items
 assert app["field1"] is False
 assert isinstance(app["field1"], bool)
 
+# We can access the children value with get_value()
+assert app.get_value("field1") is False
+assert isinstance(app.get_value("field1"), bool)
 
-# We check known value retrieval here
-t1 = app.get_value("field2")
-pprint(t1)
-assert t1 == "Default value"
-t1 = app.get_value("field3")
-assert t1 == 42
-
-
-# We check unknown value retrieval here
-t1 = app.get_value("tutu", default="SUPER")
-pprint(t1)
-assert t1 == "SUPER"
-with pytest.raises(superconf.exceptions.UndeclaredField):
-    # Raise exceptions on unset values without defaults
-    out = app.get_value("toto")
-    print("OUT", out)
+# We can access children object via call syntax
+assert isinstance(app("field1"), Leaf)
+assert app("field1").get_value() is False
 
 
-# For immutable objects, ensure we have the same ids
-assert isinstance(app.field2, str)
-assert app.field2 is app.field2
-assert app.field2 == app.field2
+# Feature - Integer field
+# ------------------------------
+
+# We check here we can access via attributes
 assert app.field2 == "Default value"
+assert isinstance(app.field2, str)
+
+# We check here we can access via items
+assert app["field2"] == "Default value"
+assert isinstance(app["field2"], str)
+
+# We can access the children value with get_value()
+assert app.get_value("field2") == "Default value"
+assert isinstance(app.get_value("field2"), str)
+
+# We can access children object via call syntax
+assert isinstance(app("field2"), Leaf)
+assert app("field2").get_value() == "Default value"
 
 
-# For mutable objects, ensure we have different ids
-# Ensure we have a different object when returned, but containing the same value
-assert isinstance(app.field5, dict)
-# assert app.field5 is not app.field5, "When cache is disabled"
-assert app.field5 is app.field5
-assert app.field5 == app.field5
-assert app.field5 is example_dict
-assert app.field5 == example_dict
+# Feature - Dict field
+# ------------------------------
+assert app.field4 == CONFIG_BASE
+assert isinstance(app.field4, dict)
 
 
-# Ensure we can iterate on children and we have the correct number of children
-count = 0
-out = {}
-for name, i in app.items():
-    count += 1
-    out[name] = app.get_value(i.key, default=i.get_default())  # , cast=i.cast)
+# III. Model instanciation with configuration
+# ==============================
 
-# ASsert we have the correct number of children and the values are correct
-assert count == CHILDREN_COUNT
-assert out == FULL_CONFIG
-assert out is not FULL_CONFIG
+# This explain what happens when we instanciate the model with a configuration passed via value option
+
+app = AppConfig(value=CONFIG_FULL1)
+
+
+# Accessing values and defaults with methods
+# ------------------------------
+
+assert app("field1").get_value() == True
+assert app("field2").get_value() == "Custom value"
+assert app("field3").get_value() == 51
+assert app("field4").get_value() == CONFIG_OVERRIDE
+
+
+assert app("field1").get_default() == False
+assert app("field2").get_default() == "Default value"
+assert app("field3").get_default() == 42
+assert app("field4").get_default() == CONFIG_BASE
+
+
+# Feature - Validate configuration
+# ------------------------------
+
+assert app.field1 == True
+assert app.field2 == "Custom value"
+assert app.field3 == 51
+assert app.field4 == CONFIG_OVERRIDE
+
+
+# IV. Change or update values with set_value()
+# ==============================
+
+# We can set a new value with a dict
+app.set_value(CONFIG_FULL2)
+
+# Short methods
+assert app.field1 == True
+assert app.field2 == "config2 value"
+assert app.field3 == 3.1416
+assert app.field4 == CONFIG_FULL2["field4"]
+
+# Long methods
+assert app("field1").get_value() == True
+assert app("field2").get_value() == "config2 value"
+assert app("field3").get_value() == 3.1416
+assert app("field4").get_value() == CONFIG_FULL2["field4"]
+
+# Accessing defaults can only be done with methods
+assert app("field1").get_default() == False
+assert app("field2").get_default() == "Default value"
+assert app("field3").get_default() == 42
+assert app("field4").get_default() == CONFIG_BASE
+
+# Eventually, we can change a single child value
+
+app("field3").set_value(4242)
+assert app("field3").get_value() == 4242
+
+
+# V. Accessing unknown values and exceptions
+# ==============================
+
+# Since model should be known in advance, an exception is raised if we try to access an unknown value.
+
+# With attributes
+try:
+    out = app.field9
+except AttributeError:
+    pass
+else:
+    assert False, "Should raise AttributeError"
+
+
+# With items
+try:
+    out = app["field9"]
+except KeyError:
+    pass
+else:
+    assert False, "Should raise KeyError"
+
+
+# With get_value()
+try:
+    out = app.get_value("field9")
+except UndeclaredField:
+    pass
+else:
+    assert False, "Should raise UndeclaredField"
+
+# With get_value() and default value
+try:
+    out = app.get_value("field9", "<UNKNOWN_FIELD>")
+except UndeclaredField:
+    pass
+else:
+    assert False, "Should raise UndeclaredField even when default is set"
+
+
+# With call syntax
+try:
+    out = app("field9")
+except UnknownChild:
+    pass
+else:
+    assert False, "Should raise UnknownChild"
+
+
+# VI. Iterating on fields
+# ==============================
+
+# With get_value()
+out_children = {}
+out_values = {}
+out_defaults = {}
+for name, child in app.items():
+    assert isinstance(child, Leaf)
+    out_children[name] = child
+
+    value = child.get_value()
+    assert not isinstance(value, Leaf)
+    out_values[name] = value
+
+    default = child.get_default()
+    assert not isinstance(default, Leaf)
+    out_defaults[name] = default
+
+print("Number of fields:", len(out_children))
+print("Childrens:")
+pprint(out_children)
+print("Values:")
+pprint(out_values)
+print("Defaults:")
+pprint(out_defaults)
+
+assert len(out_children) == len(CONFIG_FULL2)
+assert set(out_children.keys()) == set(CONFIG_FULL2.keys())
+assert out_values == CONFIG_FULL2
 
 
 print("All tests OK")
+
+
+############ EOF
