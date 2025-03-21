@@ -78,6 +78,7 @@ from pprint import pprint
 pprint(app.get_value())
 ```
 
+Also, field order is consistent and preserved from the fields class order.
 
 ### Creating an Instance With Custom Values
 
@@ -187,7 +188,7 @@ missing_value = app.get_value("field6")
 print(f"Missing value without fallback: {missing_value}")
 
 # Get value with a fallback for a non-existent field
-missing_value = app.get_value("field6", "fallback")
+missing_value = app.get_value(key="field6", default="fallback")
 print(f"Missing value with fallback: {missing_value}")
 
 ```
@@ -264,7 +265,8 @@ A powerful feature of SuperConf is the ability to iterate over all fields in a c
 app = AppConfig()
 
 print("\nIterating over all fields:")
-for name, field_obj in app.items():
+for field_obj in app:
+    name = field_obj.key
     value = field_obj.get_value()
     default = field_obj.get_default()
     help_text = getattr(field_obj, 'help', 'No help available')
@@ -272,6 +274,15 @@ for name, field_obj in app.items():
     print(f"  - Value: {value}")
     print(f"  - Default: {default}")
     print(f"  - Help: {help_text}")
+```
+
+It is also possible to use the `items` method, like a regular dict.
+
+```python
+print("\nIterating over all fields:")
+for field_key, field_obj in app.items():
+    print(f"Key: {field_key}, object: {field_obj}")
+
 ```
 
 This makes it easy to inspect all fields in a configuration, which is useful for debugging or documenting.
@@ -299,15 +310,13 @@ print(f"field2: {app.field2}")
 print("\nThis is updated from parent node as well:")
 pprint(app.get_value())
 
-assert False, "BUG HERE, missing __set__ dunder"
-
 ```
 
 You can also set values using the dictionary syntax or the `set_value()` method:
 
 ```python
 # Dictionary syntax
-app["field3"] = 100
+app.field3 = 100
 
 # set_value() method
 app.set_value("field4", {"new": "dictionary"})
@@ -321,7 +330,7 @@ print(f"field4: {app.field4}")
 
 In this guide, we've learned:
 
-- How to define a basic configuration model using `ConfigurationObj` and `Field`
+- How to define a basic configuration model using `ConfigurationObj` and `Field`s
 - How to create configuration instances with default and custom values
 - Different ways to access configuration values
 - How to handle undefined fields
@@ -339,7 +348,3 @@ Here are some exercises to practice what you've learned:
 3. Create another instance with custom values and print all fields.
 4. Try accessing a non-existent field and see what error you get.
 5. Iterate over all fields and print their values and help text.
-
-```python
-
-```
