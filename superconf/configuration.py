@@ -20,7 +20,14 @@ from superconf.casts import (
     as_is,
     as_list,
 )
-from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST, UNSET_ARG, truncate
+from superconf.common import (
+    NOT_SET,
+    NOT_SET_DICT,
+    NOT_SET_LIST,
+    UNSET_ARG,
+    truncate,
+    unique,
+)
 from superconf.nodes import BaseNode, Node
 
 # from .fields2 import Field, FieldConf, BaseFieldContainer
@@ -457,6 +464,7 @@ class ConfigurationDict(ContainerInstance):
 
     def __iter__(self):
         "Iterate over children"
+
         if self.__children__:
             return iter(self.get_children().values())
         return iter([])
@@ -538,7 +546,7 @@ class ConfigurationDict(ContainerInstance):
 
         keys = list(self.get_children().keys())
         keys.extend(list(other.get_children().keys()))
-        keys = list(set(keys))
+        keys = unique(keys)
 
         new_instance = type(self)(key=self.key)
 
@@ -763,10 +771,10 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         children_keys_default = []
         children_keys_default.extend(list(node_default_dict.keys()))
         children_keys_default.extend(self._get_child_keys())
-        children_keys_default = list(set(children_keys_default))
+        children_keys_default = unique(children_keys_default)
 
         # Instanciate default value
-        default_children = {}
+        default_children = OrderedDict()
         for child_key in children_keys_default:
 
             # Fetch key field
@@ -899,4 +907,3 @@ class ConfigurationList(ConfigurationDict):
             children[index] = child
 
         self.__children__ = children
-

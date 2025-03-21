@@ -175,3 +175,11 @@ def truncate(data, max=72, txt="..."):
             return data[: max + len(txt)] + txt
         return txt + data[(max - len(txt)) :]
     return data
+
+
+# Source: https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-in-python-whilst-preserving-order
+def unique(seq):
+    "Remove duplicates from a list while preserving order"
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
