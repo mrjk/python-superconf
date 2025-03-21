@@ -48,6 +48,8 @@ Now that we've defined our model, let's create instances and explore how to work
 The simplest way to create a configuration instance is without any arguments. We will see later how to inject configuration instead just using default values. This creates an instance with all default values:
 
 ```python
+from pprint import pprint
+
 # Create an instance with default values
 app = AppConfig()
 
@@ -67,6 +69,7 @@ assert app.field4 == {"item1": True, "item2": 4333}
 assert app.field5 is NOT_SET
 
 print("\nAll default values are correctly set!")
+pprint(app.get_value())
 ```
 
 Notice that each field has the correct value and type. SuperConf preserves the types of your default values.
@@ -279,6 +282,9 @@ app.field2 = "New value"
 print("\nAfter changing values:")
 print(f"field1: {app.field1}")
 print(f"field2: {app.field2}")
+
+print("\nThis is updated from parent node as well:")
+pprint(app.get_value())
 
 assert False, "BUG HERE, missing __set__ dunder"
 

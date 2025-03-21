@@ -71,6 +71,14 @@ print("\nAll default values are correctly set!")
 
 Notice that each field has the correct value and type. SuperConf preserves the types of your default values.
 
+There is a `get_value` method that can be used to show all fileds values:
+
+```python
+from pprint import pprint
+pprint(app.get_value())
+```
+
+
 ### Creating an Instance With Custom Values
 
 In real applications, you'll usually want to override some or all of the default values. You can do this by providing a dictionary of values when creating the instance:
@@ -95,6 +103,7 @@ print(f"field2: {app.field2} (type: {type(app.field2).__name__})")
 print(f"field3: {app.field3} (type: {type(app.field3).__name__}, from default config)")
 print(f"field4: {app.field4} (type: {type(app.field4).__name__})")
 print(f"field5: {app.field5} (type: {type(app.field5).__name__})")
+print(f"field6: {app.field6} (type: {type(app.field6).__name__})")
 
 # Verify the values match our custom configuration
 assert app.field1 is True
@@ -107,6 +116,13 @@ print("\nAll custom values are correctly set!")
 ```
 
 As you can see, the values from `custom_config` have replaced the default values, but the structure of our configuration remains the same. As illustrated with `field3`, if a value is not set, then default value from model is used.
+
+Once again, we can use `get_value` method to have a quick overview:
+
+```python
+pprint(app.get_value())
+```
+
 
 ## Accessing Configuration Values
 
@@ -279,6 +295,9 @@ app.field2 = "New value"
 print("\nAfter changing values:")
 print(f"field1: {app.field1}")
 print(f"field2: {app.field2}")
+
+print("\nThis is updated from parent node as well:")
+pprint(app.get_value())
 
 assert False, "BUG HERE, missing __set__ dunder"
 
