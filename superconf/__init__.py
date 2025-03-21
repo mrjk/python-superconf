@@ -7,70 +7,70 @@ various sources.
 
 __version__ = "0.1.0"
 
+# Import anchors
+from superconf.anchors import (
+    ABS,
+    ABSOLUTE,
+    REL,
+    RELATIVE,
+    FileAnchor,
+    PathAnchor,
+)
+
+# Import casts
+from superconf.casts import (
+    as_boolean,
+    as_dict,
+    as_int,
+    as_is,
+    as_list,
+    as_option,
+    as_tuple,
+)
+
+# Import common utilities and constants
+from superconf.common import (
+    FAIL,
+    NOT_SET,
+    NOT_SET_DICT,
+    NOT_SET_LIST,
+)
+
 # Import key classes from configuration module
 from superconf.configuration import (
-    Leaf,
-    ConfigurationObj,
     ConfigurationDict,
     ConfigurationList,
+    ConfigurationObj,
+    Leaf,
+)
+
+# Import exceptions
+from superconf.exceptions import (
+    CastValueFailure,
+    ConfigurationException,
+    InvalidCastConfiguration,
+    InvalidConfigurationFile,
+    InvalidField,
+    InvalidPath,
+    MissingSettingsSection,
+    UndeclaredField,
+    UnknownChild,
+    UnknownExtraField,
+    UnknownSetting,
 )
 
 # Import field types from fields module
 from superconf.fields import (
     Field,
-    FieldLeaf,
-    FieldContainer,
     FieldBool,
-    FieldString,
-    FieldInt,
-    FieldFloat,
-    FieldOption,
-    FieldDict,
-    FieldList,
-    FieldTuple,
     FieldConf,
+    FieldContainer,
+    FieldDict,
+    FieldFloat,
+    FieldInt,
+    FieldLeaf,
+    FieldList,
+    FieldOption,
+    FieldString,
+    FieldTuple,
 )
-
-# Import exceptions
-from superconf.exceptions import (
-    ConfigurationException,
-    InvalidConfigurationFile,
-    MissingSettingsSection,
-    InvalidPath,
-    InvalidCastConfiguration,
-    CastValueFailure,
-    UndeclaredField,
-    UnknownExtraField,
-    UnknownSetting,
-    UnknownChild,
-    InvalidField,
-)
-
-# Import casts
-from superconf.casts import (
-    as_is,
-    as_boolean,
-    as_int,
-    as_dict,
-    as_list,
-    as_tuple,
-    as_option,
-)
-
-# Import common utilities and constants
-from superconf.common import (
-    NOT_SET,
-    NOT_SET_DICT,
-    NOT_SET_LIST,
-    FAIL,
-)
-
-# Import anchors
-from superconf.anchors import (
-    PathAnchor,
-    FileAnchor,
-    RELATIVE,
-    ABSOLUTE,
-    REL,
-    ABS,
-) 
