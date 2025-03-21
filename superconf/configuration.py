@@ -354,11 +354,21 @@ class ContainerInstance(Leaf):
 
         super().__init__(meta=meta, **kwargs)
 
-    def set_value(self, value):
+    def set_value(self, *args):
         "Set value"
-        value = super().set_value(value)
-        self._set_children(value)
-        return value
+
+        if len(args) == 1:
+            value = args[0]
+            value = super().set_value(value)
+            self._set_children(value)
+            return value
+        if len(args) == 2:
+            key = args[0]
+            value = args[1]
+            self.set_key_value(key, value)
+            return value
+
+        raise SyntaxError("Invalid number of arguments")
 
     def _set_children(self, value):
         "Set children"
@@ -453,6 +463,11 @@ class ConfigurationDict(ContainerInstance):
             default = super().get_default()
 
         return default.get(key, UNSET_ARG)
+
+    def set_key_value(self, key, value):
+        "Set key value"
+        child = self.get_child(key)
+        child.set_value(value)
 
     def __contains__(self, key):
         "Check if key is in children"
