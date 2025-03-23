@@ -79,26 +79,8 @@ class BaseNode:
         self.__node_parent__ = parent or None
         self.__node_value__ = value or NOT_SET
 
-    # @property
-    # def key(self) -> Optional[Union[str, int]]:
-    #     """The configuration key identifier."""
-    #     return self.__node_key__ or None
-
-    # @key.setter
-    # def key(self, value: Optional[Union[str, int]]):
-    #     self.__node_key__ = value
-
-    # @property
-    # def parent(self) -> Optional["Node"]:
-    #     """The parent configuration object."""
-    #     return self.__node_parent__
-
-    # @parent.setter
-    # def parent(self, value: Optional["Node"]):
-    #     self.__node_parent__ = value
-
     @property
-    def name(self) -> str:
+    def __node_name__(self) -> str:
         """The display name - either the key or class name."""
         if self.__node_key__ is not None:
             return str(self.__node_key__)
@@ -110,8 +92,7 @@ class BaseNode:
         curr = self
         out = []
         while curr is not None:
-            # print("WIPPP", curr, type(curr.name), curr.name)
-            name = curr.name
+            name = curr.__node_name__
             assert isinstance(
                 name, str
             ), f"Object {curr} does not have a valid name, got: {name}"
@@ -138,6 +119,11 @@ class BaseNode:
 class Node(BaseNode):
     "Node with config management and inheritance"
 
+    # TODO: Rename internal methods
+    # def query_cfg(        ==> __node_config__
+    # def query_inst_cfg(   ==> __node_config_self__
+    # def query_parent_cfg( ==> __node_config_parent__
+
     # Instance config management
     # ----------------------------
 
@@ -158,6 +144,7 @@ class Node(BaseNode):
 
         return out
 
+    # def query_inst_cfg(
     def query_inst_cfg(
         self,
         name: str,
@@ -179,8 +166,89 @@ class Node(BaseNode):
         Raises:
             AssertionError: If casting fails
         """
+
+        def _query_inst_cfg(
+            name: str,
+            override: Optional[Dict] = None,
+            default: Any = UNSET_ARG,
+            report: Optional[List] = None,
+        ) -> Any:
+            """Internal method to query instance configuration from various sources.
+
+            Searches for configuration values in the following precedence order:
+            1. Dictionary override if provided
+            2. Instance attribute with _name prefix
+            3. Class Meta attribute via __meta__
+            4. Class Meta attribute via Meta class
+            5. Instance attribute with meta__ prefix
+            6. Default value if provided
+
+            Args:
+                name: Configuration setting name to query
+                override: Optional dictionary of override values
+                default: Default value if setting is not found
+                report: Optional list to collect query trace information
+
+            Returns:
+                The configuration value if found
+
+            Raises:
+                UnknownSetting: If the setting is not found and no default is provided
+            """
+            query_from = report if isinstance(report, list) else []
+
+            # Fetch from dict override, if provided
+            if isinstance(override, dict):
+                val = override.get(name, UNSET_ARG)
+                if val is not UNSET_ARG:
+                    query_from.append(f"dict_override:{name}")
+                    return val
+            elif override is not None:
+                raise ValueError(f"Invalid override type: {type(override)}")
+
+            # Fetch from self._NAME
+            # Good for initial setup, if write mode is required
+            val = getattr(self, f"_{name}", UNSET_ARG)
+            if val is not UNSET_ARG:
+                query_from.append(f"self_attr:_{name}")
+                return val
+
+            # Fetch from self.__meta__.NAME
+            cls = self
+            if hasattr(cls, "__meta__"):
+                val = getattr(cls.__meta__, name, UNSET_ARG)
+                if val != UNSET_ARG:
+                    query_from.append(f"class_meta:__meta__.{name}")
+                    return val
+
+            # Python class params: self.Meta.NAME
+            # Good for class overrides
+            cls = self
+            if hasattr(cls, "Meta"):
+                val = getattr(cls.Meta, name, UNSET_ARG)
+                if val != UNSET_ARG:
+                    query_from.append(f"class_meta:Meta.{name}")
+                    return val
+
+            # Fetch from self.meta__NAME
+            # Python class inherited params (good for defaults)
+            val = getattr(self, f"meta__{name}", UNSET_ARG)
+            if val is not UNSET_ARG:
+                query_from.append(f"self_attr:meta__{name}")
+                return val
+
+            if default is not UNSET_ARG:
+                query_from.append("default_arg")
+                return default
+
+            msg = (
+                f"Setting '{name}' has not been declared before being used"
+                f" in '{repr(self)}', please declare 'meta__{name}' attribute, tried to query: {query_from}"
+            )
+            raise exceptions.UnknownSetting(msg)
+
         report = report if isinstance(report, list) else []
-        out = self._query_inst_cfg(name, report=report, **kwargs)
+        out = _query_inst_cfg(name, report=report, **kwargs)
         logger.debug("Node config query for %s.%s=%s", self, name, out)
 
         if isinstance(out, (dict, list)):
@@ -194,113 +262,6 @@ class Node(BaseNode):
                 out, cast
             ), f"Wrong type for config {self}, expected {cast}, got: {type(out)} {out}"
         return out
-
-    def _query_inst_cfg(
-        self,
-        name: str,
-        override: Optional[Dict] = None,
-        default: Any = UNSET_ARG,
-        report: Optional[List] = None,
-    ) -> Any:
-        """Internal method to query instance configuration from various sources.
-
-        Searches for configuration values in the following precedence order:
-        1. Dictionary override if provided
-        2. Instance attribute with _name prefix
-        3. Class Meta attribute via __meta__
-        4. Class Meta attribute via Meta class
-        5. Instance attribute with meta__ prefix
-        6. Default value if provided
-
-        Args:
-            name: Configuration setting name to query
-            override: Optional dictionary of override values
-            default: Default value if setting is not found
-            report: Optional list to collect query trace information
-
-        Returns:
-            The configuration value if found
-
-        Raises:
-            UnknownSetting: If the setting is not found and no default is provided
-        """
-        query_from = report if isinstance(report, list) else []
-
-        # Fetch from dict override, if provided
-        if isinstance(override, dict):
-            val = override.get(name, UNSET_ARG)
-            if val is not UNSET_ARG:
-                query_from.append(f"dict_override:{name}")
-                return val
-        elif override is not None:
-            raise ValueError(f"Invalid override type: {type(override)}")
-
-        # Fetch from self._NAME
-        # Good for initial setup, if write mode is required
-        val = getattr(self, f"_{name}", UNSET_ARG)
-        if val is not UNSET_ARG:
-            query_from.append(f"self_attr:_{name}")
-            return val
-
-        # Fetch from self.__meta__.NAME
-        cls = self
-        if hasattr(cls, "__meta__"):
-            val = getattr(cls.__meta__, name, UNSET_ARG)
-            if val != UNSET_ARG:
-                query_from.append(f"class_meta:__meta__.{name}")
-                return val
-
-        # Python class params: self.Meta.NAME
-        # Good for class overrides
-        cls = self
-        if hasattr(cls, "Meta"):
-            val = getattr(cls.Meta, name, UNSET_ARG)
-            if val != UNSET_ARG:
-                query_from.append(f"class_meta:Meta.{name}")
-                return val
-
-        # Fetch from self.meta__NAME
-        # Python class inherited params (good for defaults)
-        val = getattr(self, f"meta__{name}", UNSET_ARG)
-        if val is not UNSET_ARG:
-            query_from.append(f"self_attr:meta__{name}")
-            return val
-
-        if default is not UNSET_ARG:
-            query_from.append("default_arg")
-            return default
-
-        msg = (
-            f"Setting '{name}' has not been declared before being used"
-            f" in '{repr(self)}', please declare 'meta__{name}' attribute, tried to query: {query_from}"
-        )
-        raise exceptions.UnknownSetting(msg)
-
-    # # TODO: Deprecate query_inst_cfg, and use this method instead
-    # # Add support for folowing parameters
-    # def query_cfg(
-    #     self,
-    #     name: str,
-    #     include_self: bool = True,
-    #     include_parents: bool = True,
-    #     include_root: bool = True,
-    #     report: bool = False,
-    #     **kwargs,
-    # ) -> Any:
-    #     """Query configuration from self and parent hierarchy.
-
-    #     Args:
-    #         name: Configuration setting name to query
-    #         include_self: Whether to include self in the query
-    #         report: Whether to return query trace information
-    #         **kwargs: Additional arguments passed to query_parent_cfg
-
-    #     Returns:
-    #         The configuration value, optionally with query trace information
-    #     """
-    #     return self.query_parent_cfg(
-    #         name, include_self=include_self, report=report, **kwargs
-    #     )
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     def query_parent_cfg(

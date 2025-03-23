@@ -23,7 +23,7 @@ class TestNodeBase:
 
         # Test attribute access methods
         assert t.__node_key__ is None
-        assert t.name == Node.__name__
+        assert t.__node_name__ == Node.__name__
         assert t.__node_fname__ == Node.__name__
         assert isinstance(t.__node_fkey__, str)
         assert t.__node_fkey__ == ""

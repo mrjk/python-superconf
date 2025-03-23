@@ -156,7 +156,9 @@ class Leaf(Node):
     ):
         super().__init__(**kwargs)
 
-        logger.debug("Init node %s: %s, value=%s", self.__class__, self.__node_fname__, value)
+        logger.debug(
+            "Init node %s: %s, value=%s", self.__class__, self.__node_fname__, value
+        )
 
         self.configure(value=value, default=default, meta=meta, cast=cast, field=field)
 
@@ -228,7 +230,10 @@ class Leaf(Node):
         self.__node_value__ = value
 
         logger.debug(
-            "Set value for %s: %s (VS %s)", self.__node_fname__, self.__node_value__, value
+            "Set value for %s: %s (VS %s)",
+            self.__node_fname__,
+            self.__node_value__,
+            value,
         )
         return self.__node_value__
 
@@ -386,7 +391,9 @@ class ConfigurationDict(ContainerInstance):
         "Set children"
 
         logger.info(
-            "Set children for ConfigurationDict %s: %s", self.__node_fname__, truncate(value)
+            "Set children for ConfigurationDict %s: %s",
+            self.__node_fname__,
+            truncate(value),
         )
 
         assert isinstance(
@@ -431,7 +438,9 @@ class ConfigurationDict(ContainerInstance):
 
         if noexceptions is True:
             return None
-        raise exceptions.UndeclaredField(f"Child {key} not found in {self.__node_fname__}")
+        raise exceptions.UndeclaredField(
+            f"Child {key} not found in {self.__node_fname__}"
+        )
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
@@ -773,7 +782,9 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         "Set children"
 
         logger.info(
-            "Set children for ConfigurationObj %s: %s", self.__node_fname__, truncate(value)
+            "Set children for ConfigurationObj %s: %s",
+            self.__node_fname__,
+            truncate(value),
         )
 
         assert isinstance(
@@ -898,7 +909,9 @@ class ConfigurationList(ConfigurationDict):
         "Set children"
 
         logger.info(
-            "Set children for Containerlist %s: %s", self.__node_fname__, truncate(value)
+            "Set children for Containerlist %s: %s",
+            self.__node_fname__,
+            truncate(value),
         )
 
         assert isinstance(
