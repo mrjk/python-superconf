@@ -2879,6 +2879,21 @@ objc = ["pyobjc-framework-Cocoa"]
 win32 = ["pywin32"]
 
 [[package]]
+name = "sentinel"
+version = "1.0.0"
+description = "Create sentinel objects, akin to None, NotImplemented, Ellipsis"
+optional = false
+python-versions = ">=3.6,<4.0"
+groups = ["main"]
+files = [
+    {file = "sentinel-1.0.0-py3-none-any.whl", hash = "sha256:24f02a34cc9f0fcba5a666a23b6c7f56aff332fc624632ee442e7237751a9f60"},
+    {file = "sentinel-1.0.0.tar.gz", hash = "sha256:190928f9951af6e94a1f84eefcaed791c28097dd152b88e988906be300451fd2"},
+]
+
+[package.extras]
+varname = ["varname (>=0.1)"]
+
+[[package]]
 name = "setuptools"
 version = "75.8.2"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -3297,4 +3312,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "d6f6bea05fe72458d9dd5c35391b386ef02c07b6a93af087055818733fe3f7db"
+content-hash = "a846d0990cf1050d44cad4f30bb3f03db4b0d00a4e030ca27c060ee231cb3e3b"
