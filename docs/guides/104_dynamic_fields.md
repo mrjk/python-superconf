@@ -459,3 +459,7 @@ Here are some exercises to practice what you've learned:
 3. Experiment with nested dynamic structures, such as a dictionary of services, each containing a list of endpoints.
 4. Create a configuration with default values, override some values, and add new values dynamically.
 5. Practice iterating over dynamic collections and accessing items by key or index. 
+
+```python
+
+```

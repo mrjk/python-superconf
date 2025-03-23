@@ -133,13 +133,41 @@ class _ArgCfg:
     #     return self.cfg[key]
 
 
+def _cast_value(self, value):
+    "Cast value"
+
+    def _cast(value):
+        # If there is no cast callable, then return directly the value
+        if self.__node_cast__ is None:
+            return value
+
+        # Otherwise, try to cast the value
+        try:
+            # msg = f"Cast value {self.__node_fname__} with {self.__node_cast__}: {value}"
+            # logger.debug(msg)
+            value = self.__node_cast__(value)
+        except Exception as err:
+            raise exceptions.InvalidCastConfiguration(
+                f"Invalid cast {self.__node_cast__} for {self.__node_fname__} for value: {value}, got error: {type(err).__name__} {err}"
+            )
+
+        return value
+
+    new_val = _cast(value)
+    if new_val != value:
+        msg = f"Cast value {self.__node_fname__} with {self.__node_cast__}: {value} -> {new_val}"
+        logger.debug(msg)
+
+    return new_val
+
+
 class Leaf(Node):
     "Leaf instance, representing a value"
 
     __node_value__ = NOT_SET
-    __default__ = NOT_SET
-    __cast__ = None
-    __field__ = None
+    __node_default__ = NOT_SET
+    __node_cast__ = None
+    __node_field__ = None
 
     # Public settings
     meta__default = NOT_SET
@@ -203,8 +231,8 @@ class Leaf(Node):
         )
 
         # Configure the instance
-        self.__field__ = field
-        self.__cast__ = cast
+        self.__node_field__ = field
+        self.__node_cast__ = cast
         self.set_default(default)
         if value is UNSET_ARG:
             value = self.get_value()
@@ -217,16 +245,18 @@ class Leaf(Node):
         "Set default value"
 
         value = self.pre_load(value)
-        value = self._cast_value(value)
-        self.__default__ = value
+        value = _cast_value(self, value)
+        self.__node_default__ = value
 
-        logger.debug("Set default for %s: %s", self.__node_fname__, self.__default__)
-        return self.__default__
+        logger.debug(
+            "Set default for %s: %s", self.__node_fname__, self.__node_default__
+        )
+        return self.__node_default__
 
     def set_value(self, value):
         "Set value"
         value = self.pre_load(value)
-        value = self._cast_value(value)
+        value = _cast_value(self, value)
         self.__node_value__ = value
 
         logger.debug(
@@ -237,37 +267,10 @@ class Leaf(Node):
         )
         return self.__node_value__
 
-    def _cast_value(self, value):
-        "Cast value"
-
-        def _cast(value):
-            # If there is no cast callable, then return directly the value
-            if self.__cast__ is None:
-                return value
-
-            # Otherwise, try to cast the value
-            try:
-                # msg = f"Cast value {self.__node_fname__} with {self.__cast__}: {value}"
-                # logger.debug(msg)
-                value = self.__cast__(value)
-            except Exception as err:
-                raise exceptions.InvalidCastConfiguration(
-                    f"Invalid cast {self.__cast__} for {self.__node_fname__} for value: {value}, got error: {type(err).__name__} {err}"
-                )
-
-            return value
-
-        new_val = _cast(value)
-        if new_val != value:
-            msg = f"Cast value {self.__node_fname__} with {self.__cast__}: {value} -> {new_val}"
-            logger.debug(msg)
-
-        return new_val
-
     def get_default(self):
         "Get default value"
 
-        default_value = self.__default__
+        default_value = self.__node_default__
         if callable(default_value):
             default_value = default_value(self)
 
@@ -322,11 +325,12 @@ class Leaf(Node):
         logger.info(msg)
         return self
 
-    def get_help(self) -> str:
+    @property
+    def __node_help__(self) -> str:
         "Get leaf help message"
 
-        if self.__field__ is not None and self.__field__.help:
-            return self.__field__.help
+        if self.__node_field__ is not None and self.__node_field__.help:
+            return self.__node_field__.help
 
         return self.__doc__ or "<NO_HELP>"
 

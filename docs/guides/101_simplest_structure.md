@@ -209,7 +209,7 @@ debug_enabled = field_obj.get_value()
 default_value = field_obj.get_default()
 
 # Or get its help text
-help_text = field_obj.get_help()
+help_text = field_obj.__node_help__
 
 print("\nAccessing field objects:")
 print(f"Field value: {debug_enabled}")
@@ -266,7 +266,7 @@ app = AppConfig()
 
 print("\nIterating over all fields:")
 for field_obj in app:
-    name = field_obj.key
+    name = field_obj.__node_key__
     value = field_obj.get_value()
     default = field_obj.get_default()
     help_text = getattr(field_obj, 'help', 'No help available')
@@ -348,3 +348,7 @@ Here are some exercises to practice what you've learned:
 3. Create another instance with custom values and print all fields.
 4. Try accessing a non-existent field and see what error you get.
 5. Iterate over all fields and print their values and help text.
+
+```python
+
+```

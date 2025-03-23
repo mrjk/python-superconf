@@ -320,10 +320,8 @@ for key, resource in resources.items():
 
 # Each child is a ResourceItem instance
 assert isinstance(resources.res1, ResourceItem)
-assert resources.res1['name'] == "Database"
+assert resources.res1.name == "Database"
 assert resources.res1.type == "postgres"
-
-assert False, "TODO: Fix bug where we can't use 'name' as attribute"
 ```
 
 ## Combining Meta Settings
