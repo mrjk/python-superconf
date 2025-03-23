@@ -8,7 +8,7 @@ various sources.
 __version__ = "0.1.0"
 
 # Import anchors
-from superconf.anchors import (
+from superconf.lib.anchors import (
     ABS,
     ABSOLUTE,
     REL,
