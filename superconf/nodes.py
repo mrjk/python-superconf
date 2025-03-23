@@ -49,15 +49,15 @@ class BaseNode:
     5. Parent configuration objects
 
     Attributes:
-        __key__: Configuration key identifier
-        __parent__: Reference to parent configuration object
-        __value__: Stored configuration value
+        __node_key__: Configuration key identifier
+        __node_parent__: Reference to parent configuration object
+        __node_value__: Stored configuration value
         Meta: Inner class for class-level configuration settings
     """
 
-    __key__: Optional[Union[str, int]] = None
-    __parent__: Optional["Node"] = None
-    __value__: Any = NOT_SET
+    __node_key__: Optional[Union[str, int]] = None
+    __node_parent__: Optional["Node"] = None
+    __node_value__: Any = NOT_SET
 
     class Meta:
         """Class to store class-level configuration settings."""
@@ -75,33 +75,33 @@ class BaseNode:
             value: The configuration value
             parent: Parent configuration object if this is a child config
         """
-        self.__key__ = key
-        self.__parent__ = parent
-        self.__value__ = value
+        self.__node_key__ = key or None
+        self.__node_parent__ = parent or None
+        self.__node_value__ = value or NOT_SET
 
-    @property
-    def key(self) -> Optional[Union[str, int]]:
-        """The configuration key identifier."""
-        return self.__key__ or None
+    # @property
+    # def key(self) -> Optional[Union[str, int]]:
+    #     """The configuration key identifier."""
+    #     return self.__node_key__ or None
 
-    @key.setter
-    def key(self, value: Optional[Union[str, int]]):
-        self.__key__ = value
+    # @key.setter
+    # def key(self, value: Optional[Union[str, int]]):
+    #     self.__node_key__ = value
 
     @property
     def parent(self) -> Optional["Node"]:
         """The parent configuration object."""
-        return self.__parent__
+        return self.__node_parent__
 
     @parent.setter
     def parent(self, value: Optional["Node"]):
-        self.__parent__ = value
+        self.__node_parent__ = value
 
     @property
     def name(self) -> str:
         """The display name - either the key or class name."""
-        if self.__key__ is not None:
-            return str(self.__key__)
+        if self.__node_key__ is not None:
+            return str(self.__node_key__)
         return self.__class__.__name__
 
     @property
@@ -126,7 +126,7 @@ class BaseNode:
         curr = self
         out = []
         while curr is not None:
-            curr_key = curr.key
+            curr_key = curr.__node_key__
             if not isinstance(curr_key, (int, str)):
                 curr_key = ""
             out.append(curr_key)
@@ -151,8 +151,8 @@ class Node(BaseNode):
         out = [self]
 
         target = self
-        while target.__parent__ is not None and target.__parent__ not in out:
-            target = target.__parent__
+        while target.__node_parent__ is not None and target.__node_parent__ not in out:
+            target = target.__node_parent__
             out.append(target)
 
         return out
@@ -315,7 +315,7 @@ class Node(BaseNode):
 
         Args:
             name: Configuration setting name to query
-            as_subkey: If True and parent value is dict/list, get value using self.__key__
+            as_subkey: If True and parent value is dict/list, get value using self.__node_key__
             cast: Optional type to cast the result to
             default: Default value if setting is not found
             include_self: Whether to include self in the query
@@ -330,7 +330,7 @@ class Node(BaseNode):
         """
 
         # Fast exit or raise exception
-        if not self.__parent__ and include_self is False:
+        if not self.__node_parent__ and include_self is False:
             if default is not UNSET_ARG:
                 if report:
                     return default, "No parents, return default value"
@@ -364,10 +364,12 @@ class Node(BaseNode):
                 # Ckeck subkey
                 if as_subkey is True:
                     if isinstance(out, dict):
-                        out = out.get(self.__key__, NOT_SET)
+                        out = out.get(self.__node_key__, NOT_SET)
                     elif isinstance(out, list):
-                        assert isinstance(self.__key__, int), f"Got: {self.__key__}"
-                        out = out[self.__key__]
+                        assert isinstance(
+                            self.__node_key__, int
+                        ), f"Got: {self.__node_key__}"
+                        out = out[self.__node_key__]
                     else:
                         out = NOT_SET
                 _report.append(f"Found2 '{name}' in parent {parent}= {out}")

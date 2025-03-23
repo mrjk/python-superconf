@@ -61,7 +61,7 @@ class BaseFieldLeaf(BaseNode):
         attr=None,
         instance_class=None,
     ):
-        self.__key__ = key
+        self.__node_key__ = key
         self._attr = attr
         self.default = default
         self.help = help
@@ -77,7 +77,7 @@ class BaseFieldLeaf(BaseNode):
     def attr(self):
         "Attribute"
         if self._attr is None:
-            return self.key
+            return self.__node_key__
         return self._attr
 
     @attr.setter
@@ -136,7 +136,7 @@ class _ArgCfg:
 class Leaf(Node):
     "Leaf instance, representing a value"
 
-    __value__ = NOT_SET
+    __node_value__ = NOT_SET
     __default__ = NOT_SET
     __cast__ = None
     __field__ = None
@@ -166,7 +166,7 @@ class Leaf(Node):
 
     def __repr__(self):
         "Represent the instance"
-        return f"{self.__class__.__name__}({self.__key__})"
+        return f"{self.__class__.__name__}({self.__node_key__})"
 
     def configure(
         self, value=UNSET_ARG, default=UNSET_ARG, cast=UNSET_ARG, meta=None, field=None
@@ -225,10 +225,12 @@ class Leaf(Node):
         "Set value"
         value = self.pre_load(value)
         value = self._cast_value(value)
-        self.__value__ = value
+        self.__node_value__ = value
 
-        logger.debug("Set value for %s: %s (VS %s)", self.fname, self.__value__, value)
-        return self.__value__
+        logger.debug(
+            "Set value for %s: %s (VS %s)", self.fname, self.__node_value__, value
+        )
+        return self.__node_value__
 
     def _cast_value(self, value):
         "Cast value"
@@ -274,8 +276,8 @@ class Leaf(Node):
             raise NotImplementedError("Keyed value not implemented")
 
         def _get_value(default=default, nodefaults=nodefaults):
-            if self.__value__ is not NOT_SET:
-                return self.__value__
+            if self.__node_value__ is not NOT_SET:
+                return self.__node_value__
             if nodefaults:
                 return NOT_SET
 
@@ -563,7 +565,7 @@ class ConfigurationDict(ContainerInstance):
         keys.extend(list(other.get_children().keys()))
         keys = unique(keys)
 
-        new_instance = type(self)(key=self.key)
+        new_instance = type(self)(key=self.__node_key__)
 
         out = {}
         for key in keys:
@@ -590,7 +592,7 @@ class ConfigurationDict(ContainerInstance):
             child.parent = new_instance
 
         out = {key: child.get_value() for key, child in out.items()}
-        new_instance = type(self)(value=out, key=self.key)
+        new_instance = type(self)(value=out, key=self.__node_key__)
         return new_instance
 
 
@@ -661,7 +663,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         matches = []
         for field in _children_classes:
-            if key and field.key == key:
+            if key and field.__node_key__ == key:
                 matches.append(field)
             elif attr and field.attr == attr:
                 matches.append(field)
@@ -718,7 +720,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         if attr:
             ret = [field.attr for field in _children_classes]
         else:
-            ret = [field.key for field in _children_classes]
+            ret = [field.__node_key__ for field in _children_classes]
 
         return ret
 
@@ -760,7 +762,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                     )
 
             if isinstance(field, BaseFieldLeaf):
-                field.key = field.key if field.key else attr
+                field.__node_key__ = field.__node_key__ if field.__node_key__ else attr
                 field.attr = attr
                 _children_classes.append(field)
         self._children_classes = _children_classes

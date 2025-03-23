@@ -14,16 +14,16 @@ class TestNodeBase:
         t = Node()
 
         # Test dunder methods presence and default values
-        assert hasattr(t, "__key__")
-        assert hasattr(t, "__parent__")
-        assert hasattr(t, "__value__")
-        assert t.__key__ is None
-        assert t.__parent__ is None
-        assert t.__value__ is NOT_SET
+        assert hasattr(t, "__node_key__")
+        assert hasattr(t, "__node_parent__")
+        assert hasattr(t, "__node_value__")
+        assert t.__node_key__ is None
+        assert t.__node_parent__ is None
+        assert t.__node_value__ is NOT_SET
 
         # Test attribute access methods
         assert t.parent is None
-        assert t.key is None
+        assert t.__node_key__ is None
         assert t.name == Node.__name__
         assert t.fname == Node.__name__
         assert isinstance(t.fkey, str)
@@ -33,29 +33,29 @@ class TestNodeBase:
         """Test Node instantiation with different parameter combinations."""
         # Test with key only
         t1 = Node(key="test_key")
-        assert t1.__key__ == "test_key"
-        assert t1.__parent__ is None
-        assert t1.__value__ is NOT_SET
+        assert t1.__node_key__ == "test_key"
+        assert t1.__node_parent__ is None
+        assert t1.__node_value__ is NOT_SET
 
         # Test with value only
         test_value = {"data": "test"}
         t2 = Node(value=test_value)
-        assert t2.__key__ is None
-        assert t2.__parent__ is None
-        assert t2.__value__ == test_value
+        assert t2.__node_key__ is None
+        assert t2.__node_parent__ is None
+        assert t2.__node_value__ == test_value
 
         # Test with parent only
         parent_node = Node()
         t3 = Node(parent=parent_node)
-        assert t3.__key__ is None
-        assert t3.__parent__ == parent_node
-        assert t3.__value__ is NOT_SET
+        assert t3.__node_key__ is None
+        assert t3.__node_parent__ == parent_node
+        assert t3.__node_value__ is NOT_SET
 
         # Test with all parameters
         t4 = Node(key="full_test", value={"full": "test"}, parent=parent_node)
-        assert t4.__key__ == "full_test"
-        assert t4.__parent__ == parent_node
-        assert t4.__value__ == {"full": "test"}
+        assert t4.__node_key__ == "full_test"
+        assert t4.__node_parent__ == parent_node
+        assert t4.__node_value__ == {"full": "test"}
 
     def test_13_node_configuration(self):
         """Test Node configuration with different meta configurations."""
@@ -111,25 +111,25 @@ class TestNodeNested:
         t3 = Node(key="k3", value={"level": 3}, parent=t2)
 
         # Test t1 attributes
-        assert t1.__key__ == "k1"
-        assert t1.__parent__ is None
-        assert t1.__value__ == {"level": 1}
+        assert t1.__node_key__ == "k1"
+        assert t1.__node_parent__ is None
+        assert t1.__node_value__ == {"level": 1}
         assert t1.parent is None
-        assert t1.key == "k1"
+        assert t1.__node_key__ == "k1"
 
         # Test t2 attributes
-        assert t2.__key__ == "k2"
-        assert t2.__parent__ == t1
-        assert t2.__value__ == {"level": 2}
+        assert t2.__node_key__ == "k2"
+        assert t2.__node_parent__ == t1
+        assert t2.__node_value__ == {"level": 2}
         assert t2.parent == t1
-        assert t2.key == "k2"
+        assert t2.__node_key__ == "k2"
 
         # Test t3 attributes
-        assert t3.__key__ == "k3"
-        assert t3.__parent__ == t2
-        assert t3.__value__ == {"level": 3}
+        assert t3.__node_key__ == "k3"
+        assert t3.__node_parent__ == t2
+        assert t3.__node_value__ == {"level": 3}
         assert t3.parent == t2
-        assert t3.key == "k3"
+        assert t3.__node_key__ == "k3"
 
     def test_22_nested_node_configuration(self):
         """Test nested Node configuration inheritance."""
