@@ -7,85 +7,19 @@ import os
 
 import yaml
 
+# pylint: disable=unused-import
+from superconf.lib.sentinel_v2 import (
+    DEFAULT,
+    FAIL,
+    NOT_SET,
+    NOT_SET_DICT,
+    NOT_SET_LIST,
+    UNSET_ARG,
+)
+
+
 log = logging.getLogger(__name__)
 
-
-class _NoneType:
-    """
-    A special type that behaves as a replacement for None.
-    We have to put a new default value to know if a variable has been set by
-    the user explicitly. This is useful for the ``CommandLine`` loader, when
-    CLI parsers force you to set a default value, and thus, break the discovery
-    chain.
-    """
-
-    def repr(self):
-        "Return string representation"
-        return "<NONE_TYPE>"
-
-    def __str__(self):
-        return self.repr()
-
-    def __repr__(self):
-        return self.repr()
-
-    def __bool__(self):
-        return False
-
-
-class NotSet(_NoneType):
-    "Represent an unset arg"
-
-    def repr(self):
-        return "<NOT_SET>"
-
-    @property
-    def type(self):
-        "Return object type"
-        return self.__class__
-
-
-class NotSetList(NotSet, list):
-    "Represent an unset list"
-
-    def repr(self):
-        return "<NOT_SET_LIST>"
-
-
-class NotSetDict(NotSet, dict):
-    "Represent an unset dict"
-
-    def repr(self):
-        return "<NOT_SET_DICT>"
-
-
-class UnSetArg(_NoneType):
-    "Represent an unset arg"
-
-    def repr(self):
-        return "<UNSET_ARG>"
-
-
-class Failure(_NoneType):
-    "Represent a failure"
-
-    def repr(self):
-        return "<FAILURE>"
-
-
-class Default(_NoneType):
-    "Represent a default"
-
-    def repr(self):
-        return "<DEFAULT>"
-
-
-NOT_SET = NotSet()
-NOT_SET_LIST = NotSetList()
-NOT_SET_DICT = NotSetDict()
-UNSET_ARG = UnSetArg()
-FAIL = UnSetArg()
-DEFAULT = Default()
 assert not NOT_SET
 assert not NOT_SET_LIST
 assert not NOT_SET_DICT
@@ -95,9 +29,10 @@ assert NOT_SET is not UNSET_ARG
 assert not isinstance(UNSET_ARG, str)
 assert not isinstance(NOT_SET, str)
 assert (NOT_SET or "INVALID") == "INVALID"
-
-# assert UNSET_ARG is not NOT_SET
-# assert UNSET_ARG == NOT_SET
+assert isinstance(NOT_SET_DICT, dict)
+assert isinstance(NOT_SET_LIST, list)
+assert isinstance(NOT_SET_DICT, NOT_SET.type)
+assert NOT_SET_DICT is NOT_SET_DICT or NOT_SET_DICT is NOT_SET
 
 
 def from_json(string):
