@@ -26,6 +26,7 @@ First, let's create a configuration class that uses various field types:
 ```python
 from superconf import ConfigurationObj
 from superconf.fields import (
+    Field,
     FieldBool, FieldString, FieldInt, FieldFloat, 
     FieldDict, FieldList, FieldTuple, FieldOption
 )
@@ -52,19 +53,20 @@ class AppConfig(ConfigurationObj):
     settings = FieldDict(default={"theme": "dark"})
     dimensions = FieldTuple(default=(800, 600))
     
-    # Option field - value must be one of the allowed options
-    # log_level = FieldOption(
-    #     options=["debug", "info", "warning", "error"], 
-    #     default="info"
-    # )
-    
     # Fields with NOT_SET defaults
-    unset_string = FieldString(default=NOT_SET)
-    unset_dict = FieldDict(default=NOT_SET_DICT)
-    unset_list = FieldList(default=NOT_SET_LIST)
-
+    unset = Field() # Equivalent of FieldString(default=NOT_SET)
+    unset_string = FieldString() # Equivalent of FieldString(default=NOT_SET)
+    unset_dict = FieldDict()     # Equivalent of FieldDict(default=NOT_SET_DICT)
+    unset_list = FieldList()     # Equivalent of FieldList(default=NOT_SET_LIST)
+    
 # Create an instance with default values
 app = AppConfig()
+
+```
+
+Now we created our instance, let's inspect it:
+
+```python
 
 # Print information about all fields
 print("Configuration instance with specialized field types:")
@@ -91,12 +93,9 @@ print(f"tags: {app.tags} (type: {type(app.tags).__name__})")
 print(f"settings: {app.settings} (type: {type(app.settings).__name__})")
 print(f"dimensions: {app.dimensions} (type: {type(app.dimensions).__name__})")
 
-# # Print option field
-# print("\nOption field:")
-# print(f"log_level: {app.log_level} (type: {type(app.log_level).__name__})")
-
 # Print unset fields
 print("\nUnset fields:")
+print(f"unset: {app.unset} (type: {type(app.unset).__name__})")
 print(f"unset_string: {app.unset_string} (type: {type(app.unset_string).__name__})")
 print(f"unset_dict: {app.unset_dict} (type: {type(app.unset_dict).__name__})")
 print(f"unset_list: {app.unset_list} (type: {type(app.unset_list).__name__})")
@@ -122,24 +121,47 @@ Let's explore how these work in practice:
 ```python
 from superconf.common import NOT_SET
 
+# Create an instance with default values
+app = AppConfig()
+
 # Check if a field is NOT_SET
-print("\nChecking for unset values:")
+print("\nChecking for unset values:", app.unset)
+print(id(app.unset), id(NOT_SET))
+if app.unset is NOT_SET:
+    print("unset is not set") # NEver executed since it's cast to string
+else:
+    print("unset has a value")
+
+# Check if a field is NOT_SET
+print("\nChecking for unset_string values:", app.unset_string)
+print(id(app.unset_string), id(NOT_SET))
 if app.unset_string is NOT_SET:
-    print("unset_string is not set")
+    print("unset_string is not set") # NEver executed since it's cast to string
 else:
     print("unset_string has a value")
 
 # NOT_SET_DICT ensures type safety by returning an empty dict
+print(f"\nIs unset_dict an empty dict? {app.unset_dict == {}}")
 print(f"unset_dict value: {app.unset_dict}")
-print(f"Is unset_dict an empty dict? {app.unset_dict == {}}")
 
 # NOT_SET_LIST ensures type safety by returning an empty list
+print(f"\nIs unset_list an empty list? {app.unset_list == []}")
 print(f"unset_list value: {app.unset_list}")
-print(f"Is unset_list an empty list? {app.unset_list == []}")
 
 # Set a value to a previously unset field
 app.unset_string = "Now I have a value"
 print(f"After setting: unset_string = {app.unset_string}")
+```
+
+There are other way to test values:
+
+```python
+assert app.unset_dict != NOT_SET
+assert app.unset_dict == NOT_SET_DICT
+
+# To test inherited values
+assert isinstance(app.unset_dict, NOT_SET.type)
+assert app.unset_dict is NOT_SET_DICT or app.unset_dict is NOT_SET
 ```
 
 The advantage of using `NOT_SET` constants is that they maintain type safety. For example, `NOT_SET_DICT` behaves like an empty dictionary, so operations that expect a dictionary will still work.
@@ -320,7 +342,3 @@ Here are some exercises to practice what you've learned:
 3. Create a configuration with a `FieldOption` that restricts a value to a set of valid options.
 4. Try to set an invalid value to a field with a specific type and observe the error.
 5. Create a configuration with `NOT_SET` values and check how they behave when accessed before and after setting a value. 
-
-```python
-
-```

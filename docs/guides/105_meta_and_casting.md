@@ -115,10 +115,14 @@ The `default` setting in `Meta` provides default values for the entire configura
 class SimpleConfig(ConfigurationObj):
     class Meta:
         default = {
-            "setting1": "value1",
-            "setting2": "value2",
-            "setting3": "value3",
+            "setting1": "value1, from meta.default",
+            "setting2": "value2, from meta.default",
         }
+
+    setting1 = FieldString()
+    setting2 = FieldString(default="value2, not taken in account since in meta.default")
+    setting3 = FieldString()
+    setting4 = FieldString(default="value4, from field.default")
 
 # Create an instance with no explicit fields
 simple = SimpleConfig()
@@ -128,15 +132,17 @@ print("\nSimple configuration with only Meta.default:")
 print(f"setting1: {simple.setting1}")
 print(f"setting2: {simple.setting2}")
 print(f"setting3: {simple.setting3}")
+print(f"setting4: {simple.setting4}")
 
 # Create an instance with some overrides
-simple_custom = SimpleConfig(value={"setting2": "custom2"})
+simple_custom = SimpleConfig(value={"setting2": "custom2", "setting3": "custom3"})
 
 # Print the merged values
 print("\nSimple configuration with some overrides:")
 print(f"setting1: {simple_custom.setting1}")  # From default
 print(f"setting2: {simple_custom.setting2}")  # Overridden
 print(f"setting3: {simple_custom.setting3}")  # From default
+print(f"setting4: {simple_custom.setting4}")  # From default
 ```
 
 ## Custom Casting
@@ -175,7 +181,32 @@ assert isinstance(typed.bool_field, bool)
 
 ### Creating a Custom Cast Class
 
-For more complex casting needs, you can create your own cast class. A cast class is any callable that takes a value and returns a converted value.
+For more complex casting needs, you can create your own cast logic function:
+
+```python
+def email_cast(value):
+    """Convert value to a valid email format"""
+    if value is None:
+        return None
+        
+    value = str(value).strip().lower()
+    
+    # Simple validation
+    if "@" not in value:
+        value = f"{value}@example.com"
+        
+    return value
+
+# Print what happens with different inputs
+print("\nCustom email casting examples:")
+print(f"'user': {email_cast('user')}")
+print(f"'USER': {email_cast('USER')}")
+print(f"'user@company.com': {email_cast('user@company.com')}")
+print(f"None: {email_cast(None)}")
+print(f"123: {email_cast(123)}")
+```
+
+But internally, this is implemented as a class. A cast class is any callable that takes a value and returns a converted value.
 
 Let's create a custom cast for email addresses:
 
@@ -245,51 +276,6 @@ print(f"After setting 'contact@company.com': {user.email}")
 assert user.email == "contact@company.com"
 ```
 
-### Global Casting with Meta
-
-You can also set a global cast function in the `Meta` class, which will be applied to all fields unless they have their own cast:
-
-```python
-from superconf.casts import as_int
-
-class NumericConfig(ConfigurationObj):
-    """Configuration where all fields are cast to integers"""
-    
-    class Meta:
-        # Cast all fields to integers
-        cast = as_int
-    
-    # These fields will all be cast to integers
-    value1 = Field(default="42")
-    value2 = Field(default=3.14)
-    value3 = Field(default=True)
-    
-    # This field overrides the global cast
-    text = Field(default="text", cast=str)
-
-# Create a configuration
-config = NumericConfig()
-
-# Print the values
-print("\nConfiguration with global integer casting:")
-print(f"value1: {config.value1} (type: {type(config.value1).__name__})")
-print(f"value2: {config.value2} (type: {type(config.value2).__name__})")
-print(f"value3: {config.value3} (type: {type(config.value3).__name__})")
-print(f"text: {config.text} (type: {type(config.text).__name__})")
-
-# Verify the types
-assert isinstance(config.value1, int)
-assert isinstance(config.value2, int)
-assert isinstance(config.value3, int)
-assert isinstance(config.text, str)
-
-# Verify the values
-assert config.value1 == 42
-assert config.value2 == 3  # 3.14 truncated to 3
-assert config.value3 == 1  # True converted to 1
-assert config.text == "text"
-```
-
 ## Children Classes for Containers
 
 The `children_class` attribute in `Meta` defines what class should be used for dynamically created children. This is particularly useful for variadic collections like `ConfigurationDict`:
@@ -320,20 +306,24 @@ resources = ResourcesDict(value={
 print("\nResources with custom children class:")
 for key, resource in resources.items():
     print(f"Resource {key}:")
-    print(f"  Name: {resource.name}")
+    print(f"  Name: {resource['name']}")
+    print(f"  Type: {resource.type}")
+    print(f"  Class: {type(resource).__name__}")
+
+# Print the resources
+print("\nResources with custom children class:")
+for key, resource in resources.items():
+    print(f"Resource {key}:")
+    print(f"  Name: {resource['name']}")
     print(f"  Type: {resource.type}")
     print(f"  Class: {type(resource).__name__}")
 
 # Each child is a ResourceItem instance
 assert isinstance(resources.res1, ResourceItem)
-assert resources.res1.name == "Database"
+assert resources.res1['name'] == "Database"
 assert resources.res1.type == "postgres"
 
-# Default values are applied to fields not provided
-resources.res3 = {}  # Empty config for a new resource
-print("\nNew resource with defaults:")
-print(f"res3.name: {resources.res3.name}")
-print(f"res3.type: {resources.res3.type}")
+assert False, "TODO: Fix bug where we can't use 'name' as attribute"
 ```
 
 ## Combining Meta Settings
@@ -341,23 +331,22 @@ print(f"res3.type: {resources.res3.type}")
 You can combine multiple `Meta` settings for sophisticated behavior. Let's create a feature flag configuration with boolean casting and default values:
 
 ```python
-from superconf import ConfigurationObj, ConfigurationDict
-from superconf.fields import Field, FieldConf
-from superconf.casts import as_boolean
+from superconf import ConfigurationObj, ConfigurationDict, Field, FieldBool, FieldConf, as_boolean
 
-class FeatureFlags(ConfigurationDict):
+class FeatureFlags(ConfigurationObj):
     """Dynamic feature flag configuration"""
     
     class Meta:
-        # All children are booleans
-        cast = as_boolean
-        
         # Default features
         default = {
-            "dark_mode": True,
+            "dark_mode": False,
             "beta_features": False,
             "analytics": True,
         }
+
+    dark_mode = FieldBool(default=True)
+    beta_features = FieldBool(default=False)
+    analytics = FieldBool(default=True)
 
 class AppConfig(ConfigurationObj):
     """Main app configuration with feature flags"""
@@ -367,8 +356,8 @@ class AppConfig(ConfigurationObj):
         default = {
             "app_name": "FeatureApp",
             "features": {
-                "notifications": True,
-                "auto_update": False,
+                "dark_mode": True,
+                "analytics": False,
             }
         }
     
@@ -393,18 +382,7 @@ for name, enabled in app.features.items():
 # Verify feature flags
 assert app.features.dark_mode is True
 assert app.features.beta_features is False
-assert app.features.analytics is True
-assert app.features.notifications is True
-assert app.features.auto_update is False
-
-# Add a new feature flag - it will be cast to boolean
-app.features.new_feature = "yes"
-print(f"\nNew feature 'yes': {app.features.new_feature}")
-assert app.features.new_feature is True
-
-app.features.another_feature = "no"
-print(f"Another feature 'no': {app.features.another_feature}")
-assert app.features.another_feature is False
+assert app.features.analytics is False
 ```
 
 ## Practical Example: Web Application Configuration

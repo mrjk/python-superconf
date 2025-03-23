@@ -1,4 +1,4 @@
-# Variadic Dictionary and List Fields
+# Dynamic Dictionary and List Fields
 
 Welcome to the fourth SuperConf tutorial! In this guide, we'll explore dynamic collection fields - `ConfigurationDict` and `ConfigurationList` - which allow you to work with configuration data that has a variable structure.
 
@@ -10,13 +10,12 @@ So far, we've worked with configuration models where every field is predefined i
 
 SuperConf provides powerful tools for handling these dynamic structures while maintaining type safety and validation.
 
-## Understanding Variadic Fields
+## Understanding Dynamic Fields
 
-Let's first understand why variadic fields are useful. In a traditional configuration model, every field must be defined in advance:
+Let's first understand why dynamic fields are useful. In a traditional configuration model, every field must be defined in advance:
 
 ```python
-from superconf import ConfigurationObj
-from superconf.fields import Field
+from superconf import ConfigurationObj, Field
 
 # Traditional configuration with fixed fields
 class ServerConfig(ConfigurationObj):
@@ -25,12 +24,12 @@ class ServerConfig(ConfigurationObj):
     server3 = Field(default="server3.example.com")
 ```
 
-But what if you need to support an arbitrary number of servers? That's where variadic fields come in:
+But what if you need to support an arbitrary number of servers? That's where dynamic fields come in:
 
 ```python
 from superconf import ConfigurationDict
 
-# Variadic configuration with dynamic fields
+# Dynamic configuration with dynamic fields
 class ServersConfig(ConfigurationDict):
     class Meta:
         children_class = ServerConfig  # Each item will be a ServerConfig
@@ -43,13 +42,12 @@ SuperConf provides two special container types to handle these cases:
 
 The `Meta/children_class` setting is essential for both, as it defines what type of objects will be stored in the collection.
 
-## Variadic Dictionary Fields
+## Dynamic Dictionary Fields
 
 Let's create a configuration model for managing resources, where each resource has a name, type, and location:
 
 ```python
-from superconf import ConfigurationObj, ConfigurationDict
-from superconf.fields import Field, FieldConf, FieldString
+from superconf import ConfigurationObj, ConfigurationDict, Field, FieldConf, FieldString
 
 # Define a class for individual resources
 class Resource(ConfigurationObj):
@@ -77,7 +75,7 @@ class AppConfig(ConfigurationObj):
 app = AppConfig()
 
 # Print the empty resources configuration
-print("Empty Resources Configuration:")
+print("Empty Resources ConfigurationObj:")
 print(f"Resource count: {len(app.resources)}")
 print(f"Resources: {app.resources.get_value()}")
 ```
@@ -108,7 +106,7 @@ resources_data = {
 app_with_resources = AppConfig(value={"resources": resources_data})
 
 # Print the resources configuration
-print("\nResources Configuration:")
+print("\nResources ConfigurationObj:")
 print(f"Resource count: {len(app_with_resources.resources)}")
 
 # Print each resource
@@ -135,30 +133,13 @@ resource_count = len(app_with_resources.resources)
 print(f"\nTotal resources: {resource_count}")
 ```
 
-### Adding Resources Dynamically
+Note: 
 
-You can also add resources dynamically after creating the configuration:
+  * It is not possible yet to add a single resource, all resources must be created at the same time.
+  * However it is possible to merge objects of the same type between them. We will introduce this feature later.
 
-```python
-# Add a new resource dynamically
-print("\nAdding a new resource dynamically:")
-app_with_resources.resources.new_service = {
-    "type": "api",
-    "location": "global",
-    "owner": "team-c"
-}
 
-# Verify the new resource was added
-print(f"New resource type: {type(app_with_resources.resources.new_service)}")
-print(f"New resource count: {len(app_with_resources.resources)}")
-
-# Print all resource keys
-print("\nAll resource keys after addition:")
-for key in app_with_resources.resources:
-    print(f"  - {key}")
-```
-
-## Variadic List Fields
+## Dynamic List Fields
 
 Now let's create a configuration model for a list of servers:
 
@@ -198,7 +179,7 @@ class AppConfig(ConfigurationObj):
 app = AppConfig()
 
 # Print the default servers
-print("\n\nDefault Servers Configuration:")
+print("\n\nDefault Servers ConfigurationObj:")
 print(f"Server count: {len(app.servers)}")
 
 # Print each server
@@ -211,9 +192,13 @@ for i, server in enumerate(app.servers):
 
 # Access servers by index
 print("\nAccessing servers by index:")
-print(f"First server host: {app.servers[0].host}")
-print(f"Second server role: {app.servers[1].role}")
+print(f"First server host: {app.servers(0).host}  (access with callable)")
+print(f"Second server role: {app.servers[1]['role']}  (access via attribute)")
 ```
+
+Notes:
+
+  * In the case of list, attribute access can't work since fields must be string and not numbers.
 
 ### Customizing the Server List
 
@@ -243,7 +228,7 @@ servers_data = [
 app_with_servers = AppConfig(value={"servers": servers_data})
 
 # Print the custom servers
-print("\nCustom Servers Configuration:")
+print("\nCustom Servers ConfigurationObj:")
 print(f"Server count: {len(app_with_servers.servers)}")
 
 # Print each server
@@ -260,43 +245,34 @@ print(f"\nTotal servers: {server_count}")
 
 # Access by index
 print("\nAccessing by index:")
-print(f"First server: {app_with_servers.servers[0].host}")
-print(f"Second server: {app_with_servers.servers[1].host}")
-print(f"Third server: {app_with_servers.servers[2].host}")
+print(f"First server: {app_with_servers.servers(0).host}")
+print(f"Second server: {app_with_servers.servers(1).host}")
+print(f"Third server: {app_with_servers.servers(2).host}")
 ```
 
-### Adding Servers Dynamically
+Note: 
 
-You can also add servers dynamically after creating the configuration:
+  * It is not possible yet to add a single resource, all resources must be created at the same time.
+  * However it is possible to merge objects of the same type between them. We will introduce this feature later.
 
-```python
-# Add a new server dynamically
-print("\nAdding a new server dynamically:")
-app_with_servers.servers.append({
-    "host": "cache.example.com",
-    "port": 6379,
-    "role": "cache"
-})
 
-# Verify the new server was added
-print(f"New server count: {len(app_with_servers.servers)}")
-print(f"New server host: {app_with_servers.servers[3].host}")
-print(f"New server role: {app_with_servers.servers[3].role}")
-```
 
-## Working with Default Values in Variadic Fields
+## Working with Default Values in Dynamic Fields
 
-You can provide default values for variadic collections using the `Meta.default` attribute, as we've seen with the `ServerList` example.
+You can provide default values for dynamic collections using the `Meta.default` attribute, as we've seen with the `ServerList` example.
 
 Let's create a more detailed example to explore this:
 
 ```python
+from superconf import Leaf
+
 # Create a configuration class with rich defaults
 class RichDefaultsConfig(ConfigurationDict):
-    """Configuration with rich default values"""
+    """ConfigurationObj with rich default values"""
     
     class Meta:
-        children_class = Configuration
+        # children_class = ConfigurationObj(extra_fields=True)
+        children_class = Leaf
         default = {
             "setting1": {"value": "default1", "enabled": True},
             "setting2": {"value": "default2", "enabled": False},
@@ -313,9 +289,10 @@ print(f"Setting count: {len(rich_defaults)}")
 # Print each setting
 print("\nDefault Settings:")
 for key, setting in rich_defaults.items():
+    config = setting.get_value()
     print(f"Setting: {key}")
-    print(f"  Value: {setting.value}")
-    print(f"  Enabled: {setting.enabled}")
+    print(f"  Value: {config['value']}")
+    print(f"  Enabled: {config['enabled']}")
 
 # Override some defaults
 custom_settings = {
@@ -333,30 +310,31 @@ print(f"Setting count: {len(rich_with_customs)}")
 # Print each setting
 print("\nAll Settings:")
 for key, setting in rich_with_customs.items():
+    config = setting.get_value()
     print(f"Setting: {key}")
-    print(f"  Value: {setting.value}")
-    print(f"  Enabled: {setting.enabled}")
+    print(f"  Value: {config['value']}")
+    print(f"  Enabled: {config.get('enabled', 'UNSET')}")
 ```
 
-## Using Variadic Fields Without Defaults
+## Using Dynamic Fields Without Defaults
 
-If you don't provide defaults, variadic fields will start empty:
+If you don't provide defaults, dynamic fields will start empty:
 
 ```python
-from superconf import Configuration, ConfigurationDict, ConfigurationList
+from superconf import ConfigurationObj, ConfigurationDict, ConfigurationList
 from superconf.fields import FieldConf
 
 # Define simple container classes without defaults
 class EmptyDict(ConfigurationDict):
     class Meta:
-        children_class = Configuration
+        children_class = ConfigurationDict
 
 class EmptyList(ConfigurationList):
     class Meta:
-        children_class = Configuration
+        children_class = ConfigurationDict
 
 # Define a config that uses these containers
-class EmptyContainersConfig(Configuration):
+class EmptyContainersConfig(ConfigurationObj):
     dict_items = FieldConf(EmptyDict)
     list_items = FieldConf(EmptyList)
 
@@ -369,28 +347,29 @@ print(f"Dict items count: {len(empty_containers.dict_items)}")
 print(f"List items count: {len(empty_containers.list_items)}")
 
 # Add some items
-empty_containers.dict_items.item1 = {"value": "dict value"}
-empty_containers.list_items.append({"value": "list value"})
+empty_containers.dict_items.set_value({"item1": {"value": "dict value"}})
+empty_containers.list_items.set_value([{"value": "list value"}])
 
 # Check if items were added
 print("\nAfter Adding Items:")
 print(f"Dict items count: {len(empty_containers.dict_items)}")
 print(f"List items count: {len(empty_containers.list_items)}")
 print(f"Dict item1 value: {empty_containers.dict_items.item1.value}")
-print(f"List item0 value: {empty_containers.list_items[0].value}")
+print(f"List item0 value: {empty_containers.list_items(0).value}")
+
 ```
 
-## Real-World Example: API Client Configuration
+## Real-World Example: API Client ConfigurationObj
 
 Let's put everything together in a more realistic example - an API client configuration with multiple endpoints:
 
 ```python
-from superconf import Configuration, ConfigurationDict
+from superconf import ConfigurationObj, ConfigurationDict
 from superconf.fields import Field, FieldConf, FieldInt, FieldString, FieldBool
 
 # Define the endpoint configuration
-class EndpointConfig(Configuration):
-    """Configuration for an API endpoint"""
+class EndpointConfig(ConfigurationObj):
+    """ConfigurationObj for an API endpoint"""
     url = FieldString(default="https://api.example.com", help="Endpoint URL")
     timeout = FieldInt(default=30, help="Request timeout in seconds")
     retry = FieldBool(default=True, help="Whether to retry failed requests")
@@ -416,7 +395,7 @@ class EndpointsConfig(ConfigurationDict):
         }
 
 # Define the main API client configuration
-class ApiClientConfig(Configuration):
+class ApiClientConfig(ConfigurationObj):
     """API client configuration"""
     base_url = FieldString(default="https://api.example.com", help="Base API URL")
     auth_token = FieldString(default="", help="Authentication token")
@@ -429,7 +408,7 @@ class ApiClientConfig(Configuration):
 api_config = ApiClientConfig()
 
 # Print the configuration
-print("\n\nAPI Client Configuration:")
+print("\n\nAPI Client ConfigurationObj:")
 print(f"Base URL: {api_config.base_url}")
 print(f"Auth Token: {api_config.auth_token}")
 print(f"Debug Mode: {api_config.debug}")
@@ -461,22 +440,22 @@ for name, endpoint in api_config.endpoints.items():
 
 In this guide, we've learned:
 
-- How to use `ConfigurationDict` and `ConfigurationList` for variadic fields
+- How to use `ConfigurationDict` and `ConfigurationList` for dynamic fields
 - How to configure the `children_class` attribute to define the structure of items
-- How to access, iterate, and check membership in variadic collections
-- How to provide default values for variadic collections
-- How to add items dynamically to variadic collections
-- How variadic fields behave when no defaults are provided
+- How to access, iterate, and check membership in dynamic collections
+- How to provide default values for dynamic collections
+- How to add items dynamically to dynamic collections
+- How dynamic fields behave when no defaults are provided
 - How to apply these concepts in a realistic API client configuration
 
-Variadic fields are a powerful feature of SuperConf that allow you to work with dynamic configuration structures while maintaining type safety and validation.
+Dynamic fields are a powerful feature of SuperConf that allow you to work with dynamic configuration structures while maintaining type safety and validation.
 
 ## Try It Yourself
 
 Here are some exercises to practice what you've learned:
 
-1. Create a configuration for a web application with a variadic dictionary of routes, where each route has a path, handler, and HTTP method.
-2. Create a configuration for a database connection pool with a variadic list of database connections, each with its own host, port, username, and password.
-3. Experiment with nested variadic structures, such as a dictionary of services, each containing a list of endpoints.
+1. Create a configuration for a web application with a dynamic dictionary of routes, where each route has a path, handler, and HTTP method.
+2. Create a configuration for a database connection pool with a dynamic list of database connections, each with its own host, port, username, and password.
+3. Experiment with nested dynamic structures, such as a dictionary of services, each containing a list of endpoints.
 4. Create a configuration with default values, override some values, and add new values dynamically.
-5. Practice iterating over variadic collections and accessing items by key or index. 
+5. Practice iterating over dynamic collections and accessing items by key or index. 

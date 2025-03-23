@@ -29,8 +29,7 @@ With SuperConf, you can model this structure in Python, providing type safety, v
 Let's create a nested configuration model for our web application:
 
 ```python
-from superconf import ConfigurationObj
-from superconf.fields import Field, FieldConf, FieldInt, FieldString
+from superconf import ConfigurationObj, Field, FieldConf, FieldInt, FieldString
 
 # Define the server configuration
 class ServerConfig(ConfigurationObj):
@@ -149,22 +148,29 @@ assert app.logging.file == "/var/log/app.log"  # Default value
 print("\nAll custom values are correctly set!")
 ```
 
+We can have a global overview with `get_value()`:
+
+```python
+from pprint import pprint
+
+pprint(app.get_value())
+```
+
 Notice how we can override only the values we need to change, and the rest will use their default values.
 
 ## Understanding Leaf vs Container Fields
 
 SuperConf has two main types of fields:
 
-- **Leaf Fields**: Store simple values (strings, numbers, booleans, etc.)
-- **Container Fields**: Store complex nested structures like dictionaries or other configuration objects
+- **Leaf Fields**: Store simple values (strings, numbers, booleans, etc.). They are leaf nodes.
+- **Container Fields**: Store complex nested structures like dictionaries or other configuration objects. They can contains other containers or leafs nodes.
 
 `FieldConf` is a container field that holds another configuration object. Understanding the difference between leaf and container fields is important because they behave differently when accessed.
 
 Let's create a simple example to demonstrate the difference:
 
 ```python
-from superconf import ConfigurationObj
-from superconf.fields import Field, FieldConf
+from superconf import ConfigurationObj, Field, FieldConf
 
 # Define a simple nested configuration
 class NestedConfig(ConfigurationObj):
@@ -180,38 +186,52 @@ class RootConfig(ConfigurationObj):
 # Create an instance
 config = RootConfig()
 
-print("\n\nLeaf vs Container Fields:")
+print("Leaf vs Container Fields:")
 print("\nLeaf Field:")
 print(f"  Value: {config.leaf}")
-print(f"  Type: {type(config.leaf).__name__}")
+print(f"  Type: {type(config.leaf)}")
 
 print("\nContainer Field:")
 print(f"  Value: {config.container.value}")
-print(f"  Type: {type(config.container).__name__}")
-print(f"  Container's value field type: {type(config.container.value).__name__}")
+print(f"  Type: {type(config.container)}")
+print(f"  Container's value field type: {type(config.container.value)}")
 ```
 
 ## Accessing Nested Configurations
 
 SuperConf provides multiple ways to access nested configuration values, similar to how we access simple fields.
 
-### 1. Attribute Access
+### 1. Attribute Access (Value or Node)
 
-The most natural way to access nested values is through attribute access:
+The most natural way to access nested values is through attribute access. It provides some auto-magic resolution, it returns the value if if the node is a `Leaf`, or the container object otherwise:
 
 ```python
-# Using attribute access
-print("\n\nAccessing nested values through attributes:")
+# Using attribute access to get values
+print("Accessing nested values through attributes:")
 server_host = app.server.host
 db_url = app.database.url
 log_level = app.logging.level
 
-print(f"Server Host: {server_host}")
-print(f"Database URL: {db_url}")
-print(f"Logging Level: {log_level}")
+print(f"  Server Host: {server_host}")
+print(f"  Database URL: {db_url}")
+print(f"  Logging Level: {log_level}")
 ```
 
-### 2. Dictionary-Style Access
+As explained above, when you target a container, then the container is returned instead of the value:
+
+```python
+# Using attribute access to get container nodes
+print("Accessing nested containers through attributes:")
+server_node = app.server
+db_node = app.database
+logging_node = app.logging
+
+print(f"  Server Host: {server_node}")
+print(f"  Database URL: {db_node}")
+print(f"  Logging Level: {logging_node}")
+```
+
+### 2. Dictionary-Style Access (always Value)
 
 You can also use dictionary-style access, which is useful when the field name is dynamic:
 
@@ -222,9 +242,9 @@ server_host = app["server"]["host"]
 db_url = app["database"]["url"]
 log_level = app["logging"]["level"]
 
-print(f"Server Host: {server_host}")
-print(f"Database URL: {db_url}")
-print(f"Logging Level: {log_level}")
+print(f"  Server Host: {server_host}")
+print(f"  Database URL: {db_url}")
+print(f"  Logging Level: {log_level}")
 
 # This is particularly useful when the field name is in a variable
 section_name = "server"
@@ -233,55 +253,35 @@ value = app[section_name][field_name]
 print(f"Dynamic access to {section_name}.{field_name}: {value}")
 ```
 
-### 3. Using Special Dunders _ TO REMOVE , with dont want to use dunders directly, but python natives
-
-SuperConf provides special dunder methods for accessing nested configurations, which give you more control over whether you're accessing values or objects.
-
-#### \_\_field\_\_ (Value or Object)
-
-The `__field__` method can return either a value or an object, depending on the field type:
+Accessing items through the dictionnary-style access always return the value:
 
 ```python
-print("\nAccessing with __field__ (returns value for leaf fields, object for container fields):")
+# Using attribute access to get container nodes
+print("Accessing nested containers through attributes:")
+server_node = app.server
+db_node = app.database
+logging_node = app.logging
 
-# For leaf fields, returns the value
-host_value = app.server.__field__("host")  # Returns "0.0.0.0"
-print(f"server.__field__('host'): {host_value} (type: {type(host_value).__name__})")
-
-# For container fields, returns the object
-server_obj = app.__field__("server")  # Returns ServerConfig instance
-print(f"app.__field__('server'): {server_obj} (type: {type(server_obj).__name__})")
+print(f"  Server Host: {app.server}")
+print(f"  Server Host: {app['server']}")
+print(f"  Database URL: {app['database']}")
+print(f"  Logging Level: {app['logging']}")
 ```
 
-#### \_\_items\_\_ (Always Values)
+### 3. Call Access (always Node)
 
-The `__items__` method always returns values, never objects:
-
-```python
-print("\nAccessing with __items__ (always returns values, not objects):")
-
-# Always returns the value for any field
-host_value = app.server.__items__("host")  # Returns "0.0.0.0"
-print(f"server.__items__('host'): {host_value} (type: {type(host_value).__name__})")
-
-# For container fields, returns a dictionary representation
-server_value = app.__items__("server")  # Returns dict with server config
-print(f"app.__items__('server'): {server_value} (type: {type(server_value).__name__})")
-```
-
-#### \_\_call\_\_ (Always Objects)
-
-The call method (`()`) always returns objects, never values:
 
 ```python
-print("\nAccessing with __call__ (always returns objects, not values):")
+# Using attribute access to get container nodes
+print("Accessing nested containers through attributes:")
+server_node = app.server
+db_node = app.database
+logging_node = app.logging
 
-# Always returns the field object
-host_obj = app.server("host")  # Returns Field instance for host
-print(f"server('host'): {host_obj} (type: {type(host_obj).__name__})")
-
-server_obj = app("server")  # Returns ServerConfig instance
-print(f"app('server'): {server_obj} (type: {type(server_obj).__name__})")
+print(f"  Server Host: {app.server}")
+print(f"  Server Host: {app('server')}")
+print(f"  Database URL: {app('database')}")
+print(f"  Logging Level: {app('logging')}")
 ```
 
 ## Getting All Values
@@ -346,10 +346,10 @@ app["database"]["pool_size"] = 20
 print(f"Modified database.pool_size = {app.database.pool_size}")
 
 # Or use set_value
-# app.logging.set_value("level", "warning")
-# print(f"Modified logging.level = {app.logging.level}")
+app.logging.set_value("level", "warning")
+print(f"Modified logging.level = {app.logging.level}")
 
-assert False, "TOFIX, allow key override ..."
+
 ```
 
 ## Summary
@@ -374,7 +374,3 @@ Here are some exercises to practice what you've learned:
 3. Try accessing nested values using different methods and observe the differences.
 4. Modify some nested values and verify that the changes were applied correctly.
 5. Create a deeply nested configuration (3+ levels) and practice accessing values at different levels. 
-
-```python
-
-```
