@@ -133,7 +133,7 @@ class _ArgCfg:
     #     return self.cfg[key]
 
 
-def _cast_value(self, value):
+def node_cast_value(self, value):
     "Cast value"
 
     def _cast(value):
@@ -188,17 +188,15 @@ class Leaf(Node):
             "Init node %s: %s, value=%s", self.__class__, self.__node_fname__, value
         )
 
-        self.configure(value=value, default=default, meta=meta, cast=cast, field=field)
-
-    def is_container(self):
-        "Check if the instance is a container"
-        return hasattr(self, "__children__")
+        self.__node__configure__(
+            value=value, default=default, meta=meta, cast=cast, field=field
+        )
 
     def __repr__(self):
         "Represent the instance"
         return f"{self.__class__.__name__}({self.__node_key__})"
 
-    def configure(
+    def __node__configure__(
         self, value=UNSET_ARG, default=UNSET_ARG, cast=UNSET_ARG, meta=None, field=None
     ):
         "Initialize the instance"
@@ -245,7 +243,7 @@ class Leaf(Node):
         "Set default value"
 
         value = self.pre_load(value)
-        value = _cast_value(self, value)
+        value = node_cast_value(self, value)
         self.__node_default__ = value
 
         logger.debug(
@@ -256,7 +254,7 @@ class Leaf(Node):
     def set_value(self, value):
         "Set value"
         value = self.pre_load(value)
-        value = _cast_value(self, value)
+        value = node_cast_value(self, value)
         self.__node_value__ = value
 
         logger.debug(
@@ -338,14 +336,14 @@ class Leaf(Node):
 class ContainerInstance(Leaf):
     "Container instance, either a dict or a list"
 
-    __fields__ = {}
-    __children__ = None
+    __node_fields__ = {}
+    __node_children__ = None
 
     meta__children_class = Leaf  # Generic children class
 
     def __init__(self, children_class=UNSET_ARG, meta=None, **kwargs):
 
-        self.__children__ = NOT_SET
+        self.__node_children__ = NOT_SET
 
         # Fetch settings
         override = _ArgCfg()
@@ -357,7 +355,7 @@ class ContainerInstance(Leaf):
         )
 
         report = []
-        self._children_class = self.query_inst_cfg(
+        self.__node_children_class__ = self.query_inst_cfg(
             "children_class",
             override=override.cfg,
             report=report,
@@ -371,7 +369,7 @@ class ContainerInstance(Leaf):
         if len(args) == 1:
             value = args[0]
             value = super().set_value(value)
-            self._set_children(value)
+            self.__node__set_children__(value)
             return value
         if len(args) == 2:
             key = args[0]
@@ -381,7 +379,7 @@ class ContainerInstance(Leaf):
 
         raise SyntaxError("Invalid number of arguments")
 
-    def _set_children(self, value):
+    def __node__set_children__(self, value):
         "Set children"
         raise NotImplementedError("Subclass must implement this method")
 
@@ -391,7 +389,7 @@ class ConfigurationDict(ContainerInstance):
 
     meta__cast = as_dict
 
-    def _set_children(self, value):
+    def __node__set_children__(self, value):
         "Set children"
 
         logger.info(
@@ -405,7 +403,7 @@ class ConfigurationDict(ContainerInstance):
         ), f"Expected a dict for {self.__node_fname__}, got: {type(value)}={value}"
 
         # Skip if no children requested
-        children_class = self._children_class
+        children_class = self.__node_children_class__
         if children_class is None or children_class is False:
             logger.info("No children class defined for %s, skipping", self)
             return
@@ -423,19 +421,19 @@ class ConfigurationDict(ContainerInstance):
             child = children_class(parent=self, key=key, value=val)
             children[key] = child
 
-        self.__children__ = children
+        self.__node_children__ = children
 
     def get_children(self):
         "Get children"
-        if isinstance(self.__children__, dict):
-            return self.__children__
+        if isinstance(self.__node_children__, dict):
+            return self.__node_children__
         return {}
 
     def get_child(self, key, noexceptions=False):
         "Get child"
         ret = None
-        if self.__children__ is not NOT_SET:
-            ret = self.__children__.get(key, None)
+        if self.__node_children__ is not NOT_SET:
+            ret = self.__node_children__.get(key, None)
 
         if ret is not None:
             return ret
@@ -452,9 +450,9 @@ class ConfigurationDict(ContainerInstance):
         if key is not None:
             return self.get_key_value(key, default=default, nodefaults=nodefaults)
 
-        if self.__children__ is not NOT_SET:
+        if self.__node_children__ is not NOT_SET:
             ret = {}
-            for key, child in self.__children__.items():
+            for key, child in self.__node_children__.items():
                 ret[key] = child.get_value(nodefaults=nodefaults)
 
             return ret
@@ -467,7 +465,7 @@ class ConfigurationDict(ContainerInstance):
     def get_key_value(self, key, default=UNSET_ARG, nodefaults=False):
         "Get value"
 
-        if self.__children__ is not NOT_SET:
+        if self.__node_children__ is not NOT_SET:
             noexceptions = True if default != UNSET_ARG else False
             child = self.get_child(key, noexceptions=noexceptions)
             if child is None and default != UNSET_ARG:
@@ -495,7 +493,7 @@ class ConfigurationDict(ContainerInstance):
     def __iter__(self):
         "Iterate over children"
 
-        if self.__children__:
+        if self.__node_children__:
             return iter(self.get_children().values())
         return iter([])
 
@@ -523,8 +521,8 @@ class ConfigurationDict(ContainerInstance):
 
     def __setattr__(self, key, value):
         "Set attribute"
-        if self.__children__ and key in self.__children__:
-            self.__children__[key].set_value(value)
+        if self.__node_children__ and key in self.__node_children__:
+            self.__node_children__[key].set_value(value)
         else:
             super().__setattr__(key, value)
 
@@ -535,7 +533,7 @@ class ConfigurationDict(ContainerInstance):
         if match is not None:
             if not mode or mode == "auto":
                 mode = "value"
-                if match.is_container():
+                if hasattr(match, "__node_children__"):
                     mode = "node"
 
             if mode == "value":
@@ -583,8 +581,8 @@ class ConfigurationDict(ContainerInstance):
         out = {}
         for key in keys:
 
-            base_child = self.__children__.get(key, UNSET_ARG)
-            other_child = other.__children__.get(key, UNSET_ARG)
+            base_child = self.__node_children__.get(key, UNSET_ARG)
+            other_child = other.__node_children__.get(key, UNSET_ARG)
 
             if base_child is not UNSET_ARG and other_child is not UNSET_ARG:
                 msg = f"Merge child {key} {base_child.__node_fname__} and {other_child.__node_fname__}"
@@ -623,8 +621,8 @@ class DeclarativeValuesMetaclass(type):
 
         # Walk through the MRO and add values from base class.
         for base in reversed(bases):
-            if hasattr(base, "__fields__"):
-                values.update(base.__fields__)
+            if hasattr(base, "__node_fields__"):
+                values.update(base.__node_fields__)
 
         for attr, value in attrs.items():
             if isinstance(value, BaseFieldLeaf):
@@ -633,11 +631,11 @@ class DeclarativeValuesMetaclass(type):
                 if issubclass(value, Leaf):
                     values.update({attr: value})
 
-        attrs["__fields__"] = values
+        attrs["__node_fields__"] = values
         attrs["meta__children_classes"] = values
 
         # Clean attributes
-        for key in list(attrs["__fields__"].keys()):
+        for key in list(attrs["__node_fields__"].keys()):
             if key in attrs:
                 del attrs[key]
 
@@ -668,8 +666,8 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     def _get_child_field(self, key=None, attr=None, extra_fields=False):
         "Get child class"
 
-        _children_classes = self._children_classes or []
-        _children_class = self._children_class or None
+        _children_classes = self.__node_children_classes__ or []
+        _children_class = self.__node_children_class__ or None
 
         child_key = key or attr
         assert child_key is not None, "Key or attr is required"
@@ -728,7 +726,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
     def _get_child_keys(self, attr=False):
         "Get child keys"
-        _children_classes = self._children_classes or []
+        _children_classes = self.__node_children_classes__ or []
 
         if attr:
             ret = [field.attr for field in _children_classes]
@@ -737,7 +735,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         return ret
 
-    def configure(self, meta=None, **kwargs):
+    def __node__configure__(self, meta=None, **kwargs):
 
         # Fetch settings
         override = _ArgCfg()
@@ -778,11 +776,11 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 field.__node_key__ = field.__node_key__ if field.__node_key__ else attr
                 field.attr = attr
                 _children_classes.append(field)
-        self._children_classes = _children_classes
+        self.__node_children_classes__ = _children_classes
 
-        super().configure(meta=meta, **kwargs)
+        super().__node__configure__(meta=meta, **kwargs)
 
-    def _set_children(self, value):
+    def __node__set_children__(self, value):
         "Set children"
 
         logger.info(
@@ -884,7 +882,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 child, Leaf
             ), f"Expected a Leaf for {self.__node_fname__}.{key}, got: {type(child)}={child}"
 
-        self.__children__ = children
+        self.__node_children__ = children
 
 
 class ConfigurationList(ConfigurationDict):
@@ -897,9 +895,9 @@ class ConfigurationList(ConfigurationDict):
         if key is not None:
             return self.get_key_value(key, nodefaults=nodefaults, default=default)
 
-        if self.__children__ is not NOT_SET:
+        if self.__node_children__ is not NOT_SET:
             ret = []
-            for key, child in self.__children__.items():
+            for key, child in self.__node_children__.items():
                 ret.append(child.get_value(nodefaults=nodefaults))
 
             return ret
@@ -909,7 +907,7 @@ class ConfigurationList(ConfigurationDict):
 
         return default
 
-    def _set_children(self, value):
+    def __node__set_children__(self, value):
         "Set children"
 
         logger.info(
@@ -923,7 +921,7 @@ class ConfigurationList(ConfigurationDict):
         ), f"Expected a list for {self.__node_fname__}, got: {type(value)}={value}"
 
         # Skip if no children requested
-        children_class = self._children_class
+        children_class = self.__node_children_class__
         if children_class is None or children_class is False:
             logger.info("No children class defined for %s, skipping", self)
             return
@@ -940,4 +938,4 @@ class ConfigurationList(ConfigurationDict):
             child = children_class(parent=self, key=index, value=val)
             children[index] = child
 
-        self.__children__ = children
+        self.__node_children__ = children

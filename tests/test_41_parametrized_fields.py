@@ -105,7 +105,7 @@ def test_field_metadata(field_name, field_help):
 
     # Method 3: The class might store field metadata in a special attribute
     # Try to find it in common places
-    for meta_attr in ["_fields", "fields", "__fields__", "_field_defs"]:
+    for meta_attr in ["_fields", "fields", "__node_fields__", "_field_defs"]:
         if hasattr(ConfigClass, meta_attr):
             fields_dict = getattr(ConfigClass, meta_attr)
             if isinstance(fields_dict, dict) and field_name in fields_dict:
