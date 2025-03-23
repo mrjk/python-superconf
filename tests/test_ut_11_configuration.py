@@ -202,7 +202,7 @@ def test_iteration_and_values(full_config):
     for name, item in full_config.items():
         item_count += 1
         collected_config[name] = full_config.get_value(
-            item.key, default=item.get_default()
+            item.__node_key__, default=item.get_default()
         )
 
     assert item_count == len(FULL_CONFIG)

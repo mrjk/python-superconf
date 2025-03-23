@@ -22,12 +22,11 @@ class TestNodeBase:
         assert t.__node_value__ is NOT_SET
 
         # Test attribute access methods
-        assert t.parent is None
         assert t.__node_key__ is None
         assert t.name == Node.__name__
-        assert t.fname == Node.__name__
-        assert isinstance(t.fkey, str)
-        assert t.fkey == ""
+        assert t.__node_fname__ == Node.__name__
+        assert isinstance(t.__node_fkey__, str)
+        assert t.__node_fkey__ == ""
 
     def test_12_direct_node_values(self):
         """Test Node instantiation with different parameter combinations."""
@@ -114,22 +113,16 @@ class TestNodeNested:
         assert t1.__node_key__ == "k1"
         assert t1.__node_parent__ is None
         assert t1.__node_value__ == {"level": 1}
-        assert t1.parent is None
-        assert t1.__node_key__ == "k1"
 
         # Test t2 attributes
         assert t2.__node_key__ == "k2"
         assert t2.__node_parent__ == t1
         assert t2.__node_value__ == {"level": 2}
-        assert t2.parent == t1
-        assert t2.__node_key__ == "k2"
 
         # Test t3 attributes
         assert t3.__node_key__ == "k3"
         assert t3.__node_parent__ == t2
         assert t3.__node_value__ == {"level": 3}
-        assert t3.parent == t2
-        assert t3.__node_key__ == "k3"
 
     def test_22_nested_node_configuration(self):
         """Test nested Node configuration inheritance."""

@@ -88,14 +88,14 @@ class BaseNode:
     # def key(self, value: Optional[Union[str, int]]):
     #     self.__node_key__ = value
 
-    @property
-    def parent(self) -> Optional["Node"]:
-        """The parent configuration object."""
-        return self.__node_parent__
+    # @property
+    # def parent(self) -> Optional["Node"]:
+    #     """The parent configuration object."""
+    #     return self.__node_parent__
 
-    @parent.setter
-    def parent(self, value: Optional["Node"]):
-        self.__node_parent__ = value
+    # @parent.setter
+    # def parent(self, value: Optional["Node"]):
+    #     self.__node_parent__ = value
 
     @property
     def name(self) -> str:
@@ -105,7 +105,7 @@ class BaseNode:
         return self.__class__.__name__
 
     @property
-    def fname(self) -> str:
+    def __node_fname__(self) -> str:
         """The full hierarchical name including all parent names."""
         curr = self
         out = []
@@ -116,12 +116,12 @@ class BaseNode:
                 name, str
             ), f"Object {curr} does not have a valid name, got: {name}"
             out.append(name)
-            curr = curr.parent
+            curr = curr.__node_parent__
         out.reverse()
         return ".".join(out)
 
     @property
-    def fkey(self) -> str:
+    def __node_fkey__(self) -> str:
         """The full hierarchical key including all parent keys."""
         curr = self
         out = []
@@ -130,7 +130,7 @@ class BaseNode:
             if not isinstance(curr_key, (int, str)):
                 curr_key = ""
             out.append(curr_key)
-            curr = curr.parent
+            curr = curr.__node_parent__
         out.reverse()
         return ".".join(out)
 
@@ -141,7 +141,8 @@ class Node(BaseNode):
     # Instance config management
     # ----------------------------
 
-    def get_hierarchy(self) -> List["Node"]:
+    @property
+    def __node_get_hierarchy__(self) -> List["Node"]:
         """Return the configuration hierarchy from self to root.
 
         Returns:
@@ -275,31 +276,31 @@ class Node(BaseNode):
         )
         raise exceptions.UnknownSetting(msg)
 
-    # TODO: Deprecate query_inst_cfg, and use this method instead
-    # Add support for folowing parameters
-    def query_cfg(
-        self,
-        name: str,
-        include_self: bool = True,
-        include_parents: bool = True,
-        include_root: bool = True,
-        report: bool = False,
-        **kwargs,
-    ) -> Any:
-        """Query configuration from self and parent hierarchy.
+    # # TODO: Deprecate query_inst_cfg, and use this method instead
+    # # Add support for folowing parameters
+    # def query_cfg(
+    #     self,
+    #     name: str,
+    #     include_self: bool = True,
+    #     include_parents: bool = True,
+    #     include_root: bool = True,
+    #     report: bool = False,
+    #     **kwargs,
+    # ) -> Any:
+    #     """Query configuration from self and parent hierarchy.
 
-        Args:
-            name: Configuration setting name to query
-            include_self: Whether to include self in the query
-            report: Whether to return query trace information
-            **kwargs: Additional arguments passed to query_parent_cfg
+    #     Args:
+    #         name: Configuration setting name to query
+    #         include_self: Whether to include self in the query
+    #         report: Whether to return query trace information
+    #         **kwargs: Additional arguments passed to query_parent_cfg
 
-        Returns:
-            The configuration value, optionally with query trace information
-        """
-        return self.query_parent_cfg(
-            name, include_self=include_self, report=report, **kwargs
-        )
+    #     Returns:
+    #         The configuration value, optionally with query trace information
+    #     """
+    #     return self.query_parent_cfg(
+    #         name, include_self=include_self, report=report, **kwargs
+    #     )
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     def query_parent_cfg(
@@ -342,7 +343,7 @@ class Node(BaseNode):
 
         # Check parents
         _report = []
-        parents = self.get_hierarchy()
+        parents = self.__node_get_hierarchy__
         if include_self is False:
             parents = parents[1:]
         out = NOT_SET
