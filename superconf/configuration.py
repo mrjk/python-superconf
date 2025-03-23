@@ -516,16 +516,16 @@ class ConfigurationDict(ContainerInstance):
     def get(self, key, default=UNSET_ARG, mode="auto"):
         "Get a children node or an object"
 
-        if self.__children__ and key in self.__children__:
-            match = self.__children__[key]
-
+        match = self.get_child(key, noexceptions=True)
+        if match is not None:
             if not mode or mode == "auto":
                 mode = "value"
                 if match.is_container():
                     mode = "node"
 
             if mode == "value":
-                return match.get_value()
+                ret = match.get_value()
+                return ret
             if mode == "node":
                 return match
 
@@ -677,14 +677,14 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         if ret is None:
             if extra_fields == "warn":
                 logger.warning(
-                    "Key %s is not declared in %s, use extra_fields=True to allow unknown keys",
+                    "Key '%s' is not declared in %s, use extra_fields=True to allow unknown keys",
                     child_key,
                     self.fname,
                 )
                 ret = None
             if extra_fields is False:
                 raise exceptions.UndeclaredField(
-                    f"Key {child_key} is not declared in {self.fname}, use extra_fields=True to allow unknown keys"
+                    f"Key '{child_key}' is not declared in {self.fname}, use extra_fields=True to allow unknown keys"
                 )
             ret = _children_class
 
