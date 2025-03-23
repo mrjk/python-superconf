@@ -217,12 +217,12 @@ class Leaf(Node):
         )
 
         report = []
-        default = self.query_inst_cfg(
+        default = self.__node_get_self_config__(
             "default",
             override=override.cfg,
             report=report,
         )
-        cast = self.query_inst_cfg(
+        cast = self.__node_get_self_config__(
             "cast",
             override=override.cfg,
             report=report,
@@ -355,7 +355,7 @@ class ContainerInstance(Leaf):
         )
 
         report = []
-        self.__node_children_class__ = self.query_inst_cfg(
+        self.__node_children_class__ = self.__node_get_self_config__(
             "children_class",
             override=override.cfg,
             report=report,
@@ -742,13 +742,13 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         override.update(meta)
 
         report = []
-        self._extra_fields = self.query_inst_cfg(
+        self._extra_fields = self.__node_get_self_config__(
             "extra_fields",
             override=override.cfg,
             report=report,
         )
         _children_raw_classes = (
-            self.query_inst_cfg(
+            self.__node_get_self_config__(
                 "children_classes",
                 override=override.cfg,
                 report=report,

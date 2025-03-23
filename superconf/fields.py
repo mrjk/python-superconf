@@ -359,7 +359,7 @@ class FieldConf(FieldContainer):
 
 #             # default2 = default
 #             try:
-#                 default = conf_instance.query_inst_cfg(
+#                 default = conf_instance.__node_get_self_config__(
 #                     "default", override=kwargs, default=NOT_SET
 #                 )[key]
 #                 default_from.append("conf_instance_query")

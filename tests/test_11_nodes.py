@@ -80,21 +80,21 @@ class TestNodeBase:
         node3 = NodeWithMetaName()
         node4 = NodeWithInit()
 
-        # Test query_inst_cfg basic functionality
-        assert node1.query_inst_cfg("NAME1") == "test_meta"
-        assert node2.query_inst_cfg("NAME2") == "test_meta_attr"
-        assert node3.query_inst_cfg("NAME2") == "test_direct_meta"
-        assert node4.query_inst_cfg("NAME3") == "test_init"
+        # Test __node_get_self_config__ basic functionality
+        assert node1.__node_get_self_config__("NAME1") == "test_meta"
+        assert node2.__node_get_self_config__("NAME2") == "test_meta_attr"
+        assert node3.__node_get_self_config__("NAME2") == "test_direct_meta"
+        assert node4.__node_get_self_config__("NAME3") == "test_init"
 
-        # Test query_inst_cfg with parameters
-        assert node1.query_inst_cfg("MISSING", default="default") == "default"
+        # Test __node_get_self_config__ with parameters
+        assert node1.__node_get_self_config__("MISSING", default="default") == "default"
         assert (
-            node2.query_inst_cfg("NAME2", override={"NAME2": "override"}) == "override"
+            node2.__node_get_self_config__("NAME2", override={"NAME2": "override"}) == "override"
         )
 
         # Test with report parameter
         report = []
-        cfg_value = node1.query_inst_cfg("NAME1", report=report)
+        cfg_value = node1.__node_get_self_config__("NAME1", report=report)
         assert cfg_value == "test_meta"
         assert report == ["class_meta:Meta.NAME1"]
 
@@ -158,25 +158,25 @@ class TestNodeNested:
         # Test value inheritance
         report = []
 
-        assert base_node.query_inst_cfg("BASE_VALUE") == "override"
-        assert child_node.query_inst_cfg("BASE_VALUE") == "base"
-        assert grand_child.query_inst_cfg("BASE_VALUE") == "base"
+        assert base_node.__node_get_self_config__("BASE_VALUE") == "override"
+        assert child_node.__node_get_self_config__("BASE_VALUE") == "base"
+        assert grand_child.__node_get_self_config__("BASE_VALUE") == "base"
 
-        assert base_node.query_inst_cfg("CHILD_VALUE") == "UNSET"
-        assert child_node.query_inst_cfg("CHILD_VALUE") == "child"
-        assert grand_child.query_inst_cfg("CHILD_VALUE") == "UNSET"
+        assert base_node.__node_get_self_config__("CHILD_VALUE") == "UNSET"
+        assert child_node.__node_get_self_config__("CHILD_VALUE") == "child"
+        assert grand_child.__node_get_self_config__("CHILD_VALUE") == "UNSET"
 
-        assert base_node.query_inst_cfg("GRAND_CHILD_VALUE") == "UNSET"
-        assert child_node.query_inst_cfg("GRAND_CHILD_VALUE") == "UNSET"
-        assert grand_child.query_inst_cfg("GRAND_CHILD_VALUE") == "grandchild"
+        assert base_node.__node_get_self_config__("GRAND_CHILD_VALUE") == "UNSET"
+        assert child_node.__node_get_self_config__("GRAND_CHILD_VALUE") == "UNSET"
+        assert grand_child.__node_get_self_config__("GRAND_CHILD_VALUE") == "grandchild"
 
-        assert base_node.query_inst_cfg("OVERRIDE_VALUE") == "base"
-        assert child_node.query_inst_cfg("OVERRIDE_VALUE") == "child"
-        assert grand_child.query_inst_cfg("OVERRIDE_VALUE") == "grandchild"
+        assert base_node.__node_get_self_config__("OVERRIDE_VALUE") == "base"
+        assert child_node.__node_get_self_config__("OVERRIDE_VALUE") == "child"
+        assert grand_child.__node_get_self_config__("OVERRIDE_VALUE") == "grandchild"
 
         # Test with override
         assert (
-            grand_child.query_inst_cfg(
+            grand_child.__node_get_self_config__(
                 "OVERRIDE_VALUE", override={"OVERRIDE_VALUE": "custom"}
             )
             == "custom"
@@ -184,13 +184,13 @@ class TestNodeNested:
 
         # Test with unexisting value
         assert (
-            grand_child.query_inst_cfg("UNEXISTING_VALUE", default="default")
+            grand_child.__node_get_self_config__("UNEXISTING_VALUE", default="default")
             == "default"
         )
 
         # Test with report
         report = []
-        value = grand_child.query_inst_cfg("OVERRIDE_VALUE", report=report)
+        value = grand_child.__node_get_self_config__("OVERRIDE_VALUE", report=report)
         assert value == "grandchild"
         assert report == ["class_meta:Meta.OVERRIDE_VALUE"]
 

@@ -121,8 +121,8 @@ class Node(BaseNode):
 
     # TODO: Rename internal methods
     # def query_cfg(        ==> __node_config__
-    # def query_inst_cfg(   ==> __node_config_self__
-    # def query_parent_cfg( ==> __node_config_parent__
+    # def __node_get_self_config__(   ==> __node_config_self__
+    # def __node_get_hier_config__( ==> __node_config_parent__
 
     # Instance config management
     # ----------------------------
@@ -144,8 +144,8 @@ class Node(BaseNode):
 
         return out
 
-    # def query_inst_cfg(
-    def query_inst_cfg(
+    # def __node_get_self_config__(
+    def __node_get_self_config__(
         self,
         name: str,
         cast: Optional[Type] = None,
@@ -264,7 +264,7 @@ class Node(BaseNode):
         return out
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
-    def query_parent_cfg(
+    def __node_get_hier_config__(
         self,
         name: str,
         as_subkey: bool = False,
@@ -312,12 +312,12 @@ class Node(BaseNode):
             _report.append(f"Check '{name}' in parent {parent}")
 
             if report:
-                out, _report2 = parent.query_inst_cfg(
+                out, _report2 = parent.__node_get_self_config__(
                     name, default=NOT_SET, report=True
                 )
                 _report.append(_report2)
             else:
-                out = parent.query_inst_cfg(name, default=NOT_SET)
+                out = parent.__node_get_self_config__(name, default=NOT_SET)
 
             # If a value is found, then scan it
             if out is not NOT_SET:
