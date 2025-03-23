@@ -142,15 +142,12 @@ class AsList(AbstractCast):
         # pprint(type(value).__mro__)
         # pprint(NOT_SET_LIST.type)
         # print("CAST LIST", value)
+
         if isinstance(value, NOT_SET.type):
-            # if issubclass(type(value), NOT_SET.type):
-            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            assert value is NOT_SET_LIST or value is NOT_SET
             return NOT_SET_LIST
-            # assert False, f"TOFIX: Unsupported type {type(value)}"
-            # return self.cast([])
 
         if value is None:
-            # assert False, f"TOFIX: Unsupported type {type(value)}"
             return NOT_SET_LIST
 
         # if isinstance(value, str):  # (str, int, float)):
@@ -256,14 +253,10 @@ class AsDict(AbstractCast):
         "Internal helper to parse values"
 
         if isinstance(value, NOT_SET.type):
-            # if issubclass(type(value), NOT_SET.type):
-            # assert False, f"TOFIX: Unsupported type {type(value)}"
+            assert value is NOT_SET_DICT or value is NOT_SET
             return NOT_SET_DICT
-            # assert False, f"TOFIX: Unsupported type {type(value)}"
-            # return self.cast([])
 
         if value is None:
-            # assert False, f"TOFIX: Unsupported type {type(value)}"
             return NOT_SET_DICT
 
         # if not value:
