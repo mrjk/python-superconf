@@ -50,10 +50,8 @@ class SentinelDict(dict, Sentinel):
     def setdefault(self, *args, **kwargs):
         raise TypeError("NOT_SET_DICT is immutable")
 
-
     def __delitem__(self, key):
         raise KeyError("NOT_SET_DICT is immutable")
-
 
     def __ior__(self, other):
         raise TypeError("NOT_SET_DICT is immutable")
@@ -116,13 +114,16 @@ cls_dict = {
 
 
 NOT_SET = sentinel.create(name="NOT_SET", mro=Sentinel.__mro__, cls_dict=cls_dict)
-NOT_SET_DICT = sentinel.create("NOT_SET_DICT", mro=SentinelDict.__mro__, cls_dict=cls_dict)
-NOT_SET_LIST = sentinel.create("NOT_SET_LIST", mro=SentinelList.__mro__, cls_dict=cls_dict)
+NOT_SET_DICT = sentinel.create(
+    "NOT_SET_DICT", mro=SentinelDict.__mro__, cls_dict=cls_dict
+)
+NOT_SET_LIST = sentinel.create(
+    "NOT_SET_LIST", mro=SentinelList.__mro__, cls_dict=cls_dict
+)
 
 UNSET_ARG = sentinel.create("UNSET_ARG", mro=Sentinel.__mro__, cls_dict=cls_dict)
 FAIL = sentinel.create("FAIL", mro=Sentinel.__mro__, cls_dict=cls_dict)
 DEFAULT = sentinel.create("DEFAULT", mro=Sentinel.__mro__, cls_dict=cls_dict)
-
 
 
 assert NOT_SET is NOT_SET

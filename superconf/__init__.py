@@ -7,16 +7,6 @@ various sources.
 
 __version__ = "0.1.0"
 
-# Import anchors
-from superconf.lib.anchors import (
-    ABS,
-    ABSOLUTE,
-    REL,
-    RELATIVE,
-    FileAnchor,
-    PathAnchor,
-)
-
 # Import casts
 from superconf.casts import (
     as_boolean,
@@ -73,4 +63,14 @@ from superconf.fields import (
     FieldOption,
     FieldString,
     FieldTuple,
+)
+
+# Import anchors
+from superconf.lib.anchors import (
+    ABS,
+    ABSOLUTE,
+    REL,
+    RELATIVE,
+    FileAnchor,
+    PathAnchor,
 )

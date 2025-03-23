@@ -17,7 +17,6 @@ from superconf.lib.sentinel_v2 import (
     UNSET_ARG,
 )
 
-
 log = logging.getLogger(__name__)
 
 assert not NOT_SET
