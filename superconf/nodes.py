@@ -124,6 +124,12 @@ class Node(BaseNode):
     # def __node_get_self_config__(   ==> __node_config_self__
     # def __node_get_hier_config__( ==> __node_config_parent__
 
+    def __init__(self, *args, **kwargs):
+
+        cls_name = ",".join(reversed([x.__name__ for x in self.__class__.__mro__]))
+        print(f"\n\n\n>>>>> Init a new node: {cls_name}")
+        super().__init__(*args, **kwargs)
+
     # Instance config management
     # ----------------------------
 

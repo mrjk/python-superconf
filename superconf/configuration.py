@@ -127,7 +127,7 @@ class BaseFieldContainer(BaseFieldLeaf):
 
 
 # ====================================
-# Configuration Child
+# Helpers
 # ====================================
 
 
@@ -177,8 +177,70 @@ def node_cast_value(self, value):
     return new_val
 
 
+class LeafConfigBase2:
+    "Represent a configuration leaf"
+
+    cast = None
+    instance_class = None
+
+    def __init__(
+        self,
+        default=NOT_SET,
+        help="",
+        cast=None,
+        # attr=None,
+        instance_class=None,
+        # instance_class=None, Nope, only for public fields !!!
+        # key=None,
+    ):
+
+        self.default = default
+        self.help = help
+        self.cast = cast
+        self.instance_class = instance_class
+
+    def update(self, cfg):
+        "Update the configuration"
+        assert isinstance(cfg, dict)
+        for key, val in cfg.items():
+            # if val in (UNSET_ARG, NOT_SET):
+            #     continue
+            setattr(self, key, val)
+
+
+class LeafConfigCont2(LeafConfigBase2):
+    "Represent a configuration leaf"
+
+    def __init__(
+        self,
+        *args,
+        key=None,
+        attr=None,
+        children_class=None,
+        children_classes=None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+        self.key = key
+        self.attr = attr
+        self.children_class = children_class
+        self.children_classes = children_classes
+
+
+# ====================================
+# Configuration Child
+# ====================================
+
+
 class Leaf(Node):
     "Leaf instance, representing a value"
+
+    tmp__node_config = LeafConfigBase2(
+        cast=as_is,
+        default=NOT_SET,
+        help=None,
+    )
 
     __node_value__ = NOT_SET
     __node_default__ = NOT_SET
@@ -195,7 +257,7 @@ class Leaf(Node):
         value=UNSET_ARG,
         default=UNSET_ARG,
         # cast=UNSET_ARG,
-        meta=None,
+        # meta=None,
         field=None,
         **kwargs,
     ):
@@ -203,23 +265,36 @@ class Leaf(Node):
 
         print(f"++++++++ Init Leaf: {self.__node_fname__}")
 
+        # WIP, to be able to inject via params !!!
+        self.tmp__node_config = self.tmp__node_config
+        self.tmp__cfg = self.tmp__node_config.__dict__
+
         logger.debug(
             "Init node %s: %s, value=%s", self.__class__, self.__node_fname__, value
         )
 
         # Temporary
         assert not "cast" in kwargs, "CAST is not allowed in Leaf constructor"
-
         # self.__node_field__ = field or BaseFieldLeaf(instance_class=Leaf)
 
-        # print(f">>> CONFIGURE LEAF NODE {self} default={default} meta={meta} field={field} value={value}")
+        # COMPAT LAYER
+        if field:
+            self.tmp__node_config.update(field.__dict__)
+
+            # pprint(field.__dict__)
+            # pprint(self.tmp__node_config.__dict__)
+            # assert False, "WIP"
+
+        # assert meta is None
 
         # Fetch settings
-        override = _ArgCfg()
-        override.update(meta)
+        override = {} # _ArgCfg()
+        # override.update(meta or {})
         override.update(
             {
-                "cast": field.cast if field else UNSET_ARG,
+                # "cast": field.cast if field else UNSET_ARG,
+                "cast": self.tmp__node_config.cast,
+                # "default": self.tmp__node_config.default,
             }
         )
         override.update(
@@ -229,15 +304,17 @@ class Leaf(Node):
             }
         )
 
+        # tmp_cfg = override.cfg
+        tmp_cfg = override
         report = []
         default = self.__node_get_self_config__(
             "default",
-            override=override.cfg,
+            override=tmp_cfg,
             report=report,
         )
         cast = self.__node_get_self_config__(
             "cast",
-            override=override.cfg,
+            override=tmp_cfg,
             report=report,
         )
 
@@ -374,7 +451,9 @@ class ContainerInstance(Leaf):
 
     meta__children_class = Leaf  # Generic children class
 
-    def __init__(self, children_class=UNSET_ARG, meta=None, **kwargs):
+    def __init__(self, children_class=UNSET_ARG, 
+                #  meta=None, 
+                 **kwargs):
 
         print(f"++++++++ Init ContainerInstance: {self.__node_fname__}")
 
@@ -382,7 +461,7 @@ class ContainerInstance(Leaf):
 
         # Fetch settings
         override = _ArgCfg()
-        override.update(meta)
+        # override.update(meta)
         # override.update(
         #     {
         #         "children_class": self.__node_field__.children_class,
@@ -400,7 +479,9 @@ class ContainerInstance(Leaf):
             report=report,
         )
 
-        super().__init__(meta=meta, **kwargs)
+        super().__init__(
+            # meta=meta, 
+            **kwargs)
 
         # print("CHILDREN CLASS", self.__node_key__ ,self.__node_children_class__)
         # print("")
@@ -436,6 +517,15 @@ class ConfigurationDict(ContainerInstance):
     "Dict container configuration"
 
     meta__cast = as_dict
+
+    # For dict
+    tmp__node_config = LeafConfigCont2(
+        cast=as_dict,
+        default=NOT_SET_DICT,
+        help=None,
+        children_class=None,
+        children_classes=None,
+    )
 
     def __node__set_children__(self, value):
         "Set children"
@@ -783,14 +873,16 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         return ret
 
-    def __init__(self, *args, meta=None, **kwargs):
+    def __init__(self, *args, 
+                #  meta=None,
+                 **kwargs):
         "Initialize the instance"
 
         print(f"++++++++ Init ContainerObj: {self.__node_fname__}")
 
         # Fetch settings
         override = _ArgCfg()
-        override.update(meta)
+        # override.update(meta)
 
         report = []
         self._extra_fields = self.__node_get_self_config__(
@@ -829,7 +921,9 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 _children_classes.append(field)
         self.__node_children_classes__ = _children_classes
 
-        super().__init__(*args, meta=meta, **kwargs)
+        super().__init__(*args, 
+                        #  meta=meta,
+                         **kwargs)
 
     def __node__set_children__(self, value):
         "Set children"
@@ -942,6 +1036,15 @@ class ConfigurationList(ConfigurationDict):
     "List container configuration"
 
     meta__cast = as_list
+
+    # For list
+    tmp__node_config = LeafConfigCont2(
+        cast=as_list,
+        default=NOT_SET_LIST,
+        help=None,
+        children_class=None,
+        children_classes=None,
+    )
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
