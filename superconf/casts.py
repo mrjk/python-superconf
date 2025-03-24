@@ -24,6 +24,9 @@ class AbstractCast:
     def __call__(self, value):
         raise NotImplementedError()  # pragma: no cover
 
+    def __json_dump__(self):
+        return self.__dict__
+
 
 class AsBoolean(AbstractCast):
     """Cast a value to a boolean using predefined string mappings.

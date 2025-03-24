@@ -62,7 +62,7 @@ class BaseFieldLeaf(BaseNode):
         attr=None,
         instance_class=None,
     ):
-        self.__node_key__ = key
+        self.key = key
         self._attr = attr
         self.default = default
         self.help = help
@@ -75,16 +75,22 @@ class BaseFieldLeaf(BaseNode):
             Leaf in self.instance_class.__mro__
         ), f"Got: {self.instance_class.__mro__}"
 
-    @property
-    def attr(self):
+    def get_attr(self):
         "Attribute"
         if self._attr is None:
-            return self.__node_key__
+            return self.key
         return self._attr
 
-    @attr.setter
-    def attr(self, value):
-        self._attr = value
+    # @property
+    # def attr(self):
+    #     "Attribute"
+    #     if self._attr is None:
+    #         return self.key
+    #     return self._attr
+
+    # @attr.setter
+    # def attr(self, value):
+    #     self._attr = value
 
 
 class BaseFieldContainer(BaseFieldLeaf):
@@ -176,21 +182,33 @@ class LeafConfigBase2:
         cast=None,
         # attr=None,
         instance_class=None,
+        attr=None,
         # instance_class=None, Nope, only for public fields !!!
-        # key=None,
+        key=None,
     ):
 
+        self.key = key
         self.default = default
         self.help = help
         self.cast = cast
         self.instance_class = instance_class
+        self.attr = attr
+
+    def __json_dump__(self):
+        return self.__dict__
 
     def update(self, cfg):
         "Update the configuration"
         assert isinstance(cfg, dict)
         for key, val in cfg.items():
-            # if val in (UNSET_ARG, NOT_SET):
-            #     continue
+
+            if not hasattr(self, key):
+                msg = f"Invalid field key '{key}' for {self.__class__.__name__}"
+                logger.error(msg)
+                print(f"ERROR TOFIX: {msg}")
+                continue
+                raise exceptions.InvalidField(msg)
+
             setattr(self, key, val)
 
     def __repr__(self):
@@ -207,19 +225,12 @@ class LeafConfigCont2(LeafConfigBase2):
 
     def __init__(
         self,
-        *args,
-        key=None,
-        attr=None,
         children_class=None,
-        # children_classes=None,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
-        self.key = key
-        self.attr = attr
         self.children_class = children_class
-        # self.children_classes = children_classes
 
 
 class LeafConfigObj2(LeafConfigCont2):
@@ -283,7 +294,14 @@ class Leaf(Node):
         # COMPAT LAYER
         new_field = self.tmp__node_config.copy()
         if field:
-            new_field.update(field.__dict__)
+            tmp_val = field.__dict__
+            if "_attr" in tmp_val:
+                tmp_val["attr"] = tmp_val["_attr"]
+                del tmp_val["_attr"]
+
+            # print(" >>> FIELD", self, self.__class__.__mro__, new_field)
+            # pprint(tmp_val)
+            new_field.update(tmp_val)
 
         # Fetch settings overrides
         override = {
@@ -454,10 +472,7 @@ class ContainerInstance(Leaf):
             report=report,
         )
 
-        super().__init__(
-            # meta=meta,
-            **kwargs
-        )
+        super().__init__(**kwargs)
 
         # print("CHILDREN CLASS", self.__node_key__ ,self.__node_children_class__)
         # print("")
@@ -503,7 +518,13 @@ class ConfigurationDict(ContainerInstance):
     )
 
     def __node__set_children__(self, value):
-        "Set children"
+        "Set children from dict"
+
+        # Skip if no children requested
+        children_class = self.__node_children_class__
+        if not inspect.isclass(children_class):
+            logger.info("No children class defined for %s, skipping", self)
+            return
 
         logger.info(
             "Set children for ConfigurationDict %s: %s",
@@ -514,12 +535,6 @@ class ConfigurationDict(ContainerInstance):
         assert isinstance(
             value, dict
         ), f"Expected a dict for {self.__node_fname__}, got: {type(value)}={value}"
-
-        # Skip if no children requested
-        children_class = self.__node_children_class__
-        if children_class is None or children_class is False:
-            logger.info("No children class defined for %s, skipping", self)
-            return
 
         # Instanciate children
         children = {}
@@ -786,78 +801,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         children_classes=None,
     )
 
-    def _get_child_field(self, key=None, attr=None, extra_fields=False):
-        "Get child class"
-
-        _children_classes = self.__node_children_classes__ or []
-        _children_class = self.__node_children_class__ or None
-
-        child_key = key or attr
-        assert child_key is not None, "Key or attr is required"
-
-        matches = []
-        for field in _children_classes:
-            if key and field.__node_key__ == key:
-                matches.append(field)
-            elif attr and field.attr == attr:
-                matches.append(field)
-
-        ret = None
-        if len(matches) == 1:
-            ret = matches[0]
-        if len(matches) > 1:
-            raise exceptions.InvalidCastConfiguration(
-                f"Multiple child fields found for {self.__node_fname__}: {matches}"
-            )
-
-        if ret is None:
-            if extra_fields == "warn":
-                logger.warning(
-                    "Key '%s' is not declared in %s, use extra_fields=True to allow unknown keys",
-                    child_key,
-                    self.__node_fname__,
-                )
-                ret = None
-            if extra_fields is False:
-                raise exceptions.UndeclaredField(
-                    f"Key '{child_key}' is not declared in {self.__node_fname__}, use extra_fields=True to allow unknown keys"
-                )
-            ret = _children_class
-
-        # Assert
-        passed = False
-        if isinstance(ret, BaseFieldLeaf):
-            passed = True
-            return ret, ret.instance_class
-        elif inspect.isclass(ret):
-            if issubclass(ret, Leaf):
-                passed = True
-                return (
-                    BaseFieldLeaf(key=key, attr=attr, instance_class=Leaf),
-                    ret,
-                )
-        elif ret is None:
-            passed = True
-            return None, None
-
-        if not passed:
-            raise exceptions.InvalidField(
-                f"Expected a BaseFieldLeaf or a Leaf for {self.__node_fname__}.{child_key}, got: {type(ret)}={ret}"
-            )
-
-        return ret
-
-    def _get_child_keys(self, attr=False):
-        "Get child keys"
-        _children_classes = self.__node_children_classes__ or []
-
-        if attr:
-            ret = [field.attr for field in _children_classes]
-        else:
-            ret = [field.__node_key__ for field in _children_classes]
-
-        return ret
-
     def __init__(
         self,
         *args,
@@ -905,17 +848,61 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                     )
 
             if isinstance(field, BaseFieldLeaf):
-                field.__node_key__ = field.__node_key__ if field.__node_key__ else attr
+                field.key = field.key if field.key else attr
                 field.attr = attr
                 _children_classes.append(field)
 
         self.__node_children_classes__ = _children_classes
 
-        super().__init__(
-            *args,
-            #  meta=meta,
-            **kwargs,
-        )
+        super().__init__(*args, **kwargs)
+
+    def _get_child_field(self, key=None, attr=None):
+        "Get child field"
+
+        _children_classes = self.__node_children_classes__ or []
+        _children_class = self.__node_children_class__ or None
+        extra_fields = self.__node_extra_fields__
+
+        child_key = key or attr
+        assert child_key is not None, "Key or attr is required"
+
+        # Search best match field
+        matches = []
+        for field in _children_classes:
+            if key and field.key == key:
+                matches.append(field)
+            elif attr and field.attr == attr:
+                matches.append(field)
+
+        field = None
+        if len(matches) == 1:
+            field = matches[0]
+        if len(matches) > 1:
+            raise exceptions.InvalidCastConfiguration(
+                f"Multiple child fields found for {self.__node_fname__}: {matches}"
+            )
+
+        # Handle extra fields
+        if field is None:
+            if extra_fields == "warn":
+                logger.warning(
+                    "Key '%s' is not declared in %s, use extra_fields=True to allow unknown keys",
+                    child_key,
+                    self.__node_fname__,
+                )
+            if extra_fields is False:
+                raise exceptions.UndeclaredField(
+                    f"Key '{child_key}' is not declared in {self.__node_fname__}, use extra_fields=True to allow unknown keys"
+                )
+            field = BaseFieldLeaf(key=key, attr=attr, instance_class=_children_class)
+
+        # Check field result
+        if not isinstance(field, BaseFieldLeaf):
+            raise exceptions.InvalidField(
+                f"Expected a BaseFieldLeaf for {self.__node_fname__}.{child_key}, got: {type(field)}={field}"
+            )
+
+        return field
 
     def __node__set_children__(self, value):
         "Set children"
@@ -937,89 +924,42 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         # Build children keys
         children_keys_default = []
         children_keys_default.extend(list(node_default_dict.keys()))
-        children_keys_default.extend(self._get_child_keys())
+        children_keys_default.extend(
+            [field.key for field in self.__node_children_classes__ or []]
+        )
         children_keys_default = unique(children_keys_default)
 
-        # Instanciate default value
-        default_children = OrderedDict()
-        for child_key in children_keys_default:
+        # NEW AVAILABLE FIELDS
+        available_fields = []
+        available_fields.extend(children_keys_default)
+        available_fields.extend(list(value.keys()))
+        available_fields = unique(available_fields)
 
-            # Fetch key field
-            child_field, child_cls = self._get_child_field(
-                key=child_key, extra_fields=extra_fields
-            )
-            # print(" >>> CHILD FIELD1", child_field, child_cls)
+        children = OrderedDict()
+        for child_key in available_fields:
 
-            # Note: child_field can be one of:
-            #  - None, disabled
-            #  - Field instance, then we use instance_class attribute
-            #  - Children class of Leaf or ContainerInstance
-            if child_field is None:
-                # Skip when None
+            child_field = self._get_child_field(key=child_key)
+            child_cls = child_field.instance_class
+
+            if not child_cls:  # if None of False, then skip
                 continue
 
             assert inspect.isclass(
                 child_cls
             ), f"Expected a class for {self.__node_fname__}.{child_key}, got: {type(child_cls)}={child_cls}"
 
-            # Get default values
-            child_default = UNSET_ARG
-            if child_key in node_default_dict:
-                child_default = node_default_dict[child_key]
-            if child_default == UNSET_ARG:
-                if child_field is not None:
-                    child_default = child_field.default
+            child_default = node_default_dict.get(child_key, child_field.default)
+            child_value = value.get(child_key, NOT_SET)
 
             # Generate child instance
             child = child_cls(
-                parent=self, key=child_key, default=child_default, field=child_field
+                parent=self,
+                key=child_key,
+                default=child_default,
+                value=child_value,
+                field=child_field,
             )
-            default_children[child_key] = child
-
-        # Instanciate children
-        children = {}
-        children = default_children
-        for key, val in value.items():
-
-            if key in children:
-                children[key].set_value(val)
-            else:
-                if extra_fields == "warn":
-                    logger.warning(
-                        "Key %s is not declared in %s, use extra_fields=True to allow unknown keys",
-                        key,
-                        self.__node_fname__,
-                    )
-                    continue
-                if extra_fields is False:
-                    raise exceptions.UndeclaredField(
-                        f"Key {key} is not declared in {self.__node_fname__}, use extra_fields=True to allow unknown keys"
-                    )
-
-                child_field, child_cls = self._get_child_field(
-                    key=key, extra_fields=extra_fields
-                )
-                # print(" >>> CHILD FIELD2", child_field, child_cls)
-
-                assert child_cls is not None, "WIP"
-                if child_cls:
-                    logger.info(
-                        "Instanciate child %s: %s(%s)",
-                        key,
-                        child_cls.__name__,
-                        truncate(val),
-                    )
-
-                    child = child_cls(
-                        parent=self, key=key, value=val, field=child_field
-                    )
-
-                    children[key] = child
-
-        for key, child in children.items():
-            assert isinstance(
-                child, Leaf
-            ), f"Expected a Leaf for {self.__node_fname__}.{key}, got: {type(child)}={child}"
+            children[child_key] = child
 
         self.__node_children__ = children
 
@@ -1055,7 +995,13 @@ class ConfigurationList(ConfigurationDict):
         return default
 
     def __node__set_children__(self, value):
-        "Set children"
+        "Set children from list"
+
+        # Skip if no children requested
+        children_class = self.__node_children_class__
+        if not inspect.isclass(children_class):
+            logger.info("No children class defined for %s, skipping", self)
+            return
 
         logger.info(
             "Set children for Containerlist %s: %s",
@@ -1066,12 +1012,6 @@ class ConfigurationList(ConfigurationDict):
         assert isinstance(
             value, list
         ), f"Expected a list for {self.__node_fname__}, got: {type(value)}={value}"
-
-        # Skip if no children requested
-        children_class = self.__node_children_class__
-        if children_class is None or children_class is False:
-            logger.info("No children class defined for %s, skipping", self)
-            return
 
         # Instanciate children
         children = {}
