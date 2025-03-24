@@ -89,7 +89,8 @@ class TestNodeBase:
         # Test __node_get_self_config__ with parameters
         assert node1.__node_get_self_config__("MISSING", default="default") == "default"
         assert (
-            node2.__node_get_self_config__("NAME2", override={"NAME2": "override"}) == "override"
+            node2.__node_get_self_config__("NAME2", override={"NAME2": "override"})
+            == "override"
         )
 
         # Test with report parameter
