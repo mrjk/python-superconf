@@ -127,7 +127,7 @@ class Node(BaseNode):
     def __init__(self, *args, **kwargs):
 
         cls_name = ",".join(reversed([x.__name__ for x in self.__class__.__mro__]))
-        print(f"\n\n\n>>>>> Init a new node: {cls_name}")
+        # print(f"\n\n\n>>>>> Init a new node: {cls_name}")
         super().__init__(*args, **kwargs)
 
     # Instance config management
@@ -236,6 +236,18 @@ class Node(BaseNode):
             AssertionError: If casting fails
         """
 
+        def is_defined(val):
+            if val is UNSET_ARG:
+                return False
+            return True
+
+        def is_set(val):
+            if val is UNSET_ARG:
+                return False
+            if isinstance(val, NOT_SET.type):
+                return False
+            return True
+
         def _query_inst_cfg(
             name: str,
             override: Optional[Dict] = None,
@@ -269,7 +281,7 @@ class Node(BaseNode):
             # Fetch from dict override, if provided
             if isinstance(override, dict):
                 val = override.get(name, UNSET_ARG)
-                if val is not UNSET_ARG:
+                if is_set(val):
                     query_from.append(f"dict_override:{name}")
                     return val
             elif override is not None:
@@ -287,7 +299,8 @@ class Node(BaseNode):
             cls = self
             if hasattr(cls, "__meta__"):
                 val = getattr(cls.__meta__, name, UNSET_ARG)
-                if val != UNSET_ARG:
+                if is_defined(val):
+
                     query_from.append(f"class_meta:__meta__.{name}")
                     return val
 
@@ -296,14 +309,14 @@ class Node(BaseNode):
             cls = self
             if hasattr(cls, "Meta"):
                 val = getattr(cls.Meta, name, UNSET_ARG)
-                if val != UNSET_ARG:
+                if is_defined(val):
                     query_from.append(f"class_meta:Meta.{name}")
                     return val
 
             # Fetch from self.meta__NAME
             # Python class inherited params (good for defaults)
             val = getattr(self, f"meta__{name}", UNSET_ARG)
-            if val is not UNSET_ARG:
+            if is_defined(val):
                 query_from.append(f"self_attr:meta__{name}")
                 return val
 
@@ -322,8 +335,8 @@ class Node(BaseNode):
         logger.debug(
             "Node config query for %s.%s=%s (from: %s)", self, name, out, report[-1]
         )
-        msg = f"QUERRRYYYYY ===>>> Node config query for {self}, {name}={out} (from: {report[-1]})"
-        print(msg)
+        # msg = f"QUERRRYYYYY ===>>> Node config query for {self}, {name}={out} (from: {report[-1]})"
+        # print(msg)
 
         if isinstance(out, (dict, list)):
             out = copy.copy(out)
