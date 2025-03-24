@@ -249,7 +249,7 @@ class Node(BaseNode):
 
         report = report if isinstance(report, list) else []
         out = _query_inst_cfg(name, report=report, **kwargs)
-        logger.debug("Node config query for %s.%s=%s", self, name, out)
+        logger.debug("Node config query for %s.%s=%s (from: %s)", self, name, out, report[-1])
 
         if isinstance(out, (dict, list)):
             out = copy.copy(out)
