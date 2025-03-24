@@ -374,7 +374,3 @@ Here are some exercises to practice what you've learned:
 3. Try accessing nested values using different methods and observe the differences.
 4. Modify some nested values and verify that the changes were applied correctly.
 5. Create a deeply nested configuration (3+ levels) and practice accessing values at different levels. 
-
-```python
-
-```

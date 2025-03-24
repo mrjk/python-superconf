@@ -342,7 +342,3 @@ Here are some exercises to practice what you've learned:
 3. Create a configuration with a `FieldOption` that restricts a value to a set of valid options.
 4. Try to set an invalid value to a field with a specific type and observe the error.
 5. Create a configuration with `NOT_SET` values and check how they behave when accessed before and after setting a value. 
-
-```python
-
-```
