@@ -39,11 +39,32 @@ def from_json(string):
     return json.loads(string)
 
 
+class CustomJSONEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder to handle specific object types.
+    This method is called for objects not natively JSON serializable.
+    """
+
+    def default(self, obj):
+        """
+        Custom JSON encoder to handle specific object types.
+        This method is called for objects not natively JSON serializable.
+        """
+
+        if hasattr(obj, "__json_dump__"):
+            return obj.__json_dump__()
+
+        try:
+            return super().default(obj)
+        except TypeError:
+            return str(obj)
+
+
 def to_json(obj, nice=True):
     "Transform JSON string to python dict"
     if nice:
-        return json.dumps(obj, indent=2)
-    return json.dumps(obj)
+        return json.dumps(obj, indent=2, cls=CustomJSONEncoder)
+    return json.dumps(obj, cls=CustomJSONEncoder)
 
 
 def from_yaml(string):
