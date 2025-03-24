@@ -6,8 +6,10 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
-from superconf.configuration import NOT_SET, Configuration, ConfigurationDict
-from superconf.fields import Field, FieldConf
+from superconf import NOT_SET, ConfigurationDict, ConfigurationObj, Field, FieldConf
+
+# from superconf.configuration import NOT_SET, ConfigurationObj, ConfigurationDict
+# from superconf.fields import Field, FieldConf
 
 # This test explore the nested use cases, WITHOUT defaults
 
@@ -31,7 +33,7 @@ CONFIG_MERGED = {"resources": RESOURCES1 | RESOURCES2}
 RESOURCES_COUNT = len(CONFIG_MERGED["resources"])
 
 
-class Resource(Configuration):
+class Resource(ConfigurationObj):
     "Represent resources"
 
     class Meta:
@@ -52,7 +54,7 @@ class ResourcesCtl(ConfigurationDict):
         children_class = Resource
 
 
-class AppConfig(Configuration):
+class AppConfig(ConfigurationObj):
     "Main app config"
 
     class Meta:

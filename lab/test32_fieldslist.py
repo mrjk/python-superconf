@@ -7,7 +7,11 @@ import pytest
 
 import superconf.exceptions
 from superconf.common import DEFAULT, FAIL, NOT_SET, NOT_SET_DICT, NOT_SET_LIST
-from superconf.configuration import Configuration, ConfigurationDict, ConfigurationList
+from superconf.configuration import (
+    ConfigurationDict,
+    ConfigurationList,
+    ConfigurationObj,
+)
 from superconf.fields import (
     Field,
     FieldBool,

@@ -1,5 +1,5 @@
 # pylint: skip-file
-
+import copy
 from pprint import pprint
 
 import pytest
@@ -150,6 +150,8 @@ assert app.field4 == CONFIG_OVERRIDE
 # We can set a new value with a dict
 app.set_value(CONFIG_FULL2)
 
+pprint(app.get_value())
+
 # Short methods
 assert app.field1 == True
 assert app.field2 == "config2 value"
@@ -170,8 +172,9 @@ assert app("field4").get_default() == CONFIG_BASE
 
 # Eventually, we can change a single child value
 
-app("field3").set_value(4242)
-assert app("field3").get_value() == 4242
+NEW_FIELD_VALUE = 4242
+app("field3").set_value(NEW_FIELD_VALUE)
+assert app("field3").get_value() == NEW_FIELD_VALUE
 
 
 # V. Accessing unknown values and exceptions
@@ -206,12 +209,8 @@ else:
     assert False, "Should raise UndeclaredField"
 
 # With get_value() and default value
-try:
-    out = app.get_value("field9", "<UNKNOWN_FIELD>")
-except UndeclaredField:
-    pass
-else:
-    assert False, "Should raise UndeclaredField even when default is set"
+out = app.get_value("field9", "<UNKNOWN_FIELD>")
+assert out == "<UNKNOWN_FIELD>"
 
 
 # With call syntax
@@ -245,14 +244,23 @@ for name, child in app.items():
 print("Number of fields:", len(out_children))
 print("Childrens:")
 pprint(out_children)
-print("Values:")
-pprint(out_values)
 print("Defaults:")
 pprint(out_defaults)
 
-assert len(out_children) == len(CONFIG_FULL2)
-assert set(out_children.keys()) == set(CONFIG_FULL2.keys())
-assert out_values == CONFIG_FULL2
+# Preapre result assertion
+EXPECTED_RESULT = copy.deepcopy(CONFIG_FULL2)
+EXPECTED_RESULT["field3"] = NEW_FIELD_VALUE
+
+print("Expected Values:")
+pprint(EXPECTED_RESULT)
+
+print("Values:")
+pprint(out_values)
+
+
+assert len(out_children) == len(EXPECTED_RESULT)
+assert set(out_children.keys()) == set(EXPECTED_RESULT.keys())
+assert out_values == EXPECTED_RESULT
 
 
 print("All tests OK")

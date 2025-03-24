@@ -6,12 +6,14 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
-from superconf.configuration import NOT_SET, Configuration, ConfigurationDict
-from superconf.fields import Field, FieldConf
+from superconf import NOT_SET, ConfigurationDict, ConfigurationObj, Field, FieldConf
+
+# from superconf.configuration import NOT_SET, ConfigurationObj, ConfigurationDict
+# from superconf.fields import Field, FieldConf
 
 # from superconf.configuration import (
 #     NOT_SET,
-#     Configuration,
+#     ConfigurationObj,
 #     ConfigurationDict,
 #     Environment,
 #     Field,
@@ -30,7 +32,7 @@ from superconf.fields import Field, FieldConf
 print("=============== VAlidate extra_children")
 
 
-class ResourceFailWithUnknownArgs(Configuration):
+class ResourceFailWithUnknownArgs(ConfigurationObj):
     "Represent resources, alternative way"
 
     class Meta:
@@ -52,7 +54,7 @@ with pytest.raises(superconf.exceptions.UndeclaredField):
     # pprint(f1.__dict__)
 
 
-class ResourceOKWithUnknownArgs(Configuration):
+class ResourceOKWithUnknownArgs(ConfigurationObj):
     "Represent resources, alternative way"
 
     class Meta:
@@ -98,7 +100,7 @@ CONFIG_MERGED = {"resources": RESOURCES1 | RESOURCES2}
 RESOURCES_COUNT = len(CONFIG_MERGED["resources"])
 
 
-# class Resource1(Configuration):
+# class Resource1(ConfigurationObj):
 #     "Represent resources"
 
 #     # class Meta:
@@ -108,7 +110,7 @@ RESOURCES_COUNT = len(CONFIG_MERGED["resources"])
 #     owner = Field(default="MISSING OWNER1")
 
 
-class Resource2(Configuration):
+class Resource2(ConfigurationObj):
     "Represent resources, alternative way"
 
     class Meta:
@@ -126,7 +128,7 @@ class Resource2(Configuration):
     namespace2 = Field()
 
 
-# class Resource3(Configuration):
+# class Resource3(ConfigurationObj):
 #     "Represent resources dict, with unknown fields"
 
 #     class Meta:
@@ -146,7 +148,7 @@ class ResourcesCtl(ConfigurationDict):
         children_class = Resource2
 
 
-class AppConfig(Configuration):
+class AppConfig(ConfigurationObj):
     "Main app config"
 
     class Meta:

@@ -8,7 +8,7 @@ import pytest
 
 import superconf.exceptions
 from superconf.common import DEFAULT, FAIL, NOT_SET, NOT_SET_DICT, NOT_SET_LIST
-from superconf.configuration import Configuration, ConfigurationDict
+from superconf.configuration import ConfigurationDict, ConfigurationObj
 from superconf.fields import (
     Field,
     FieldBool,
@@ -41,7 +41,7 @@ logging.basicConfig(
 print("\n\n================ Boolean Fields ===========\n\n")
 
 
-class AppBools(Configuration):
+class AppBools(ConfigurationObj):
     "Tests types"
 
     class Meta:
@@ -74,7 +74,7 @@ assert app1.get_value() == EXPECTED
 print("\n\n================ String Fields ===========\n\n")
 
 
-class AppStrings(Configuration):
+class AppStrings(ConfigurationObj):
     "Tests types"
 
     class Meta:
@@ -117,7 +117,7 @@ assert app1.get_value() == EXPECTED
 print("\n\n================ Int Fields ===========\n\n")
 
 
-class AppInt(Configuration):
+class AppInt(ConfigurationObj):
     "Tests types"
 
     class Meta:
@@ -166,7 +166,7 @@ assert app1.get_value() == EXPECTED
 # }
 
 
-# class AppOption(Configuration):
+# class AppOption(ConfigurationObj):
 #     "Tests types"
 
 #     class Meta:
@@ -210,7 +210,7 @@ assert app1.get_value() == EXPECTED
 print("\n\n================ List Fields ===========\n\n")
 
 
-class AppList(Configuration):
+class AppList(ConfigurationObj):
     "Tests types"
 
     class Meta:
@@ -255,7 +255,7 @@ assert app1.get_value() == EXPECTED
 print("\n\n================ Tuple Fields ===========\n\n")
 
 
-class AppTuple(Configuration):
+class AppTuple(ConfigurationObj):
     "Tests types"
 
     class Meta:
@@ -295,7 +295,7 @@ assert app1.get_value() == EXPECTED
 print("\n\n================ Dict Fields ===========\n\n")
 
 
-class AppDict(Configuration):
+class AppDict(ConfigurationObj):
     "Tests types"
 
     class Meta:

@@ -5,11 +5,13 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
-from superconf.configuration import Configuration, ConfigurationDict
-from superconf.fields import Field, FieldConf
+from superconf import ConfigurationDict, ConfigurationObj, Field, FieldConf
+
+# from superconf.configuration import ConfigurationObj, ConfigurationDict
+# from superconf.fields import Field, FieldConf
 
 # from superconf.configuration import (
-#     Configuration,
+#     ConfigurationObj,
 #     ConfigurationDict,
 #     Environment,
 #     Field,
@@ -42,7 +44,7 @@ RESOURCES2 = {
 CONFIG1 = {"resources": RESOURCES | RESOURCES2}
 
 
-class Resource(Configuration):
+class Resource(ConfigurationObj):
     "Represent resources"
 
     class Meta:
@@ -62,7 +64,7 @@ class ResourcesCtl(ConfigurationDict):
         children_class = Resource
 
 
-class AppConfig(Configuration):
+class AppConfig(ConfigurationObj):
     "Main app config"
 
     # meta__custom_field = "My VALUUUUuuueeeee 555555"

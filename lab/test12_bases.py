@@ -6,10 +6,9 @@ from pprint import pprint
 import pytest
 
 import superconf.exceptions
-from superconf.configuration import Configuration
-from superconf.fields import Field, FieldConf
+from superconf import ConfigurationObj, Field, FieldConf
 
-# from superconf.configuration import Configuration, Environment, Field, FieldConf
+# from superconf.configuration import ConfigurationObj, Environment, Field, FieldConf
 # from superconf.loaders import Dict
 
 # This test explore the default specificities of classyconf
@@ -39,7 +38,7 @@ TOP_CONFIG = {
 CHILDREN_COUNT = len(FULL_CONFIG)
 
 
-class AppConfig(Configuration):
+class AppConfig(ConfigurationObj):
 
     # class Meta:
     #     loaders = [Environment()]
@@ -52,7 +51,7 @@ class AppConfig(Configuration):
     field4 = Field(default=example_dict, help="Another dict field")
 
 
-class TopConfig(Configuration):
+class TopConfig(ConfigurationObj):
 
     # class Meta:
     #     allow_undeclared = True
