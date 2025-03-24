@@ -136,10 +136,6 @@ class _ArgCfg:
         cfg = {k: v for k, v in cfg.items() if v not in (UNSET_ARG, NOT_SET)}
         self.cfg.update(cfg)
 
-    # def __getitem__(self, key):
-    #     "Get an item"
-    #     return self.cfg[key]
-
 
 def node_cast_value(self, value):
     "Cast value"
@@ -266,7 +262,6 @@ class Leaf(Node):
     __node_default__ = NOT_SET
     __node_cast__ = None
     __node_field__ = None
-    # __node_field__ = BaseFieldLeaf(instance_class=Leaf)
 
     # Public settings
     meta__default = NOT_SET
@@ -277,12 +272,9 @@ class Leaf(Node):
         value: Any = NOT_SET,
         # value=UNSET_ARG,
         default=UNSET_ARG,
-        # cast=UNSET_ARG,
-        # meta=None,
         key: Optional[Union[str, int]] = None,
         parent: Optional["Node"] = None,
         field=None,
-        # **kwargs,
     ):
         super().__init__(key=key, value=value, parent=parent)
         # print(f"++++++++ Init Leaf: {self.__node_fname__}")
@@ -305,10 +297,8 @@ class Leaf(Node):
 
         # Fetch settings overrides
         override = {
-            "default": default,
-            # "cast": field.cast if field else UNSET_ARG,
+            "default": default if default is not UNSET_ARG else new_field.default,
             "cast": new_field.cast,
-            # "default": new_field.default,
         }
         report = []
         default = self.__node_get_self_config__(
@@ -327,8 +317,6 @@ class Leaf(Node):
         self.__node_cast__ = cast
         self.set_default(default)
         if value is UNSET_ARG or isinstance(value, NOT_SET.type):
-            # assert value is UNSET_ARG, f"WIP: {self.__node_fname__}, {value}"
-            # assert value is not NOT_SET, f"WIP: {self.__node_fname__}, {value}"
             value = self.get_value()
         self.set_value(value)
 
@@ -427,7 +415,7 @@ class Leaf(Node):
     def __node_help__(self) -> str:
         "Get leaf help message"
 
-        if self.__node_field__ is not None and self.__node_field__.help:
+        if self.__node_field__.help:
             return self.__node_field__.help
 
         return self.__doc__ or "<NO_HELP>"
@@ -441,20 +429,14 @@ class ContainerInstance(Leaf):
 
     meta__children_class = Leaf  # Generic children class
 
-    def __init__(
-        self,
-        children_class=UNSET_ARG,
-        #  meta=None,
-        **kwargs,
-    ):
+    def __init__(self, children_class=UNSET_ARG, **kwargs):
 
-        print(f"++++++++ Init ContainerInstance: {self.__node_fname__}")
+        # print(f"++++++++ Init ContainerInstance: {self.__node_fname__}")
 
         self.__node_children__ = NOT_SET
 
         # Fetch settings
         override = _ArgCfg()
-        # override.update(meta)
         # override.update(
         #     {
         #         "children_class": self.__node_field__.children_class,
@@ -473,15 +455,6 @@ class ContainerInstance(Leaf):
         )
 
         super().__init__(**kwargs)
-
-        # print("CHILDREN CLASS", self.__node_key__ ,self.__node_children_class__)
-        # print("")
-        # if self.__node_key__ == "features":
-        #     print("FEATURES", self)
-        #     pprint(self.__dict__)
-        #     print("")
-        #     assert self.__node_children_class__.__name__ == "AppFeature", f"Expected AppFeature, got: {self.__node_children_class__.__name__}"
-        #     assert False, "PASSS OKKKKKK"
 
     def set_value(self, *args):
         "Set value"
@@ -801,30 +774,19 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         children_classes=None,
     )
 
-    def __init__(
-        self,
-        *args,
-        #  meta=None,
-        **kwargs,
-    ):
+    def __init__(self, *args, **kwargs):
         "Initialize the instance"
 
-        print(f"++++++++ Init ContainerObj: {self.__node_fname__}")
-
-        # Fetch settings
-        # override = _ArgCfg()
-        # override.update(meta)
+        # print(f"++++++++ Init ContainerObj: {self.__node_fname__}")
 
         report = []
         self.__node_extra_fields__ = self.__node_get_self_config__(
             "extra_fields",
-            # override=override.cfg,
             report=report,
         )
         _children_raw_classes = (
             self.__node_get_self_config__(
                 "children_classes",
-                # override=override.cfg,
                 report=report,
             )
             or {}
@@ -838,7 +800,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         for attr, field in _children_raw_classes.items():
 
             if inspect.isclass(field):
-                assert False
+                assert False, "BUG NOT SUPPORTED ANYMORE"
                 if issubclass(field, Leaf):
                     field = BaseFieldContainer(field, key=attr)
                     assert isinstance(field, BaseFieldLeaf)
@@ -917,37 +879,38 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
             value, dict
         ), f"Expected a dict for {self.__node_fname__}, got: {type(value)}={value}"
 
-        # Prepare node elements
-        node_default_dict = self.get_default() or {}
-        extra_fields = self.__node_extra_fields__
-
         # Build children keys
-        children_keys_default = []
-        children_keys_default.extend(list(node_default_dict.keys()))
-        children_keys_default.extend(
+        # -----------------------
+        available_fields = []
+        # Feed known fields from children_classes
+        available_fields.extend(
             [field.key for field in self.__node_children_classes__ or []]
         )
-        children_keys_default = unique(children_keys_default)
-
-        # NEW AVAILABLE FIELDS
-        available_fields = []
-        available_fields.extend(children_keys_default)
+        # Feed known fields from default node value
+        node_default_dict = self.get_default() or {}
+        available_fields.extend(list(node_default_dict.keys()))
+        # Feed known fields from value
         available_fields.extend(list(value.keys()))
+        # Remove duplicates
         available_fields = unique(available_fields)
 
+        # Instanciate children
+        # -----------------------
         children = OrderedDict()
         for child_key in available_fields:
 
+            # Fetch field config overrides
             child_field = self._get_child_field(key=child_key)
             child_cls = child_field.instance_class
 
+            # Skip if field is not valid class
             if not child_cls:  # if None of False, then skip
                 continue
-
             assert inspect.isclass(
                 child_cls
             ), f"Expected a class for {self.__node_fname__}.{child_key}, got: {type(child_cls)}={child_cls}"
 
+            # Build field default and value
             child_default = node_default_dict.get(child_key, child_field.default)
             child_value = value.get(child_key, NOT_SET)
 
