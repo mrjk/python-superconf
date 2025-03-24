@@ -88,7 +88,7 @@ RESOURCES1 = {
     },
     "wifi-ap": {
         "location": "home2",
-        "extra_field": "extra_value",
+        "suplemental_field": "extra_value",
     },
 }
 RESOURCES2 = {
@@ -184,14 +184,14 @@ EXPECTED = {
     "location": "home2",
     "namespace3": "Absent",
     "owner": "MISSING OWNER2",
-    "extra_field": "extra_value",
+    "suplemental_field": "extra_value",
 }
 
 out = app.get_value()
 pprint(out["resources"]["wifi-ap"])
 pprint(EXPECTED)
 assert out["resources"]["wifi-ap"] == EXPECTED
-assert out["resources"]["wifi-ap"]["extra_field"] == "extra_value"
+assert out["resources"]["wifi-ap"]["suplemental_field"] == "extra_value"
 
 # assert False, "WIP"
 
