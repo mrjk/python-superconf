@@ -150,6 +150,69 @@ class Node(BaseNode):
 
         return out
 
+    def __node_get_self_config_NEW__(
+        self,
+        name: str,
+        sources: Union[List[str], str] = None,
+        # cast: Optional[Type] = None,
+        report: Optional[List] = None,
+        # **kwargs,
+    ) -> Any:
+
+        query_from = report if isinstance(report, list) else []
+
+        def class_meta__dunder(self, name: str):
+            "Fetch from self.Meta.__meta__.NAME"
+            if hasattr(self, "__meta__"):
+                val = getattr(self.__meta__, name, UNSET_ARG)
+                if val is not UNSET_ARG:
+                    query_from.append(f"class_meta:__meta__.{name}")
+                    return val
+            return UNSET_ARG
+
+        def class_meta__class(self, name: str):
+            "Fetch from self.Meta.NAME"
+            # Python class params: self.Meta.NAME
+            # Good for class overrides
+            if hasattr(self, "Meta"):
+                val = getattr(self.Meta, name, UNSET_ARG)
+                if val is not UNSET_ARG:
+                    query_from.append(f"class_meta:Meta.{name}")
+                    return val
+            return UNSET_ARG
+
+        def class_meta__prefix(self, name: str):
+            "Fetch from self.meta__NAME"
+            # Fetch from self.meta__NAME
+            # Python class inherited params (good for defaults)
+            val = getattr(self, f"meta__{name}", UNSET_ARG)
+            if val is not UNSET_ARG:
+                query_from.append(f"self_attr:meta__{name}")
+                return val
+            return UNSET_ARG
+
+        mapping = {
+            "class_meta:__meta__": class_meta__dunder,
+            "class_meta:Meta": class_meta__class,
+            "self_attr:meta__": class_meta__prefix,
+        }
+
+        if sources is None:
+            sources = ["class_meta:__meta__", "class_meta:Meta", "self_attr:meta__"]
+        elif isinstance(sources, str):
+            sources = [sources]
+
+        for source in sources:
+            if source in mapping:
+                ret = mapping[source](self, name)
+                if ret is not UNSET_ARG or ret is not NOT_SET:
+                    return ret
+            else:
+                assert False, f"Invalid source: {source}"
+
+        # assert False, f"Invalid source: {sources}"
+        return UNSET_ARG
+
     # def __node_get_self_config__(
     def __node_get_self_config__(
         self,
@@ -214,10 +277,11 @@ class Node(BaseNode):
 
             # Fetch from self._NAME
             # Good for initial setup, if write mode is required
-            val = getattr(self, f"_{name}", UNSET_ARG)
-            if val is not UNSET_ARG:
-                query_from.append(f"self_attr:_{name}")
-                return val
+            # val = getattr(self, f"_{name}", UNSET_ARG)
+            # if val is not UNSET_ARG:
+            #     assert False, f"DEPRECATED: {self}, {name}={val}"
+            #     # query_from.append(f"self_attr:_{name}")
+            #     # return val
 
             # Fetch from self.__meta__.NAME
             cls = self
@@ -258,6 +322,8 @@ class Node(BaseNode):
         logger.debug(
             "Node config query for %s.%s=%s (from: %s)", self, name, out, report[-1]
         )
+        msg = f"QUERRRYYYYY ===>>> Node config query for {self}, {name}={out} (from: {report[-1]})"
+        print(msg)
 
         if isinstance(out, (dict, list)):
             out = copy.copy(out)

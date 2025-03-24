@@ -13,6 +13,7 @@ from collections.abc import Mapping, Sequence
 
 # pylint: disable=unused-import
 from pprint import pprint
+from typing import Any, Dict, List, Optional, Union
 
 from superconf import exceptions
 from superconf.casts import (
@@ -84,21 +85,6 @@ class BaseFieldLeaf(BaseNode):
     @attr.setter
     def attr(self, value):
         self._attr = value
-
-    def ctx_query(self, key, leaf=None, report=None):
-        "Query context"
-
-        field_attr = getattr(self, key, UNSET_ARG)
-        if field_attr is not UNSET_ARG:
-            return field_attr
-
-        leaf.__node_get_self_config__(
-            key,
-            # override=override.cfg,
-            report=report,
-        )
-
-        # return self.instance_class.ctx_query(key)
 
 
 class BaseFieldContainer(BaseFieldLeaf):
@@ -207,6 +193,14 @@ class LeafConfigBase2:
             #     continue
             setattr(self, key, val)
 
+    def __repr__(self):
+
+        return f"LeafCfg: {self.__dict__}"
+
+    def copy(self):
+        "Copy the configuration"
+        return self.__class__(**self.__dict__)
+
 
 class LeafConfigCont2(LeafConfigBase2):
     "Represent a configuration leaf"
@@ -217,7 +211,7 @@ class LeafConfigCont2(LeafConfigBase2):
         key=None,
         attr=None,
         children_class=None,
-        children_classes=None,
+        # children_classes=None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -225,6 +219,21 @@ class LeafConfigCont2(LeafConfigBase2):
         self.key = key
         self.attr = attr
         self.children_class = children_class
+        # self.children_classes = children_classes
+
+
+class LeafConfigObj2(LeafConfigCont2):
+    "Represent a configuration leaf"
+
+    def __init__(
+        self,
+        extra_fields=False,
+        children_classes=None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+        self.extra_fields = extra_fields
         self.children_classes = children_classes
 
 
@@ -254,91 +263,54 @@ class Leaf(Node):
 
     def __init__(
         self,
-        value=UNSET_ARG,
+        value: Any = NOT_SET,
+        # value=UNSET_ARG,
         default=UNSET_ARG,
         # cast=UNSET_ARG,
         # meta=None,
+        key: Optional[Union[str, int]] = None,
+        parent: Optional["Node"] = None,
         field=None,
-        **kwargs,
+        # **kwargs,
     ):
-        super().__init__(**kwargs)
-
-        print(f"++++++++ Init Leaf: {self.__node_fname__}")
-
-        # WIP, to be able to inject via params !!!
-        self.tmp__node_config = self.tmp__node_config
-        self.tmp__cfg = self.tmp__node_config.__dict__
-
+        super().__init__(key=key, value=value, parent=parent)
+        # print(f"++++++++ Init Leaf: {self.__node_fname__}")
         logger.debug(
             "Init node %s: %s, value=%s", self.__class__, self.__node_fname__, value
         )
 
         # Temporary
-        assert not "cast" in kwargs, "CAST is not allowed in Leaf constructor"
-        # self.__node_field__ = field or BaseFieldLeaf(instance_class=Leaf)
-
         # COMPAT LAYER
+        new_field = self.tmp__node_config.copy()
         if field:
-            self.tmp__node_config.update(field.__dict__)
+            new_field.update(field.__dict__)
 
-            # pprint(field.__dict__)
-            # pprint(self.tmp__node_config.__dict__)
-            # assert False, "WIP"
-
-        # assert meta is None
-
-        # Fetch settings
-        override = {} # _ArgCfg()
-        # override.update(meta or {})
-        override.update(
-            {
-                # "cast": field.cast if field else UNSET_ARG,
-                "cast": self.tmp__node_config.cast,
-                # "default": self.tmp__node_config.default,
-            }
-        )
-        override.update(
-            {
-                "default": default,
-                # "cast": cast,
-            }
-        )
-
-        # tmp_cfg = override.cfg
-        tmp_cfg = override
+        # Fetch settings overrides
+        override = {
+            "default": default,
+            # "cast": field.cast if field else UNSET_ARG,
+            "cast": new_field.cast,
+            # "default": new_field.default,
+        }
         report = []
         default = self.__node_get_self_config__(
             "default",
-            override=tmp_cfg,
+            override=override,
             report=report,
         )
         cast = self.__node_get_self_config__(
             "cast",
-            override=tmp_cfg,
+            override=override,
             report=report,
         )
 
-        # NEW CODE  ---- WIP
-        # report2 = []
-        # field = self.__node_field__
-        # cast2 = field.ctx_query("cast", leaf=self, report=report2)
-
-        # default2 = default
-        # if default is UNSET_ARG:
-        #     default2 = field.ctx_query("default", leaf=self, report=report2)
-
-        # pprint(report2)
-        # print("CAST VS CAST2", cast, cast2)
-        # print("DEFAULT VS DEFAULT2", default, default2)
-        # assert cast == cast2, f"CAST mismatch: {cast} != {cast2}"
-
-        ###############
-
         # Configure the instance
-        self.__node_field__ = field
+        self.__node_field__ = new_field
         self.__node_cast__ = cast
         self.set_default(default)
-        if value is UNSET_ARG:
+        if value is UNSET_ARG or isinstance(value, NOT_SET.type):
+            # assert value is UNSET_ARG, f"WIP: {self.__node_fname__}, {value}"
+            # assert value is not NOT_SET, f"WIP: {self.__node_fname__}, {value}"
             value = self.get_value()
         self.set_value(value)
 
@@ -451,9 +423,12 @@ class ContainerInstance(Leaf):
 
     meta__children_class = Leaf  # Generic children class
 
-    def __init__(self, children_class=UNSET_ARG, 
-                #  meta=None, 
-                 **kwargs):
+    def __init__(
+        self,
+        children_class=UNSET_ARG,
+        #  meta=None,
+        **kwargs,
+    ):
 
         print(f"++++++++ Init ContainerInstance: {self.__node_fname__}")
 
@@ -480,8 +455,9 @@ class ContainerInstance(Leaf):
         )
 
         super().__init__(
-            # meta=meta, 
-            **kwargs)
+            # meta=meta,
+            **kwargs
+        )
 
         # print("CHILDREN CLASS", self.__node_key__ ,self.__node_children_class__)
         # print("")
@@ -524,7 +500,6 @@ class ConfigurationDict(ContainerInstance):
         default=NOT_SET_DICT,
         help=None,
         children_class=None,
-        children_classes=None,
     )
 
     def __node__set_children__(self, value):
@@ -801,6 +776,16 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     meta__extra_fields = False
     meta__children_classes = None
 
+    # For dict
+    tmp__node_config = LeafConfigObj2(
+        cast=as_dict,
+        default=NOT_SET_DICT,
+        help=None,
+        extra_fields=False,
+        children_class=None,
+        children_classes=None,
+    )
+
     def _get_child_field(self, key=None, attr=None, extra_fields=False):
         "Get child class"
 
@@ -873,27 +858,30 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         return ret
 
-    def __init__(self, *args, 
-                #  meta=None,
-                 **kwargs):
+    def __init__(
+        self,
+        *args,
+        #  meta=None,
+        **kwargs,
+    ):
         "Initialize the instance"
 
         print(f"++++++++ Init ContainerObj: {self.__node_fname__}")
 
         # Fetch settings
-        override = _ArgCfg()
+        # override = _ArgCfg()
         # override.update(meta)
 
         report = []
-        self._extra_fields = self.__node_get_self_config__(
+        self.__node_extra_fields__ = self.__node_get_self_config__(
             "extra_fields",
-            override=override.cfg,
+            # override=override.cfg,
             report=report,
         )
         _children_raw_classes = (
             self.__node_get_self_config__(
                 "children_classes",
-                override=override.cfg,
+                # override=override.cfg,
                 report=report,
             )
             or {}
@@ -907,6 +895,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         for attr, field in _children_raw_classes.items():
 
             if inspect.isclass(field):
+                assert False
                 if issubclass(field, Leaf):
                     field = BaseFieldContainer(field, key=attr)
                     assert isinstance(field, BaseFieldLeaf)
@@ -919,11 +908,14 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 field.__node_key__ = field.__node_key__ if field.__node_key__ else attr
                 field.attr = attr
                 _children_classes.append(field)
+
         self.__node_children_classes__ = _children_classes
 
-        super().__init__(*args, 
-                        #  meta=meta,
-                         **kwargs)
+        super().__init__(
+            *args,
+            #  meta=meta,
+            **kwargs,
+        )
 
     def __node__set_children__(self, value):
         "Set children"
@@ -940,7 +932,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         # Prepare node elements
         node_default_dict = self.get_default() or {}
-        extra_fields = self._extra_fields
+        extra_fields = self.__node_extra_fields__
 
         # Build children keys
         children_keys_default = []
@@ -1043,7 +1035,6 @@ class ConfigurationList(ConfigurationDict):
         default=NOT_SET_LIST,
         help=None,
         children_class=None,
-        children_classes=None,
     )
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):

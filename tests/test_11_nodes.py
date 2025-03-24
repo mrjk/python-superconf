@@ -70,21 +70,22 @@ class TestNodeBase:
         class NodeWithMetaName(Node):
             meta__NAME2 = "test_direct_meta"
 
-        class NodeWithInit(Node):
-            def __init__(self):
-                self._NAME3 = "test_init"
+        # Disabled since we dont want to support this
+        # class NodeWithInit(Node):
+        #     def __init__(self):
+        #         self._NAME3 = "test_init"
 
         # Test instances
         node1 = NodeWithMeta()
         node2 = NodeWithMetaAttr()
         node3 = NodeWithMetaName()
-        node4 = NodeWithInit()
+        # node4 = NodeWithInit()
 
         # Test __node_get_self_config__ basic functionality
         assert node1.__node_get_self_config__("NAME1") == "test_meta"
         assert node2.__node_get_self_config__("NAME2") == "test_meta_attr"
         assert node3.__node_get_self_config__("NAME2") == "test_direct_meta"
-        assert node4.__node_get_self_config__("NAME3") == "test_init"
+        # assert node4.__node_get_self_config__("NAME3") == "test_init"
 
         # Test __node_get_self_config__ with parameters
         assert node1.__node_get_self_config__("MISSING", default="default") == "default"
