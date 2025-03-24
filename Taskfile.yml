@@ -97,6 +97,10 @@ tasks:
   test_report:
     desc: Report tests
     cmds:
-      - pytest tests --tb no -vv -q
-      - pytest --cov=superconf --cov-report term-missing  tests/
+      # - pytest tests --tb no -vv -q
+      # - pytest --cov=superconf --cov-report term-missing  tests/
+      - >
+        pytest tests/
+        --tb no -vv -q
+        --cov=superconf --cov-report term-missing
 
