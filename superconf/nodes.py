@@ -250,7 +250,6 @@ class Node(BaseNode):
 
         def _query_inst_cfg(
             name: str,
-            # override: Optional[Dict] = None,
             overrides: Optional[List] = None,
             default: Any = UNSET_ARG,
             report: Optional[List] = None,
@@ -281,18 +280,9 @@ class Node(BaseNode):
 
             if isinstance(overrides, list):
                 for _override in overrides:
-                    # if _override is not UNSET_ARG:
                     if is_set(_override):
                         query_from.append(f"dict_override:{name}")
                         return _override
-
-            # # Fetch from dict override, if provided
-            # if isinstance(override, dict):
-            #     assert False, f"DEPRECATED override option: {self}, {name}={override}"
-            #     val = override.get(name, UNSET_ARG)
-            #     if is_set(val):
-            #         query_from.append(f"dict_override:{name}")
-            #         return val
             elif overrides is not None:
                 raise ValueError(f"Invalid override type: {type(override)}")
 
@@ -341,13 +331,14 @@ class Node(BaseNode):
             )
             raise exceptions.MissingSetting(msg)
 
-        # Ensure setting is valid:
-        # if not hasattr(self, f"meta__{name}"):
-        #     msg = (
-        #         f"Setting '{name}' has not been declared before being used"
-        #         f" in '{repr(self)}', please declare 'meta__{name}' attribute"
-        #     )
-        #     raise exceptions.UnknownSetting(msg)
+        # Ensure setting is valid: TOFIX => SHOULD NOT BE HERE
+        if hasattr(self, "tmp__node_config"):
+            if not hasattr(self.tmp__node_config, name):
+                msg = (
+                    f"Setting '{name}' has not available for {self} "
+                    f"with config: {self.tmp__node_config}"
+                )
+                raise exceptions.UnknownSetting(msg)
 
         report = report if isinstance(report, list) else []
         out = _query_inst_cfg(name, report=report, **kwargs)

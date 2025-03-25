@@ -23,8 +23,8 @@ from superconf.casts import (  # as_string,
 )
 from superconf.common import FAIL, NOT_SET, UNSET_ARG
 from superconf.configuration import (
-    GenericField,
     Leaf,
+    PublicField,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # ====================================
 
 
-class FieldContainer(GenericField):
+class FieldContainer(PublicField):
     "Represent a configuration class WIP/BROKEN"
 
     instance_class = Leaf

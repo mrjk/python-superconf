@@ -59,6 +59,10 @@ class GenericField:
         return f"Field({self.__class__.__name__}/{inst_name}): {self.__dict__}"
 
 
+class PublicField(GenericField):
+    "Public field"
+
+
 # LeafBaseConfig
 class LeafBaseConfig(GenericField):
     "Represent a configuration leaf"
@@ -244,23 +248,24 @@ class Leaf(Node):
 
         # Get node field
         base_field = self.tmp__node_config
-        new_field = base_field
+        new_field = None
         if field is not None:
             # override_field = field
             new_field = field
 
         # Fetch settings overrides
-        override = {
-            "default": default if default is not UNSET_ARG else new_field.default,
-            "cast": new_field.cast,
-        }
+        # override = {
+        #     "default": default if default is not UNSET_ARG else new_field.default,
+        #     "cast": new_field.cast,
+        # }
         report = []
         _default = self.__node_get_self_config__(
             "default",
             # override=override,
             default=base_field.default,
             overrides=[
-                default if default is not UNSET_ARG else new_field.default,
+                default,
+                new_field.default if new_field else UNSET_ARG,
             ],
             report=report,
         )
@@ -438,17 +443,17 @@ class ContainerInstance(Leaf):
         self.__node_children__ = NOT_SET
 
         # Fetch settings
-        override = _ArgCfg()
+        # override = _ArgCfg()
+        # # override.update(
+        # #     {
+        # #         "children_class": self.__node_field__.children_class,
+        # #     }
+        # # )
         # override.update(
         #     {
-        #         "children_class": self.__node_field__.children_class,
+        #         "children_class": children_class,
         #     }
         # )
-        override.update(
-            {
-                "children_class": children_class,
-            }
-        )
         report = []
         self.__node_children_class__ = self.__node_get_self_config__(
             "children_class",
@@ -731,7 +736,7 @@ class DeclarativeValuesMetaclass(type):
                 values.update(base.__node_fields__)
 
         for attr, value in attrs.items():
-            if isinstance(value, GenericField):
+            if isinstance(value, PublicField):
                 values.update({attr: value})
             elif inspect.isclass(value):
                 if issubclass(value, Leaf):
@@ -743,6 +748,7 @@ class DeclarativeValuesMetaclass(type):
         # Clean attributes
         for key in list(attrs["__node_fields__"].keys()):
             if key in attrs:
+                print(f"DELETE {key}")
                 del attrs[key]
 
         # # Clean Meta class
@@ -783,6 +789,10 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         "Initialize the instance"
 
         # print(f"++++++++ Init ContainerObj: {self.__node_fname__}")
+
+        assert isinstance(
+            self.tmp__node_config, LeafObjConfig
+        ), "ConfigurationObj must have a LeafObjConfig"
 
         report = []
         self.__node_extra_fields__ = self.__node_get_self_config__(
