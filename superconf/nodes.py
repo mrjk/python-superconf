@@ -251,6 +251,7 @@ class Node(BaseNode):
         def _query_inst_cfg(
             name: str,
             override: Optional[Dict] = None,
+            overrides: Optional[List] = None,
             default: Any = UNSET_ARG,
             report: Optional[List] = None,
         ) -> Any:
@@ -278,8 +279,16 @@ class Node(BaseNode):
             """
             query_from = report if isinstance(report, list) else []
 
+            if isinstance(overrides, list):
+                for _override in overrides:
+                    # if _override is not UNSET_ARG:
+                    if is_set(_override):
+                        query_from.append(f"dict_override:{name}")
+                        return _override
+
             # Fetch from dict override, if provided
             if isinstance(override, dict):
+                # assert False, f"DEPRECATED override option: {self}, {name}={override}"
                 val = override.get(name, UNSET_ARG)
                 if is_set(val):
                     query_from.append(f"dict_override:{name}")
@@ -320,15 +329,25 @@ class Node(BaseNode):
                 query_from.append(f"self_attr:meta__{name}")
                 return val
 
+            print(f"DEFAULT: {default}")
             if default is not UNSET_ARG:
                 query_from.append("default_arg")
                 return default
 
             msg = (
-                f"Setting '{name}' has not been declared before being used"
-                f" in '{repr(self)}', please declare 'meta__{name}' attribute, tried to query: {query_from}"
+                f"Failed to query setting: '{name}'"
+                # f"Setting '{name}' has not been declared before being used"
+                f" in '{repr(self)}', please provide default value, tried to query: {query_from}"
             )
-            raise exceptions.UnknownSetting(msg)
+            raise exceptions.MissingSetting(msg)
+
+        # Ensure setting is valid:
+        # if not hasattr(self, f"meta__{name}"):
+        #     msg = (
+        #         f"Setting '{name}' has not been declared before being used"
+        #         f" in '{repr(self)}', please declare 'meta__{name}' attribute"
+        #     )
+        #     raise exceptions.UnknownSetting(msg)
 
         report = report if isinstance(report, list) else []
         out = _query_inst_cfg(name, report=report, **kwargs)

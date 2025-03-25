@@ -38,6 +38,10 @@ class UnknownSetting(ConfigurationException):
     "Raised when an unexpected field is met. Enable extra_fields=True to disable this error"
 
 
+class MissingSetting(ConfigurationException):
+    "Raised when a setting is missing"
+
+
 class UnknownChild(ConfigurationException):
     "Raised when a child is not found"
 

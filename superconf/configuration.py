@@ -50,6 +50,14 @@ logger = logging.getLogger(__name__)
 class GenericField:
     "Generic field"
 
+    instance_class = None
+
+    def __repr__(self):
+        inst_name = (
+            self.instance_class.__class__.__name__ if self.instance_class else "None"
+        )
+        return f"Field({self.__class__.__name__}/{inst_name}): {self.__dict__}"
+
 
 # LeafBaseConfig
 class LeafBaseConfig(GenericField):
@@ -73,9 +81,9 @@ class LeafBaseConfig(GenericField):
         self,
         default=NOT_SET,
         help="",
-        cast=None,
-        instance_class=None,
-        attr=None,
+        cast=NOT_SET,
+        instance_class=NOT_SET,
+        attr=NOT_SET,
         key=None,
     ):
 
@@ -113,9 +121,6 @@ class LeafBaseConfig(GenericField):
                 continue
 
             setattr(self, key, val)
-
-    def __repr__(self):
-        return f"LeafCfg({self.instance_class}): {self.__dict__}"
 
     def copy(self):
         "Copy the configuration"
@@ -176,7 +181,7 @@ def node_cast_value(self, value):
 
     def _cast(value):
         # If there is no cast callable, then return directly the value
-        if self.__node_cast__ is None:
+        if self.__node_cast__ is None or self.__node_cast__ is NOT_SET:
             return value
 
         # Otherwise, try to cast the value
@@ -220,7 +225,7 @@ class Leaf(Node):
 
     # Public settings
     meta__default = NOT_SET
-    meta__cast = None
+    meta__cast = UNSET_ARG
 
     def __init__(
         self,
@@ -237,18 +242,12 @@ class Leaf(Node):
             "Init node %s: %s, value=%s", self.__class__, self.__node_fname__, value
         )
 
-        # Temporary
-        # COMPAT LAYER
-        new_field = self.tmp__node_config.copy()
-        if field:
-            tmp_val = field.__dict__
-            if "_attr" in tmp_val:
-                tmp_val["attr"] = tmp_val["_attr"]
-                del tmp_val["_attr"]
-
-            print(" >>> FIELD", self, self.__class__.__mro__, new_field)
-            # pprint(tmp_val)
-            new_field.update(tmp_val)
+        # Get node field
+        base_field = self.tmp__node_config
+        new_field = base_field
+        if field is not None:
+            # override_field = field
+            new_field = field
 
         # Fetch settings overrides
         override = {
@@ -256,21 +255,62 @@ class Leaf(Node):
             "cast": new_field.cast,
         }
         report = []
-        default = self.__node_get_self_config__(
+        _default = self.__node_get_self_config__(
             "default",
             override=override,
             report=report,
         )
+        # pprint(new_field.__dict__)
+        # assert (
+        #     new_field.cast is not UNSET_ARG
+        # ), f"Cast is not set for {self}/{new_field}: {new_field.__dict__}"
         cast = self.__node_get_self_config__(
             "cast",
+            default=base_field.cast,
             override=override,
             report=report,
         )
 
+        # NEW OVERRIDES
+        report2 = []
+        cast2 = self.__node_get_self_config__(
+            "cast",
+            default=base_field.cast,
+            # override={
+            #     "cast": new_field.cast if new_field else UNSET_ARG,
+            # },
+            overrides=[
+                new_field.cast if new_field else UNSET_ARG,
+            ],
+            report=report2,
+        )
+        assert cast == cast2, f"Cast mismatch: {cast} != {cast2} ==>{report2}"
+
+        report2 = []
+        default2 = self.__node_get_self_config__(
+            "default",
+            default=base_field.default,
+            # override={
+            #     "default": (
+            #         default
+            #         if default is not UNSET_ARG
+            #         else (new_field.default if new_field else UNSET_ARG)
+            #     ),
+            # },
+            overrides=[
+                default,
+                new_field.default if new_field else UNSET_ARG,
+            ],
+            report=report2,
+        )
+        assert (
+            _default == default2
+        ), f"Default mismatch: {_default} != {default2} ==>{report2} VIA {new_field}"
+
         # Configure the instance
         self.__node_field__ = new_field
         self.__node_cast__ = cast
-        self.set_default(default)
+        self.set_default(_default)
         if value is UNSET_ARG or isinstance(value, NOT_SET.type):
             value = self.get_value()
         self.set_value(value)
@@ -435,7 +475,7 @@ class ContainerInstance(Leaf):
 class ConfigurationDict(ContainerInstance):
     "Dict container configuration"
 
-    meta__cast = as_dict
+    # meta__cast = as_dict
 
     # For dict
     tmp__node_config = LeafContainerConfig(
@@ -887,7 +927,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 class ConfigurationList(ConfigurationDict):
     "List container configuration"
 
-    meta__cast = as_list
+    # meta__cast = as_list
 
     # For list
     tmp__node_config = LeafContainerConfig(
