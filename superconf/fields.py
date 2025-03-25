@@ -20,10 +20,10 @@ from superconf.casts import (  # as_string,
     as_tuple,
 )
 from superconf.common import FAIL, NOT_SET, UNSET_ARG
-from superconf.configuration import (  # ContainerConf,; ContainerDict,; ContainerList,
-    BaseFieldContainer,
-    BaseFieldLeaf,
+from superconf.configuration import (  # ContainerConf,; ContainerDict,; ContainerList,; BaseFieldContainer,; BaseFieldLeaf,
+    BaseNode,
     ContainerInstance,
+    GenericField,
     Leaf,
 )
 
@@ -35,6 +35,82 @@ from superconf.configuration import (  # ContainerConf,; ContainerDict,; Contain
 
 
 logger = logging.getLogger(__name__)
+
+
+# ====================================
+# Base Fields V1
+# ====================================
+
+
+class BaseFieldLeaf(BaseNode, GenericField):
+    "Represent a configuration leaf"
+
+    cast = None
+    instance_class = None
+
+    def __init__(
+        self,
+        key=None,
+        default=NOT_SET,
+        help="",
+        cast=None,
+        attr=None,
+        instance_class=None,
+    ):
+        self.key = key
+        self._attr = attr
+        self.default = default
+        self.help = help
+        self.cast = cast if cast is not None else self.cast
+        self.instance_class = instance_class or self.instance_class
+        # Validate input
+        assert self.instance_class is not None, "Instance class is required"
+        # assert issubclass(self.instance_class, Leaf), f"Expected a Leaf for {self.__node_fname__}, got: {type(self.instance_class)}={self.instance_class}"
+        assert (
+            Leaf in self.instance_class.__mro__
+        ), f"Got: {self.instance_class.__mro__}"
+
+    def get_attr(self):
+        "Attribute"
+        if self._attr is None:
+            return self.key
+        return self._attr
+
+    # @property
+    # def attr(self):
+    #     "Attribute"
+    #     if self._attr is None:
+    #         return self.key
+    #     return self._attr
+
+    # @attr.setter
+    # def attr(self, value):
+    #     self._attr = value
+
+
+class BaseFieldContainer(BaseFieldLeaf):
+    "Represent a configuration class"
+
+    instance_class = None
+    children_class = None
+    children_classes = None
+
+    def __init__(
+        self,
+        instance_class,
+        key=None,
+        children_class=None,
+        children_classes=None,
+        **kwargs,
+    ):
+        self.instance_class = instance_class or self.instance_class
+        self.children_class = children_class or self.children_class
+        self.children_classes = children_classes or {}
+        super().__init__(key=key, **kwargs)
+
+        assert issubclass(
+            self.instance_class, Leaf
+        ), f"Expected a Leaf for {self.__node_fname__}, got: {type(self.children_class)}={self.children_class}"
 
 
 # Leaf Fields

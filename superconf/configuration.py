@@ -43,11 +43,117 @@ logger = logging.getLogger(__name__)
 
 
 # ====================================
-# Base Fields
+# Base Fields V2
 # ====================================
 
 
-class BaseFieldLeaf(BaseNode):
+class GenericField:
+    "Generic field"
+
+
+class LeafConfigBase2(GenericField):
+    "Represent a configuration leaf"
+
+    # cast = None
+    # instance_class = None
+
+    @classmethod
+    def get_keys(cls):
+        "Get class item"
+        item = cls()
+        return list(item.dump().keys())
+
+    # pylint: disable=redefined-builtin
+    def __init__(
+        self,
+        default=NOT_SET,
+        help="",
+        cast=None,
+        instance_class=None,
+        attr=None,
+        key=None,
+    ):
+
+        self.key = key
+        self.default = default
+        self.help = help
+        self.cast = cast
+        self.instance_class = instance_class
+        self.attr = attr
+
+    def __json_dump__(self):
+        return self.__dict__
+
+    # def set_attr(self, attr, value):
+    #     "Set attribute"
+    #     assert (
+    #         attr in self.__dict__
+    #     ), f"Invalid attribute '{attr}' for {self.__class__.__name__}, please choose one of: {list(self.__dict__.keys())}"
+    #     setattr(self, attr, value)
+
+    def dump(self):
+        "Dump the configuration"
+        return dict(self.__dict__)
+
+    def update(self, cfg, skip_unset=True):
+        "Update the configuration"
+        assert isinstance(cfg, dict)
+        for key, val in cfg.items():
+
+            if skip_unset and val is UNSET_ARG:
+                continue
+
+            if not hasattr(self, key):
+                msg = f"Invalid field key '{key}' for {self.__class__.__name__}"
+                logger.error(msg)
+                print(f"ERROR TOFIX: {msg}")
+                continue
+                # raise exceptions.InvalidField(msg)
+
+            setattr(self, key, val)
+
+    def __repr__(self):
+        return f"LeafCfg({self.instance_class}): {self.__dict__}"
+
+    def copy(self):
+        "Copy the configuration"
+        return self.__class__(**self.__dict__)
+
+
+class LeafConfigCont2(LeafConfigBase2):
+    "Represent a Configuration Container leaf"
+
+    def __init__(
+        self,
+        children_class=None,
+        **kwargs,
+    ):
+
+        self.children_class = children_class
+        super().__init__(**kwargs)
+
+
+class LeafConfigObj2(LeafConfigCont2):
+    "Represent a ConfigurationObj leaf"
+
+    def __init__(
+        self,
+        extra_fields=False,
+        children_classes=None,
+        **kwargs,
+    ):
+
+        self.extra_fields = extra_fields
+        self.children_classes = children_classes
+        super().__init__(**kwargs)
+
+
+# ====================================
+# Base Fields V1
+# ====================================
+
+
+class BaseFieldLeaf(BaseNode, GenericField):
     "Represent a configuration leaf"
 
     cast = None
@@ -163,85 +269,6 @@ def node_cast_value(self, value):
         logger.debug(msg)
 
     return new_val
-
-
-class LeafConfigBase2:
-    "Represent a configuration leaf"
-
-    cast = None
-    instance_class = None
-
-    def __init__(
-        self,
-        default=NOT_SET,
-        help="",
-        cast=None,
-        # attr=None,
-        instance_class=None,
-        attr=None,
-        # instance_class=None, Nope, only for public fields !!!
-        key=None,
-    ):
-
-        self.key = key
-        self.default = default
-        self.help = help
-        self.cast = cast
-        self.instance_class = instance_class
-        self.attr = attr
-
-    def __json_dump__(self):
-        return self.__dict__
-
-    def update(self, cfg):
-        "Update the configuration"
-        assert isinstance(cfg, dict)
-        for key, val in cfg.items():
-
-            if not hasattr(self, key):
-                msg = f"Invalid field key '{key}' for {self.__class__.__name__}"
-                logger.error(msg)
-                print(f"ERROR TOFIX: {msg}")
-                continue
-                raise exceptions.InvalidField(msg)
-
-            setattr(self, key, val)
-
-    def __repr__(self):
-
-        return f"LeafCfg: {self.__dict__}"
-
-    def copy(self):
-        "Copy the configuration"
-        return self.__class__(**self.__dict__)
-
-
-class LeafConfigCont2(LeafConfigBase2):
-    "Represent a configuration leaf"
-
-    def __init__(
-        self,
-        children_class=None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-
-        self.children_class = children_class
-
-
-class LeafConfigObj2(LeafConfigCont2):
-    "Represent a configuration leaf"
-
-    def __init__(
-        self,
-        extra_fields=False,
-        children_classes=None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-
-        self.extra_fields = extra_fields
-        self.children_classes = children_classes
 
 
 # ====================================
@@ -726,7 +753,7 @@ class DeclarativeValuesMetaclass(type):
                 values.update(base.__node_fields__)
 
         for attr, value in attrs.items():
-            if isinstance(value, BaseFieldLeaf):
+            if isinstance(value, GenericField):
                 values.update({attr: value})
             elif inspect.isclass(value):
                 if issubclass(value, Leaf):
@@ -803,13 +830,13 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 assert False, "BUG NOT SUPPORTED ANYMORE"
                 if issubclass(field, Leaf):
                     field = BaseFieldContainer(field, key=attr)
-                    assert isinstance(field, BaseFieldLeaf)
+                    assert isinstance(field, GenericField)
                 else:
                     raise exceptions.InvalidField(
                         f"Expected a Leaf for {self.__node_fname__}.{attr}, got: {type(field)}={field}"
                     )
 
-            if isinstance(field, BaseFieldLeaf):
+            if isinstance(field, GenericField):
                 field.key = field.key if field.key else attr
                 field.attr = attr
                 _children_classes.append(field)
@@ -856,12 +883,14 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 raise exceptions.UndeclaredField(
                     f"Key '{child_key}' is not declared in {self.__node_fname__}, use extra_fields=True to allow unknown keys"
                 )
-            field = BaseFieldLeaf(key=key, attr=attr, instance_class=_children_class)
+            # field = BaseFieldLeaf(key=key, attr=attr, instance_class=_children_class)
+            child_field_cls = _children_class.tmp__node_config.__class__
+            field = child_field_cls(key=key, attr=attr, instance_class=_children_class)
 
         # Check field result
-        if not isinstance(field, BaseFieldLeaf):
+        if not isinstance(field, GenericField):
             raise exceptions.InvalidField(
-                f"Expected a BaseFieldLeaf for {self.__node_fname__}.{child_key}, got: {type(field)}={field}"
+                f"Expected a GenericField for {self.__node_fname__}.{child_key}, got: {type(field)}={field}"
             )
 
         return field
