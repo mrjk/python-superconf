@@ -9,6 +9,8 @@
 # from pprint import pprint
 import logging
 
+from superconf import exceptions
+
 # from superconf import exceptions
 from superconf.casts import (  # as_string,
     as_boolean,
@@ -38,101 +40,68 @@ logger = logging.getLogger(__name__)
 
 
 # ====================================
-# Base Fields V1
+# Base Fields
 # ====================================
 
 
-class BaseFieldLeaf(BaseNode, GenericField):
-    "Represent a configuration leaf"
+class FieldContainer(GenericField):
+    "Represent a configuration class WIP/BROKEN"
 
-    cast = None
-    instance_class = None
-
-    def __init__(
-        self,
-        key=None,
-        default=NOT_SET,
-        help="",
-        cast=None,
-        attr=None,
-        instance_class=None,
-    ):
-        self.key = key
-        self._attr = attr
-        self.default = default
-        self.help = help
-        self.cast = cast if cast is not None else self.cast
-        self.instance_class = instance_class or self.instance_class
-        # Validate input
-        assert self.instance_class is not None, "Instance class is required"
-        # assert issubclass(self.instance_class, Leaf), f"Expected a Leaf for {self.__node_fname__}, got: {type(self.instance_class)}={self.instance_class}"
-        assert (
-            Leaf in self.instance_class.__mro__
-        ), f"Got: {self.instance_class.__mro__}"
-
-    def get_attr(self):
-        "Attribute"
-        if self._attr is None:
-            return self.key
-        return self._attr
-
-    # @property
-    # def attr(self):
-    #     "Attribute"
-    #     if self._attr is None:
-    #         return self.key
-    #     return self._attr
-
-    # @attr.setter
-    # def attr(self, value):
-    #     self._attr = value
-
-
-class BaseFieldContainer(BaseFieldLeaf):
-    "Represent a configuration class"
-
-    instance_class = None
-    children_class = None
-    children_classes = None
+    instance_class = Leaf
 
     def __init__(
         self,
         instance_class,
-        key=None,
-        children_class=None,
-        children_classes=None,
         **kwargs,
     ):
-        self.instance_class = instance_class or self.instance_class
-        self.children_class = children_class or self.children_class
-        self.children_classes = children_classes or {}
-        super().__init__(key=key, **kwargs)
 
+        # Fetch instance class
+        self.instance_class = instance_class or self.instance_class
         assert issubclass(
             self.instance_class, Leaf
-        ), f"Expected a Leaf for {self.__node_fname__}, got: {type(self.children_class)}={self.children_class}"
+        ), f"Expected a Leaf for {self}, got: {type(self.instance_class)}={self.instance_class}"
+
+        # Fetch node field
+        node_field = self.instance_class.tmp__node_config
+
+        # Validate kwargs and report unknown fields
+        field_names = node_field.get_keys()
+        for key, val in kwargs.items():
+            if key not in field_names:
+                msg = f"Unknown field: {key}={val} for Field '{node_field}'"
+                raise exceptions.InvalidFieldOption(msg)
+
+        # Fetch base config
+        base_cfg = {}
+        for name in field_names:
+            if hasattr(self, name):
+                val = getattr(self, name)
+                base_cfg[name] = val
+
+        # Build requested config
+        new_cfg = {}
+        new_cfg.update(node_field.dump())
+        new_cfg.update(base_cfg)
+        new_cfg.update(kwargs)
+
+        # Apply config attributes
+        for key, val in new_cfg.items():
+            setattr(self, key, val)
+
+
+class FieldLeaf(FieldContainer):
+    "Represent a configuration leaf"
+
+    def __init__(self, instance_class=None, **kwargs):
+
+        super().__init__(instance_class, **kwargs)
+
+
+Field = FieldLeaf
 
 
 # Leaf Fields
 # ============================
-
-
-class FieldLeaf(BaseFieldLeaf):
-    "Represent a configuration leaf"
-
-    cast = as_is
-    instance_class = Leaf
-
-
-class FieldContainer(BaseFieldContainer):
-    "Represent a configuration class"
-
-    cast = UNSET_ARG
-    child_class = ContainerInstance
-    instance_class = None
-
-
-Field = FieldLeaf
 
 
 class FieldBool(FieldLeaf):

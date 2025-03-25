@@ -51,17 +51,22 @@ class GenericField:
     "Generic field"
 
 
-class LeafConfigBase2(GenericField):
+# LeafBaseConfig
+class LeafBaseConfig(GenericField):
     "Represent a configuration leaf"
 
     # cast = None
     # instance_class = None
 
     @classmethod
-    def get_keys(cls):
+    def get_keys_cls(cls):
         "Get class item"
         item = cls()
         return list(item.dump().keys())
+
+    def get_keys(self):
+        "Get class item"
+        return list(self.__dict__.keys())
 
     # pylint: disable=redefined-builtin
     def __init__(
@@ -100,15 +105,12 @@ class LeafConfigBase2(GenericField):
         assert isinstance(cfg, dict)
         for key, val in cfg.items():
 
-            if skip_unset and val is UNSET_ARG:
-                continue
-
             if not hasattr(self, key):
                 msg = f"Invalid field key '{key}' for {self.__class__.__name__}"
-                logger.error(msg)
-                print(f"ERROR TOFIX: {msg}")
+                raise exceptions.InvalidField(msg)
+
+            if skip_unset and val is UNSET_ARG:
                 continue
-                # raise exceptions.InvalidField(msg)
 
             setattr(self, key, val)
 
@@ -120,7 +122,8 @@ class LeafConfigBase2(GenericField):
         return self.__class__(**self.__dict__)
 
 
-class LeafConfigCont2(LeafConfigBase2):
+# LeafContainerConfig
+class LeafContainerConfig(LeafBaseConfig):
     "Represent a Configuration Container leaf"
 
     def __init__(
@@ -133,8 +136,9 @@ class LeafConfigCont2(LeafConfigBase2):
         super().__init__(**kwargs)
 
 
-class LeafConfigObj2(LeafConfigCont2):
-    "Represent a ConfigurationObj leaf"
+# LeafObjConfig
+class LeafObjConfig(LeafContainerConfig):
+    "Represent a Configuration Object leaf"
 
     def __init__(
         self,
@@ -146,82 +150,6 @@ class LeafConfigObj2(LeafConfigCont2):
         self.extra_fields = extra_fields
         self.children_classes = children_classes
         super().__init__(**kwargs)
-
-
-# ====================================
-# Base Fields V1
-# ====================================
-
-
-class BaseFieldLeaf(BaseNode, GenericField):
-    "Represent a configuration leaf"
-
-    cast = None
-    instance_class = None
-
-    def __init__(
-        self,
-        key=None,
-        default=NOT_SET,
-        help="",
-        cast=None,
-        attr=None,
-        instance_class=None,
-    ):
-        self.key = key
-        self._attr = attr
-        self.default = default
-        self.help = help
-        self.cast = cast if cast is not None else self.cast
-        self.instance_class = instance_class or self.instance_class
-        # Validate input
-        assert self.instance_class is not None, "Instance class is required"
-        # assert issubclass(self.instance_class, Leaf), f"Expected a Leaf for {self.__node_fname__}, got: {type(self.instance_class)}={self.instance_class}"
-        assert (
-            Leaf in self.instance_class.__mro__
-        ), f"Got: {self.instance_class.__mro__}"
-
-    def get_attr(self):
-        "Attribute"
-        if self._attr is None:
-            return self.key
-        return self._attr
-
-    # @property
-    # def attr(self):
-    #     "Attribute"
-    #     if self._attr is None:
-    #         return self.key
-    #     return self._attr
-
-    # @attr.setter
-    # def attr(self, value):
-    #     self._attr = value
-
-
-class BaseFieldContainer(BaseFieldLeaf):
-    "Represent a configuration class"
-
-    instance_class = None
-    children_class = None
-    children_classes = None
-
-    def __init__(
-        self,
-        instance_class,
-        key=None,
-        children_class=None,
-        children_classes=None,
-        **kwargs,
-    ):
-        self.instance_class = instance_class or self.instance_class
-        self.children_class = children_class or self.children_class
-        self.children_classes = children_classes or {}
-        super().__init__(key=key, **kwargs)
-
-        assert issubclass(
-            self.instance_class, Leaf
-        ), f"Expected a Leaf for {self.__node_fname__}, got: {type(self.children_class)}={self.children_class}"
 
 
 # ====================================
@@ -279,7 +207,7 @@ def node_cast_value(self, value):
 class Leaf(Node):
     "Leaf instance, representing a value"
 
-    tmp__node_config = LeafConfigBase2(
+    tmp__node_config = LeafBaseConfig(
         cast=as_is,
         default=NOT_SET,
         help=None,
@@ -318,7 +246,7 @@ class Leaf(Node):
                 tmp_val["attr"] = tmp_val["_attr"]
                 del tmp_val["_attr"]
 
-            # print(" >>> FIELD", self, self.__class__.__mro__, new_field)
+            print(" >>> FIELD", self, self.__class__.__mro__, new_field)
             # pprint(tmp_val)
             new_field.update(tmp_val)
 
@@ -510,7 +438,7 @@ class ConfigurationDict(ContainerInstance):
     meta__cast = as_dict
 
     # For dict
-    tmp__node_config = LeafConfigCont2(
+    tmp__node_config = LeafContainerConfig(
         cast=as_dict,
         default=NOT_SET_DICT,
         help=None,
@@ -792,7 +720,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     meta__children_classes = None
 
     # For dict
-    tmp__node_config = LeafConfigObj2(
+    tmp__node_config = LeafObjConfig(
         cast=as_dict,
         default=NOT_SET_DICT,
         help=None,
@@ -962,7 +890,7 @@ class ConfigurationList(ConfigurationDict):
     meta__cast = as_list
 
     # For list
-    tmp__node_config = LeafConfigCont2(
+    tmp__node_config = LeafContainerConfig(
         cast=as_list,
         default=NOT_SET_LIST,
         help=None,

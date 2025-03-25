@@ -44,3 +44,7 @@ class UnknownChild(ConfigurationException):
 
 class InvalidField(ConfigurationException):
     "Raised when an invalid field is found"
+
+
+class InvalidFieldOption(ConfigurationException):
+    "Raised when an invalid field option is found"
