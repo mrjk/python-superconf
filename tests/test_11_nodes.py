@@ -90,7 +90,7 @@ class TestNodeBase:
         # Test __node_get_self_config__ with parameters
         assert node1.__node_get_self_config__("MISSING", default="default") == "default"
         assert (
-            node2.__node_get_self_config__("NAME2", override={"NAME2": "override"})
+            node2.__node_get_self_config__("NAME2", overrides=["override"])
             == "override"
         )
 
@@ -178,9 +178,7 @@ class TestNodeNested:
 
         # Test with override
         assert (
-            grand_child.__node_get_self_config__(
-                "OVERRIDE_VALUE", override={"OVERRIDE_VALUE": "custom"}
-            )
+            grand_child.__node_get_self_config__("OVERRIDE_VALUE", overrides=["custom"])
             == "custom"
         )
 
