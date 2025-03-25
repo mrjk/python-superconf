@@ -257,7 +257,11 @@ class Leaf(Node):
         report = []
         _default = self.__node_get_self_config__(
             "default",
-            override=override,
+            # override=override,
+            default=base_field.default,
+            overrides=[
+                default if default is not UNSET_ARG else new_field.default,
+            ],
             report=report,
         )
         # pprint(new_field.__dict__)
@@ -267,7 +271,10 @@ class Leaf(Node):
         cast = self.__node_get_self_config__(
             "cast",
             default=base_field.cast,
-            override=override,
+            # override=override,
+            overrides=[
+                new_field.cast if new_field else UNSET_ARG,
+            ],
             report=report,
         )
 
@@ -445,7 +452,10 @@ class ContainerInstance(Leaf):
         report = []
         self.__node_children_class__ = self.__node_get_self_config__(
             "children_class",
-            override=override.cfg,
+            # override=override.cfg,
+            overrides=[
+                children_class,
+            ],
             report=report,
         )
 

@@ -250,7 +250,7 @@ class Node(BaseNode):
 
         def _query_inst_cfg(
             name: str,
-            override: Optional[Dict] = None,
+            # override: Optional[Dict] = None,
             overrides: Optional[List] = None,
             default: Any = UNSET_ARG,
             report: Optional[List] = None,
@@ -267,7 +267,7 @@ class Node(BaseNode):
 
             Args:
                 name: Configuration setting name to query
-                override: Optional dictionary of override values
+                overrides: Optional list of override values
                 default: Default value if setting is not found
                 report: Optional list to collect query trace information
 
@@ -286,14 +286,14 @@ class Node(BaseNode):
                         query_from.append(f"dict_override:{name}")
                         return _override
 
-            # Fetch from dict override, if provided
-            if isinstance(override, dict):
-                # assert False, f"DEPRECATED override option: {self}, {name}={override}"
-                val = override.get(name, UNSET_ARG)
-                if is_set(val):
-                    query_from.append(f"dict_override:{name}")
-                    return val
-            elif override is not None:
+            # # Fetch from dict override, if provided
+            # if isinstance(override, dict):
+            #     assert False, f"DEPRECATED override option: {self}, {name}={override}"
+            #     val = override.get(name, UNSET_ARG)
+            #     if is_set(val):
+            #         query_from.append(f"dict_override:{name}")
+            #         return val
+            elif overrides is not None:
                 raise ValueError(f"Invalid override type: {type(override)}")
 
             # Fetch from self._NAME
