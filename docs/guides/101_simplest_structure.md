@@ -1,3 +1,18 @@
+---
+jupyter:
+  jupytext:
+    cell_metadata_filter: -all
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.3'
+      jupytext_version: 1.16.7
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
 # Simplest Structure with SuperConf
 
 Welcome to the first SuperConf tutorial! In this guide, we'll explore the fundamental building blocks of SuperConf and learn how to create and use simple configuration models.

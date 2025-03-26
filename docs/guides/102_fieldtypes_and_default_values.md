@@ -1,3 +1,18 @@
+---
+jupyter:
+  jupytext:
+    cell_metadata_filter: -all
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.3'
+      jupytext_version: 1.16.7
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
 # Field Types and Default/Unset Values
 
 Welcome to the second SuperConf tutorial! In this guide, we'll explore the various field types available in SuperConf and how they handle default and unset values.

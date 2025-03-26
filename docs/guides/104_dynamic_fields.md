@@ -1,3 +1,18 @@
+---
+jupyter:
+  jupytext:
+    cell_metadata_filter: -all
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.3'
+      jupytext_version: 1.16.7
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
 # Dynamic Dictionary and List Fields
 
 Welcome to the fourth SuperConf tutorial! In this guide, we'll explore dynamic collection fields - `ConfigurationDict` and `ConfigurationList` - which allow you to work with configuration data that has a variable structure.

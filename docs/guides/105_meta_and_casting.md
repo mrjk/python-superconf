@@ -1,3 +1,18 @@
+---
+jupyter:
+  jupytext:
+    cell_metadata_filter: -all
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.3'
+      jupytext_version: 1.16.7
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
 # Behavior Customization with Meta and Casting
 
 Welcome to the fifth and final SuperConf tutorial! In this guide, we'll explore advanced customization options for configuring your SuperConf models using the `Meta` class and custom casting functionality.
