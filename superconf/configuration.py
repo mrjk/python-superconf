@@ -58,6 +58,9 @@ class GenericField:
         )
         return f"Field({self.__class__.__name__}/{inst_name}): {self.__dict__}"
 
+    def __bool__(self):
+        return True
+
 
 class PublicField(GenericField):
     "Public field"
@@ -247,6 +250,16 @@ class Leaf(Node):
             # override_field = field
             new_field = field
 
+        # Validate Meta
+        metadata = getattr(self, "Meta", None)
+        if metadata is not None:
+            for key, val in metadata.__dict__.items():
+                if key.startswith("__"):
+                    continue
+                if not hasattr(base_field, key):
+                    msg = f"Invalid Meta key '{key}' for {self.__class__}, please choose one of: {list(self.tmp__node_config.__dict__.keys())}"
+                    raise exceptions.InvalidField(msg)
+
         # Fetch settings overrides
         # override = {
         #     "default": default if default is not UNSET_ARG else new_field.default,
@@ -416,7 +429,7 @@ class Leaf(Node):
     def __node_help__(self) -> str:
         "Get leaf help message"
 
-        if self.__node_field__.help:
+        if self.__node_field__ and self.__node_field__.help:
             return self.__node_field__.help
 
         return self.__doc__ or "<NO_HELP>"
@@ -537,7 +550,7 @@ class ConfigurationDict(_ContainerInstance):
         children = {}
         for key, val in value.items():
             logger.info(
-                "Instanciate child %s: %s(%s)",
+                "Instanciate ConfigurationDict child %s: %s(%s)",
                 key,
                 children_class.__name__,
                 truncate(val),
@@ -896,16 +909,12 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         # Handle extra fields
         if field is None:
-            if extra_fields == "warn":
-                logger.warning(
-                    "Key '%s' is not declared in '%s', use extra_fields=True to allow unknown keys",
-                    child_key,
-                    self.__node_fname__,
-                )
-            elif extra_fields is False:
-                raise exceptions.UndeclaredField(
-                    f"Key '{child_key}' is not declared in '{self.__node_fname__}', use extra_fields=True to allow unknown keys"
-                )
+            if extra_fields is not True:
+                msg = f"Key '{child_key}' is not declared in '{self.__class__.__name__}({self.__node_fname__})', use extra_fields=True to allow unknown keys"
+                if extra_fields == "warn":
+                    logger.warning(msg)
+                elif extra_fields is False:
+                    raise exceptions.UndeclaredField(msg)
             # field = BaseFieldLeaf(key=key, attr=attr, instance_class=_children_class)
             child_field_cls = _children_class.tmp__node_config.__class__
             field = child_field_cls(key=key, attr=attr, instance_class=_children_class)
@@ -1038,7 +1047,7 @@ class ConfigurationList(ConfigurationDict):
         children = {}
         for index, val in enumerate(value):
             logger.info(
-                "Instanciate child %s: %s(%s)",
+                "Instanciate ConfigurationList child %s: %s(%s)",
                 index,
                 children_class.__name__,
                 truncate(val),
