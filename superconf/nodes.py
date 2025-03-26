@@ -75,9 +75,13 @@ class BaseNode:
             value: The configuration value
             parent: Parent configuration object if this is a child config
         """
-        self.__node_key__ = key or None
-        self.__node_parent__ = parent or None
+        self.__node_key__ = key
+        self.__node_parent__ = parent
         self.__node_value__ = value or NOT_SET
+
+    def __bool__(self) -> bool:
+        "Always return True"
+        return True
 
     @property
     def __node_name__(self) -> str:
@@ -118,17 +122,6 @@ class BaseNode:
 
 class Node(BaseNode):
     "Node with config management and inheritance"
-
-    # TODO: Rename internal methods
-    # def query_cfg(        ==> __node_config__
-    # def __node_get_self_config__(   ==> __node_config_self__
-    # def __node_get_hier_config__( ==> __node_config_parent__
-
-    def __init__(self, *args, **kwargs):
-
-        cls_name = ",".join(reversed([x.__name__ for x in self.__class__.__mro__]))
-        # print(f"\n\n\n>>>>> Init a new node: {cls_name}")
-        super().__init__(*args, **kwargs)
 
     # Instance config management
     # ----------------------------

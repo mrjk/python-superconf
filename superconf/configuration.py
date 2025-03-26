@@ -178,20 +178,6 @@ class LeafObjConfig(LeafContainerConfig):
 # ====================================
 
 
-class _ArgCfg:
-    "Arg configuration"
-
-    def __init__(self):
-
-        self.cfg = {}
-
-    def update(self, cfg):
-        "Update the configuration"
-        cfg = cfg or {}
-        cfg = {k: v for k, v in cfg.items() if v not in (UNSET_ARG, NOT_SET)}
-        self.cfg.update(cfg)
-
-
 def node_cast_value(self, value):
     "Cast value"
 
@@ -253,10 +239,6 @@ class Leaf(Node):
         field=None,
     ):
         super().__init__(key=key, value=value, parent=parent)
-        # print(f"++++++++ Init Leaf: {self.__node_fname__}")
-        logger.debug(
-            "Init node %s: %s, value=%s", self.__class__, self.__node_fname__, value
-        )
 
         # Get node field
         base_field = self.tmp__node_config
@@ -916,13 +898,13 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         if field is None:
             if extra_fields == "warn":
                 logger.warning(
-                    "Key '%s' is not declared in %s, use extra_fields=True to allow unknown keys",
+                    "Key '%s' is not declared in '%s', use extra_fields=True to allow unknown keys",
                     child_key,
                     self.__node_fname__,
                 )
-            if extra_fields is False:
+            elif extra_fields is False:
                 raise exceptions.UndeclaredField(
-                    f"Key '{child_key}' is not declared in {self.__node_fname__}, use extra_fields=True to allow unknown keys"
+                    f"Key '{child_key}' is not declared in '{self.__node_fname__}', use extra_fields=True to allow unknown keys"
                 )
             # field = BaseFieldLeaf(key=key, attr=attr, instance_class=_children_class)
             child_field_cls = _children_class.tmp__node_config.__class__
@@ -1065,3 +1047,7 @@ class ConfigurationList(ConfigurationDict):
             children[index] = child
 
         self.__node_children__ = children
+
+
+# Temporary Compat layer
+Configuration = ConfigurationObj
