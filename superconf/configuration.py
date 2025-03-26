@@ -126,9 +126,21 @@ class LeafBaseConfig(GenericField):
 
             setattr(self, key, val)
 
+    def inherit(self, cls=None, override=None, **kwargs):
+        "Inherit the configuration"
+
+        cls = cls if cls is not None else self.__class__
+        override = override or {}
+
+        child_kwargs = {}
+        child_kwargs.update(self.dump())
+        child_kwargs.update(override)
+        child_kwargs.update(kwargs)
+        return cls(**child_kwargs)
+
     def copy(self):
-        "Copy the configuration"
-        return self.__class__(**self.__dict__)
+        "Copy the configuration and return a new instance of object"
+        return self.__class__(**self.dump())
 
 
 # LeafContainerConfig
@@ -228,8 +240,8 @@ class Leaf(Node):
     __node_field__ = None
 
     # Public settings
-    meta__default = NOT_SET
-    meta__cast = UNSET_ARG
+    # meta__default = NOT_SET
+    # meta__cast = UNSET_ARG
 
     def __init__(
         self,
@@ -287,7 +299,7 @@ class Leaf(Node):
         report2 = []
         cast2 = self.__node_get_self_config__(
             "cast",
-            default=base_field.cast,
+            default=self.tmp__node_config.cast,
             # override={
             #     "cast": new_field.cast if new_field else UNSET_ARG,
             # },
@@ -301,7 +313,7 @@ class Leaf(Node):
         report2 = []
         default2 = self.__node_get_self_config__(
             "default",
-            default=base_field.default,
+            default=self.tmp__node_config.default,
             # override={
             #     "default": (
             #         default
@@ -320,7 +332,7 @@ class Leaf(Node):
         ), f"Default mismatch: {_default} != {default2} ==>{report2} VIA {new_field}"
 
         # Configure the instance
-        self.__node_field__ = new_field
+        self.__node_field__ = new_field or base_field
         self.__node_cast__ = cast
         self.set_default(_default)
         if value is UNSET_ARG or isinstance(value, NOT_SET.type):
@@ -428,17 +440,28 @@ class Leaf(Node):
         return self.__doc__ or "<NO_HELP>"
 
 
-class ContainerInstance(Leaf):
+class _ContainerInstance(Leaf):
     "Container instance, either a dict or a list"
 
     __node_fields__ = {}
     __node_children__ = None
 
-    meta__children_class = Leaf  # Generic children class
+    # meta__children_class = Leaf  # Generic children class
+
+    tmp__node_config = LeafContainerConfig(
+        cast=as_is,
+        default=NOT_SET,
+        help=None,
+        children_class=Leaf,
+    )
+    # tmp__node_config = Leaf.tmp__node_config.inherit(
+    #     cls=LeafContainerConfig,
+    #     children_class=Leaf,
+    # )
 
     def __init__(self, children_class=UNSET_ARG, **kwargs):
 
-        # print(f"++++++++ Init ContainerInstance: {self.__node_fname__}")
+        # print(f"++++++++ Init _ContainerInstance: {self.__node_fname__}")
 
         self.__node_children__ = NOT_SET
 
@@ -458,6 +481,7 @@ class ContainerInstance(Leaf):
         self.__node_children_class__ = self.__node_get_self_config__(
             "children_class",
             # override=override.cfg,
+            default=self.tmp__node_config.children_class,
             overrides=[
                 children_class,
             ],
@@ -487,7 +511,7 @@ class ContainerInstance(Leaf):
         raise NotImplementedError("Subclass must implement this method")
 
 
-class ConfigurationDict(ContainerInstance):
+class ConfigurationDict(_ContainerInstance):
     "Dict container configuration"
 
     # meta__cast = as_dict
@@ -497,8 +521,16 @@ class ConfigurationDict(ContainerInstance):
         cast=as_dict,
         default=NOT_SET_DICT,
         help=None,
-        children_class=None,
+        children_class=Leaf,
     )
+
+    # tmp__node_config = _ContainerInstance.tmp__node_config.inherit(
+    #     cls=LeafContainerConfig,
+    #     cast=as_dict,
+    #     default=NOT_SET_DICT,
+    # )
+
+    # assert tmp__node_config.__dict__ == tmp__node_config2.__dict__
 
     def __node__set_children__(self, value):
         "Set children from dict"
@@ -735,20 +767,26 @@ class DeclarativeValuesMetaclass(type):
             if hasattr(base, "__node_fields__"):
                 values.update(base.__node_fields__)
 
+        values_local = {}
         for attr, value in attrs.items():
             if isinstance(value, PublicField):
-                values.update({attr: value})
-            elif inspect.isclass(value):
-                if issubclass(value, Leaf):
-                    values.update({attr: value})
+                # values.update({attr: value})
+                values_local.update({attr: value})
 
-        attrs["__node_fields__"] = values
-        attrs["meta__children_classes"] = values
+            # Unused ...
+            # elif inspect.isclass(value):
+            #     if issubclass(value, Leaf):
+            #         values.update({attr: value})
+
+        all_values = {**values, **values_local}
+        attrs["__node_fields__"] = all_values
+        # attrs["meta__children_classes"] = all_values
 
         # Clean attributes
-        for key in list(attrs["__node_fields__"].keys()):
+        # for key in list(attrs["__node_fields__"].keys()):
+        for key in list(all_values.keys()):
             if key in attrs:
-                print(f"DELETE {key}")
+                # print(f"DELETE {key}")
                 del attrs[key]
 
         # # Clean Meta class
@@ -772,8 +810,8 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     "Keyed dict container configuration"
 
     # If True, allow unknown children, transformed into meta__children_class
-    meta__extra_fields = False
-    meta__children_classes = None
+    # meta__extra_fields = False
+    # meta__children_classes = NOT_SET_DICT
 
     # For dict
     tmp__node_config = LeafObjConfig(
@@ -781,9 +819,16 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         default=NOT_SET_DICT,
         help=None,
         extra_fields=False,
-        children_class=None,
-        children_classes=None,
+        # children_class=None,
+        children_class=Leaf,
+        children_classes=NOT_SET_DICT,
     )
+
+    # tmp__node_config = ConfigurationDict.tmp__node_config.inherit(
+    #     cls=LeafObjConfig,
+    #     # children_class=Leaf,
+    #     children_classes=NOT_SET_DICT,
+    # )
 
     def __init__(self, *args, **kwargs):
         "Initialize the instance"
@@ -797,18 +842,26 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         report = []
         self.__node_extra_fields__ = self.__node_get_self_config__(
             "extra_fields",
+            default=self.tmp__node_config.extra_fields,
             report=report,
         )
-        _children_raw_classes = (
-            self.__node_get_self_config__(
-                "children_classes",
-                report=report,
-            )
-            or {}
+
+        # Fetch and process local fields
+        local_values = self.__node_get_self_config__(
+            "children_classes",
+            default=self.tmp__node_config.children_classes,
+            report=report,
         )
         assert isinstance(
-            _children_raw_classes, dict
-        ), f"Expected a dict for {self.__node_fname__}, got: {type(_children_raw_classes)}={_children_raw_classes}"
+            local_values, dict
+        ), f"Expected a dict for {self.__node_fname__}, got: {type(local_values)}={local_values}"
+
+        # Merge local fields with global fields
+        _children_raw_classes = {}
+        _children_raw_classes.update(self.__node_fields__)
+        _children_raw_classes.update(
+            local_values,
+        )
 
         # Reprocess children fields
         _children_classes = []
@@ -816,13 +869,13 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
             if inspect.isclass(field):
                 assert False, "BUG NOT SUPPORTED ANYMORE"
-                if issubclass(field, Leaf):
-                    field = BaseFieldContainer(field, key=attr)
-                    assert isinstance(field, GenericField)
-                else:
-                    raise exceptions.InvalidField(
-                        f"Expected a Leaf for {self.__node_fname__}.{attr}, got: {type(field)}={field}"
-                    )
+                # if issubclass(field, Leaf):
+                #     field = BaseFieldContainer(field, key=attr)
+                #     assert isinstance(field, GenericField)
+                # else:
+                #     raise exceptions.InvalidField(
+                #         f"Expected a Leaf for {self.__node_fname__}.{attr}, got: {type(field)}={field}"
+                #     )
 
             if isinstance(field, GenericField):
                 field.key = field.key if field.key else attr
@@ -954,8 +1007,14 @@ class ConfigurationList(ConfigurationDict):
         cast=as_list,
         default=NOT_SET_LIST,
         help=None,
-        children_class=None,
+        # children_class=None,
+        children_class=Leaf,
     )
+    # tmp__node_config = _ContainerInstance.tmp__node_config.inherit(
+    #     cls=LeafContainerConfig,
+    #     cast=as_list,
+    #     default=NOT_SET_LIST,
+    # )
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
