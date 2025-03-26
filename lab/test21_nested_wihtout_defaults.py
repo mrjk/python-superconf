@@ -57,9 +57,9 @@ class ResourcesCtl(ConfigurationDict):
 class AppConfig(ConfigurationObj):
     "Main app config"
 
-    class Meta:
-        # default = {"resources": {"res1": {"owner": "bob", "location": "BLIHH"}}}
-        cache = True
+    # class Meta:
+    #    # default = {"resources": {"res1": {"owner": "bob", "location": "BLIHH"}}}
+    #    cache = True
 
     resources = FieldConf(
         ResourcesCtl,

@@ -42,7 +42,7 @@ class AppList(ConfigurationList):
 
     class Meta:
         # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = False
+        # strict_cast = False
         default = [
             {"key1": "item1"},
             {"key2": "item2"},

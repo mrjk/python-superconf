@@ -69,9 +69,9 @@ class AppConfig(ConfigurationObj):
 
     # meta__custom_field = "My VALUUUUuuueeeee 555555"
 
-    class Meta:
-        # default = {"resources": {"res1": {"owner": "bob"}}}
-        cache = True
+    # class Meta:
+    # default = {"resources": {"res1": {"owner": "bob"}}}
+    # cache = True
 
     #     cache = False
     #     children_class = Resources

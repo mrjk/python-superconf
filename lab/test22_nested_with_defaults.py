@@ -158,7 +158,6 @@ class AppConfig(ConfigurationObj):
             #     "res1": {"owner": "bob", "location": "BLIHH"}
             #     }
         }
-        cache = True
 
     resources = FieldConf(
         ResourcesCtl,

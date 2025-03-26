@@ -46,10 +46,10 @@ class AppBools(ConfigurationObj):
 
     class Meta:
         # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = True
+        # strict_cast = True
 
         # TODO
-        allow_unset = True  # Always the case actually
+        extra_fields = True  # Always the case actually
 
     # is_enabled = FieldBool() # Enabled, this should fail !
     is_online = FieldBool(default=False)
@@ -77,9 +77,9 @@ print("\n\n================ String Fields ===========\n\n")
 class AppStrings(ConfigurationObj):
     "Tests types"
 
-    class Meta:
-        # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = True
+    # class Meta:
+    #    # Will fail on undefined casted values if true, alow NOT_SET
+    #    strict_cast = True
 
     # is_enabled = FieldBool() # Enabled, this should fail !
     # is_online = FieldBool(default=False)
@@ -120,9 +120,9 @@ print("\n\n================ Int Fields ===========\n\n")
 class AppInt(ConfigurationObj):
     "Tests types"
 
-    class Meta:
-        # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = True
+    # class Meta:
+    #    # Will fail on undefined casted values if true, alow NOT_SET
+    #    strict_cast = True
 
     int_test1 = FieldInt(default=-1)
     int_test2 = FieldInt(default=1)
@@ -213,9 +213,9 @@ print("\n\n================ List Fields ===========\n\n")
 class AppList(ConfigurationObj):
     "Tests types"
 
-    class Meta:
-        # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = True
+    # class Meta:
+    #    # Will fail on undefined casted values if true, alow NOT_SET
+    #    strict_cast = True
 
     list_test1 = FieldList(default=[])
     list_test2 = FieldList(default=["item1", "item2", "item3"])
@@ -258,9 +258,9 @@ print("\n\n================ Tuple Fields ===========\n\n")
 class AppTuple(ConfigurationObj):
     "Tests types"
 
-    class Meta:
-        # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = True
+    # class Meta:
+    #    # Will fail on undefined casted values if true, alow NOT_SET
+    #    strict_cast = True
 
     list_test1 = FieldTuple(default=[])
     list_test2 = FieldTuple(default=["item1", "item2", "item3"])
@@ -298,9 +298,9 @@ print("\n\n================ Dict Fields ===========\n\n")
 class AppDict(ConfigurationObj):
     "Tests types"
 
-    class Meta:
-        # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = True
+    # class Meta:
+    # Will fail on undefined casted values if true, alow NOT_SET
+    # strict_cast = True
 
     field_test1 = FieldDict(default={})
     field_test2 = FieldDict(default={"item1": "val1", "item2": "val2", "item3": "val3"})
