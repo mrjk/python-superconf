@@ -56,28 +56,37 @@ class FieldContainer(PublicField):
         node_field = self.instance_class.tmp__node_config
 
         # Validate kwargs and report unknown fields
+        overrides = {}
         field_names = node_field.get_keys()
         for key, val in kwargs.items():
             if key not in field_names:
                 msg = f"Unknown field: {key}={val} for Field '{node_field}'"
                 raise exceptions.InvalidFieldOption(msg)
 
-        # Fetch base config
-        base_cfg = {}
+            overrides[key] = val
+
+        # Fetch base config from Field class attributes
+        defaults = {}
         for name in field_names:
             if hasattr(self, name):
                 val = getattr(self, name)
-                base_cfg[name] = val
+                defaults[name] = val
 
-        # Build requested config
-        new_cfg = {}
-        new_cfg.update(node_field.dump())
-        new_cfg.update(base_cfg)
-        new_cfg.update(kwargs)
+        self.__field_default__ = defaults
+        self.__field_override__ = overrides
 
-        # Apply config attributes
-        for key, val in new_cfg.items():
-            setattr(self, key, val)
+    def query(self, name, default=NOT_SET):
+        "Get a configuration value"
+
+        # Return overrided args from init
+        if name in self.__field_override__:
+            return self.__field_override__[name]
+
+        # Return default args from class
+        if name in self.__field_default__:
+            return self.__field_default__[name]
+
+        return default
 
 
 class FieldLeaf(FieldContainer):

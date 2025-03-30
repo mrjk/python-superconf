@@ -20,8 +20,28 @@ class Sentinel:
         return self.__class__
 
 
+cls_dict = {
+    "__str__": lambda self: f"<{repr(self)}>",
+    "type": property(lambda self: Sentinel),
+}
+
+
+NOT_SET = sentinel.create(name="NOT_SET", mro=Sentinel.__mro__, cls_dict=cls_dict)
+
+
+class SentinelObj(Sentinel):
+    """
+    A sentinel object that behaves like an empty dict but is identifiable as NOT_SET_OBJ.
+    Passes the isinstance(NOT_SET_OBJ, dict) test.
+    All methods are read-only.
+    """
+
+    def __getattr__(self, *_):
+        return NOT_SET
+
+
 # Dictionary sentinel
-class SentinelDict(dict, Sentinel):
+class SentinelDict(dict, SentinelObj):
     """
     A sentinel dictionary that behaves like an empty dict but is identifiable as NOT_SET_DICT.
     Passes the isinstance(NOT_SET_DICT, dict) test.
@@ -65,7 +85,7 @@ class SentinelDict(dict, Sentinel):
 
 
 # List sentinel
-class SentinelList(list, Sentinel):
+class SentinelList(list, SentinelObj):
     """
     A sentinel list that behaves like an empty list but is identifiable as NOT_SET_LIST.
     Passes the isinstance(NOT_SET_LIST, list) test.
@@ -107,19 +127,13 @@ class SentinelList(list, Sentinel):
 ### INSTANCES
 
 
-cls_dict = {
-    "__str__": lambda self: f"<{repr(self)}>",
-    "type": property(lambda self: Sentinel),
-}
-
-
-NOT_SET = sentinel.create(name="NOT_SET", mro=Sentinel.__mro__, cls_dict=cls_dict)
 NOT_SET_DICT = sentinel.create(
     "NOT_SET_DICT", mro=SentinelDict.__mro__, cls_dict=cls_dict
 )
 NOT_SET_LIST = sentinel.create(
     "NOT_SET_LIST", mro=SentinelList.__mro__, cls_dict=cls_dict
 )
+NOT_SET_OBJ = sentinel.create("NOT_SET_OBJ", mro=SentinelObj.__mro__, cls_dict=cls_dict)
 
 UNSET_ARG = sentinel.create("UNSET_ARG", mro=Sentinel.__mro__, cls_dict=cls_dict)
 FAIL = sentinel.create("FAIL", mro=Sentinel.__mro__, cls_dict=cls_dict)

@@ -50,6 +50,7 @@ logger = logging.getLogger(__name__)
 class GenericField:
     "Generic field"
 
+    key = None
     instance_class = None
 
     def __repr__(self):
@@ -60,6 +61,48 @@ class GenericField:
 
     def __bool__(self):
         return True
+
+    def dump(self):
+        "Dump the configuration"
+        return dict(self.__dict__)
+
+    def query(self, name, default=NOT_SET):
+        "Get a configuration value"
+        return getattr(self, name, default)
+        # return self.__dict__.get(key, default)
+
+    def __json_dump__(self):
+        return self.__dict__
+
+    # def update(self, cfg, skip_unset=True):
+    #     "Update the configuration"
+    #     assert isinstance(cfg, dict)
+    #     for key, val in cfg.items():
+
+    #         if not hasattr(self, key):
+    #             msg = f"Invalid field key '{key}' for {self.__class__.__name__}"
+    #             raise exceptions.InvalidField(msg)
+
+    #         if skip_unset and val is UNSET_ARG:
+    #             continue
+
+    #         setattr(self, key, val)
+
+    # def inherit(self, cls=None, override=None, **kwargs):
+    #     "Inherit the configuration"
+
+    #     cls = cls if cls is not None else self.__class__
+    #     override = override or {}
+
+    #     child_kwargs = {}
+    #     child_kwargs.update(self.dump())
+    #     child_kwargs.update(override)
+    #     child_kwargs.update(kwargs)
+    #     return cls(**child_kwargs)
+
+    # def copy(self):
+    #     "Copy the configuration and return a new instance of object"
+    #     return self.__class__(**self.dump())
 
 
 class PublicField(GenericField):
@@ -73,11 +116,11 @@ class LeafBaseConfig(GenericField):
     # cast = None
     # instance_class = None
 
-    @classmethod
-    def get_keys_cls(cls):
-        "Get class item"
-        item = cls()
-        return list(item.dump().keys())
+    # @classmethod
+    # def get_keys_cls(cls):
+    #     "Get class item"
+    #     item = cls()
+    #     return list(item.dump().keys())
 
     def get_keys(self):
         "Get class item"
@@ -87,11 +130,11 @@ class LeafBaseConfig(GenericField):
     def __init__(
         self,
         default=NOT_SET,
-        help="",
+        help=NOT_SET,
         cast=NOT_SET,
         instance_class=NOT_SET,
         attr=NOT_SET,
-        key=None,
+        key=NOT_SET,
     ):
 
         self.key = key
@@ -101,50 +144,6 @@ class LeafBaseConfig(GenericField):
         self.instance_class = instance_class
         self.attr = attr
 
-    def __json_dump__(self):
-        return self.__dict__
-
-    # def set_attr(self, attr, value):
-    #     "Set attribute"
-    #     assert (
-    #         attr in self.__dict__
-    #     ), f"Invalid attribute '{attr}' for {self.__class__.__name__}, please choose one of: {list(self.__dict__.keys())}"
-    #     setattr(self, attr, value)
-
-    def dump(self):
-        "Dump the configuration"
-        return dict(self.__dict__)
-
-    def update(self, cfg, skip_unset=True):
-        "Update the configuration"
-        assert isinstance(cfg, dict)
-        for key, val in cfg.items():
-
-            if not hasattr(self, key):
-                msg = f"Invalid field key '{key}' for {self.__class__.__name__}"
-                raise exceptions.InvalidField(msg)
-
-            if skip_unset and val is UNSET_ARG:
-                continue
-
-            setattr(self, key, val)
-
-    def inherit(self, cls=None, override=None, **kwargs):
-        "Inherit the configuration"
-
-        cls = cls if cls is not None else self.__class__
-        override = override or {}
-
-        child_kwargs = {}
-        child_kwargs.update(self.dump())
-        child_kwargs.update(override)
-        child_kwargs.update(kwargs)
-        return cls(**child_kwargs)
-
-    def copy(self):
-        "Copy the configuration and return a new instance of object"
-        return self.__class__(**self.dump())
-
 
 # LeafContainerConfig
 class LeafContainerConfig(LeafBaseConfig):
@@ -152,7 +151,7 @@ class LeafContainerConfig(LeafBaseConfig):
 
     def __init__(
         self,
-        children_class=None,
+        children_class=NOT_SET,
         **kwargs,
     ):
 
@@ -166,8 +165,8 @@ class LeafObjConfig(LeafContainerConfig):
 
     def __init__(
         self,
-        extra_fields=False,
-        children_classes=None,
+        extra_fields=NOT_SET,
+        children_classes=NOT_SET_DICT,
         **kwargs,
     ):
 
@@ -244,25 +243,23 @@ class Leaf(Node):
     ):
         super().__init__(key=key, value=value, parent=parent)
 
-        print(f"\n\n\nINIT NODE: {self}, field={field}, kwargs={kwargs}")
+        # print(f"\n\n\nINIT NODE: {self}, field={field}, kwargs={kwargs}")
 
         # Get node field
-        base_field = self.tmp__node_config
-        new_field = None
-        if field is not None:
-            # override_field = field
-            new_field = field
-        self.__node_field__ = new_field  # or base_field
-        print(f"PREPARE Field: {self} -> {self.__node_field__}")
+        self.__node_field__ = GenericField() if field is None else field
+        assert isinstance(
+            self.__node_field__, GenericField
+        ), f"Invalid field: {self.__node_field__}"
+        # print(f"PREPARE Field: {self} -> {self.__node_field__}")
 
         # Validate Meta
         metadata = getattr(self, "Meta", None)
         if metadata is not None:
-            for key, val in metadata.__dict__.items():
-                if key.startswith("__"):
+            for _key, _ in metadata.__dict__.items():
+                if _key.startswith("__"):
                     continue
-                if not hasattr(base_field, key):
-                    msg = f"Invalid Meta key '{key}' for {self.__class__}, please choose one of: {list(self.tmp__node_config.__dict__.keys())}"
+                if not hasattr(self.tmp__node_config, _key):
+                    msg = f"Invalid Meta key '{_key}' for {self.__class__}, please choose one of: {list(self.tmp__node_config.__dict__.keys())}"
                     raise exceptions.InvalidField(msg)
 
         # Call Hook
@@ -272,27 +269,13 @@ class Leaf(Node):
         _default = self.__node_get_self_config__(
             "default",
             # override=override,
-            default=base_field.default,
+            default=self.tmp__node_config.default,
             overrides=[
                 default,
-                new_field.default if new_field else UNSET_ARG,
+                self.__node_field__.query("default"),
             ],
             report=report,
         )
-
-        # report2 = []
-        # default2 = self.__node_get_self_config__(
-        #     "default",
-        #     default=base_field.default,
-        #     overrides=[
-        #         default,
-        #         new_field.default if new_field else UNSET_ARG,
-        #     ],
-        #     report=report2,
-        # )
-        # assert (
-        #     _default == default2
-        # ), f"Default mismatch: {_default} != {default2} ==>{report2} VIA {new_field}"
 
         self.set_default(_default)
 
@@ -306,44 +289,20 @@ class Leaf(Node):
     def tmp__prepare(self, **kwargs):
         "Prepare the instance"
 
-        print(f"PREPARE Leaf: {self}: {kwargs}")
+        # print(f"PREPARE Leaf: {self}: {kwargs}")
 
         assert len(kwargs) == 0, f"Unexpected kwargs: {kwargs}"
 
         # Fetch settings overrides
-        # override = {
-        #     "default": default if default is not UNSET_ARG else new_field.default,
-        #     "cast": new_field.cast,
-        # }
-        new_field = self.__node_field__
-        # base_field = self.tmp__node_config
-        # report = []
-
-        # pprint(new_field.__dict__)
-        # assert (
-        #     new_field.cast is not UNSET_ARG
-        # ), f"Cast is not set for {self}/{new_field}: {new_field.__dict__}"
-        # cast = self.__node_get_self_config__(
-        #     "cast",
-        #     default=base_field.cast,
-        #     # override=override,
-        #     overrides=[
-        #         new_field.cast if new_field else UNSET_ARG,
-        #     ],
-        #     report=report,
-        # )
-
-        # NEW OVERRIDES
-        report2 = []
+        report = []
         cast2 = self.__node_get_self_config__(
             "cast",
-            default=self.tmp__node_config.cast,
+            default=self.tmp__node_config.query("cast"),
             overrides=[
-                new_field.cast if new_field else UNSET_ARG,
+                self.__node_field__.query("cast"),
             ],
-            report=report2,
+            report=report,
         )
-        # assert cast == cast2, f"Cast mismatch: {cast} != {cast2} ==>{report2}"
 
         # Configure the instance
         self.__node_cast__ = cast2
@@ -440,8 +399,9 @@ class Leaf(Node):
     def __node_help__(self) -> str:
         "Get leaf help message"
 
-        if self.__node_field__ and self.__node_field__.help:
-            return self.__node_field__.help
+        ret = self.__node_field__.query("help", NOT_SET)
+        if ret != NOT_SET:
+            return ret
 
         return self.__doc__ or "<NO_HELP>"
 
@@ -460,87 +420,34 @@ class _ContainerInstance(Leaf):
         help=None,
         children_class=Leaf,
     )
-    # tmp__node_config = Leaf.tmp__node_config.inherit(
-    #     cls=LeafContainerConfig,
-    #     children_class=Leaf,
-    # )
-
-    # def __init__(self, children_class=UNSET_ARG, **kwargs):
-
-    #     # print(f"++++++++ Init _ContainerInstance: {self.__node_fname__}")
-
-    #     self.__node_children__ = NOT_SET
-
-    #     # Fetch settings
-    #     # override = _ArgCfg()
-    #     # # override.update(
-    #     # #     {
-    #     # #         "children_class": self.__node_field__.children_class,
-    #     # #     }
-    #     # # )
-    #     # override.update(
-    #     #     {
-    #     #         "children_class": children_class,
-    #     #     }
-    #     # )
-    #     report = []
-    #     self.__node_children_class__ = self.__node_get_self_config__(
-    #         "children_class",
-    #         # override=override.cfg,
-    #         default=self.tmp__node_config.children_class,
-    #         overrides=[
-    #             children_class,
-    #         ],
-    #         report=report,
-    #     )
-
-    #     super().__init__(**kwargs)
 
     def tmp__prepare(self, children_class=UNSET_ARG, **kwargs):
         "Prepare the instance"
 
         super().tmp__prepare(**kwargs)
 
-        print(
-            f"PREPARE _ContainerInstance: {self}: children_class={children_class}{kwargs}"
-        )
+        # print(
+        #     f"PREPARE _ContainerInstance: {self}: children_class={children_class}{kwargs}"
+        # )
 
         self.__node_children__ = NOT_SET
 
         # Fetch settings
-        # override = _ArgCfg()
-        # # override.update(
-        # #     {
-        # #         "children_class": self.__node_field__.children_class,
-        # #     }
-        # # )
-        # override.update(
-        #     {
-        #         "children_class": children_class,
-        #     }
-        # )
-        field = self.__node_field__
-        report = []
-        self.__node_children_class__ = self.__node_get_self_config__(
+        report2 = []
+        _children_class = self.__node_get_self_config__(
             "children_class",
-            # override=override.cfg,
-            default=self.tmp__node_config.children_class,
             overrides=[
                 children_class,
+                self.__node_field__.query("children_class"),
                 # TODO: PROBLEMATIC LINE
                 # This need to be enabled to support shortform
                 # This need to be disabled to not break tests
-
-                
-                # field.children_class if field else UNSET_ARG,
             ],
-            report=report,
+            default=self.tmp__node_config.query("children_class"),
+            report=report2,
         )
 
-        print(f"Children cls source: override1={children_class}")
-        print(f"override2={field.children_class if field else UNSET_ARG}")
-        print(f"default={self.tmp__node_config.children_class}")
-        print(f"DETECTED CHILDREN FIELD: {self.__node_children_class__}")
+        self.__node_children_class__ = _children_class
 
     def set_value(self, *args):
         "Set value"
@@ -565,8 +472,6 @@ class _ContainerInstance(Leaf):
 
 class ConfigurationDict(_ContainerInstance):
     "Dict container configuration"
-
-    # meta__cast = as_dict
 
     # For dict
     tmp__node_config = LeafContainerConfig(
@@ -861,10 +766,6 @@ class DeclarativeValuesMetaclass(type):
 class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
     "Keyed dict container configuration"
 
-    # If True, allow unknown children, transformed into meta__children_class
-    # meta__extra_fields = False
-    # meta__children_classes = NOT_SET_DICT
-
     # For dict
     tmp__node_config = LeafObjConfig(
         cast=as_dict,
@@ -887,7 +788,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         super().tmp__prepare(**kwargs)
 
-        print(f"PREPARE ConfigurationObj: {self}: {kwargs}")
+        # print(f"PREPARE ConfigurationObj: {self}: {kwargs}")
 
         assert isinstance(
             self.tmp__node_config, LeafObjConfig
@@ -896,14 +797,14 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         report = []
         self.__node_extra_fields__ = self.__node_get_self_config__(
             "extra_fields",
-            default=self.tmp__node_config.extra_fields,
+            default=self.tmp__node_config.query("extra_fields"),
             report=report,
         )
 
         # Fetch and process local fields
         local_values = self.__node_get_self_config__(
             "children_classes",
-            default=self.tmp__node_config.children_classes,
+            default=self.tmp__node_config.query("children_classes"),
             report=report,
         )
         assert isinstance(
@@ -937,62 +838,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 _children_classes.append(field)
 
         self.__node_children_classes__ = _children_classes
-
-    # def __init__(self, *args, **kwargs):
-    #     "Initialize the instance"
-
-    #     # print(f"++++++++ Init ContainerObj: {self.__node_fname__}")
-
-    #     assert isinstance(
-    #         self.tmp__node_config, LeafObjConfig
-    #     ), "ConfigurationObj must have a LeafObjConfig"
-
-    #     report = []
-    #     self.__node_extra_fields__ = self.__node_get_self_config__(
-    #         "extra_fields",
-    #         default=self.tmp__node_config.extra_fields,
-    #         report=report,
-    #     )
-
-    #     # Fetch and process local fields
-    #     local_values = self.__node_get_self_config__(
-    #         "children_classes",
-    #         default=self.tmp__node_config.children_classes,
-    #         report=report,
-    #     )
-    #     assert isinstance(
-    #         local_values, dict
-    #     ), f"Expected a dict for {self.__node_fname__}, got: {type(local_values)}={local_values}"
-
-    #     # Merge local fields with global fields
-    #     _children_raw_classes = {}
-    #     _children_raw_classes.update(self.__node_fields__)
-    #     _children_raw_classes.update(
-    #         local_values,
-    #     )
-
-    #     # Reprocess children fields
-    #     _children_classes = []
-    #     for attr, field in _children_raw_classes.items():
-
-    #         if inspect.isclass(field):
-    #             assert False, "BUG NOT SUPPORTED ANYMORE"
-    #             # if issubclass(field, Leaf):
-    #             #     field = BaseFieldContainer(field, key=attr)
-    #             #     assert isinstance(field, GenericField)
-    #             # else:
-    #             #     raise exceptions.InvalidField(
-    #             #         f"Expected a Leaf for {self.__node_fname__}.{attr}, got: {type(field)}={field}"
-    #             #     )
-
-    #         if isinstance(field, GenericField):
-    #             field.key = field.key if field.key else attr
-    #             field.attr = attr
-    #             _children_classes.append(field)
-
-    #     self.__node_children_classes__ = _children_classes
-
-    #     super().__init__(*args, **kwargs)
 
     def _get_child_field(self, key=None, attr=None):
         "Get child field"
@@ -1085,7 +930,9 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
             ), f"Expected a class for {self.__node_fname__}.{child_key}, got: {type(child_cls)}={child_cls}"
 
             # Build field default and value
-            child_default = node_default_dict.get(child_key, child_field.default)
+            child_default = node_default_dict.get(
+                child_key, child_field.query("default")
+            )
             child_value = value.get(child_key, NOT_SET)
 
             logger.info(

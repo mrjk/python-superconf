@@ -94,13 +94,13 @@ def test_field_metadata(field_name, field_help):
     # Method 1: Try to access the field metadata through the class's __dict__
     if field_name in ConfigClass.__dict__:
         field_obj = ConfigClass.__dict__[field_name]
-        assert field_obj.help == field_help
+        assert field_obj.query("help") == field_help
         return
 
     # Method 2: Try to use hasattr/getattr on the class directly
     if hasattr(ConfigClass, field_name):
         field_obj = getattr(ConfigClass, field_name)
-        assert field_obj.help == field_help
+        assert field_obj.query("help") == field_help
         return
 
     # Method 3: The class might store field metadata in a special attribute
@@ -110,7 +110,7 @@ def test_field_metadata(field_name, field_help):
             fields_dict = getattr(ConfigClass, meta_attr)
             if isinstance(fields_dict, dict) and field_name in fields_dict:
                 field_obj = fields_dict[field_name]
-                assert field_obj.help == field_help
+                assert field_obj.query("help") == field_help
                 return
 
     # If we get here, we need to skip the test because we can't find the field metadata

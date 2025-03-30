@@ -245,6 +245,7 @@ class Node(BaseNode):
         def _query_inst_cfg(
             name: str,
             overrides: Optional[List] = None,
+            defaults: Optional[List] = None,
             default: Any = UNSET_ARG,
             report: Optional[List] = None,
         ) -> Any:
@@ -273,12 +274,12 @@ class Node(BaseNode):
             query_from = report if isinstance(report, list) else []
 
             if isinstance(overrides, list):
-                for _override in overrides:
+                for idx, _override in enumerate(overrides):
                     if is_set(_override):
-                        query_from.append(f"dict_override:{name}")
+                        query_from.append(f"overrides_arg:{name}:{idx}")
                         return _override
             elif overrides is not None:
-                raise ValueError(f"Invalid override type: {type(override)}")
+                raise ValueError(f"Invalid override type: {type(overrides)}")
 
             # Fetch from self._NAME
             # Good for initial setup, if write mode is required
@@ -313,6 +314,14 @@ class Node(BaseNode):
                 query_from.append(f"self_attr:meta__{name}")
                 return val
 
+            if isinstance(defaults, list):
+                for idx, _default in enumerate(defaults):
+                    if is_set(_default):
+                        query_from.append(f"defaults_arg:{name}:{idx}")
+                        return _default
+            elif defaults is not None:
+                raise ValueError(f"Invalid default type: {type(defaults)}")
+
             if default is not UNSET_ARG:
                 query_from.append("default_arg")
                 return default
@@ -338,7 +347,7 @@ class Node(BaseNode):
         logger.debug(
             "Node config query for %s.%s=%s (from: %s)", self, name, out, report[-1]
         )
-        # msg = f"QUERRRYYYYY ===>>> Node config query for {self}, {name}={out} (from: {report[-1]})"
+        # msg = f"QUERRRY ===>>> Node config query for {self}, {name}={out} (from: {report[-1]})"
         # print(msg)
 
         if isinstance(out, (dict, list)):
