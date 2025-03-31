@@ -1,6 +1,14 @@
-from pprint import pprint
 import logging
-from superconf import ConfigurationObj, ConfigurationDict, FieldString, FieldList, FieldDict, FieldConf
+from pprint import pprint
+
+from superconf import (
+    ConfigurationDict,
+    ConfigurationObj,
+    FieldConf,
+    FieldDict,
+    FieldList,
+    FieldString,
+)
 from superconf.exceptions import InvalidFieldOption
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -32,7 +40,6 @@ class App(ConfigurationObj):
     # Application configuration
     # default_features = FieldList(help="default features")
     # resource_model = FieldDict(help="resource model")
-
 
     # This is the long form
     # features = FieldConf(AppFeatures)
@@ -71,9 +78,8 @@ app_payload = {
             "name": "feat2",
             "group": "group2",
             "fake_feat": "TUTU",
-        }
+        },
     }
-
 }
 
 app = App(value=app_payload)
@@ -95,4 +101,3 @@ for feature in app.features:
 
 
 print("All tests OK")
-

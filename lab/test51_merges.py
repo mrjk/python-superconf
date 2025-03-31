@@ -8,9 +8,9 @@ import pytest
 import superconf.exceptions
 from superconf.common import DEFAULT, FAIL, NOT_SET
 from superconf.configuration import (
-    ConfigurationObj,
     ConfigurationDict,
     ConfigurationList,
+    ConfigurationObj,
 )
 from superconf.fields import (
     Field,
