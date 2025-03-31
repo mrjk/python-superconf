@@ -227,10 +227,6 @@ class Leaf(Node):
     __node_cast__ = None
     __node_field__ = None
 
-    # Public settings
-    # meta__default = NOT_SET
-    # meta__cast = UNSET_ARG
-
     def __init__(
         self,
         value: Any = NOT_SET,
@@ -242,7 +238,6 @@ class Leaf(Node):
         **kwargs,
     ):
         super().__init__(key=key, value=value, parent=parent)
-
 
         # Get default and override node field
         self.__node_field__ = GenericField() if field is None else field
@@ -263,7 +258,7 @@ class Leaf(Node):
                     msg = f"Invalid Meta key '{_key}' for {self.__class__}, please choose one of: {list(self.__node_config__.__dict__.keys())}"
                     raise exceptions.InvalidField(msg)
 
-        # Call Hook
+        # Call node init hook
         self.__node_init__(**kwargs)
 
         _report = []
@@ -292,22 +287,21 @@ class Leaf(Node):
     def __node_init__(self, **kwargs):
         "Prepare Leaf instance"
 
-        # print(f"PREPARE Leaf: {self}: {kwargs}")
-
+        # Call parent init
+        cast = kwargs.pop("cast", UNSET_ARG)
         assert len(kwargs) == 0, f"Unexpected kwargs: {kwargs}"
+        _report = []
 
-        # Fetch settings overrides
-        report = []
+        # Fetch cast settings
         _cast = self.__node_get_self_config__(
             "cast",
             default=self.__node_config__.query("cast"),
             overrides=[
+                cast,
                 self.__node_field__.query("cast"),
             ],
-            report=report,
+            report=_report,
         )
-
-        # Configure the instance
         self.__node_cast__ = _cast
 
     def __repr__(self):
@@ -431,6 +425,7 @@ class _ContainerInstance(Leaf):
         children_class = kwargs.pop("children_class", UNSET_ARG)
         super().__node_init__(**kwargs)
 
+        # Configure instance
         self.__node_children__ = NOT_SET
 
         # Fetch node_children_class settings
@@ -769,7 +764,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         default=NOT_SET_DICT,
         help=None,
         extra_fields=False,
-        # children_class=None,
         children_class=Leaf,
         children_classes=NOT_SET_DICT,
     )
@@ -786,28 +780,23 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         # Call parent init
         children_classes = kwargs.pop("children_classes", UNSET_ARG)
         super().__node_init__(**kwargs)
+        _report = []
 
-        # print(f"PREPARE ConfigurationObj: {self}: {kwargs}")
-
-        assert isinstance(
-            self.__node_config__, LeafObjConfig
-        ), "ConfigurationObj must have a LeafObjConfig"
-
-        report = []
+        # Fetch extra fields settings
         self.__node_extra_fields__ = self.__node_get_self_config__(
             "extra_fields",
             default=self.__node_config__.query("extra_fields"),
-            report=report,
+            report=_report,
         )
 
-        # Fetch and process local fields
+        # Fetch children_classes field settings
         local_values = self.__node_get_self_config__(
             "children_classes",
             default=self.__node_config__.query("children_classes"),
             overrides=[
                 children_classes,
             ],
-            report=report,
+            report=_report,
         )
         assert isinstance(
             local_values, dict
