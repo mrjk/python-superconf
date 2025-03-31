@@ -30,8 +30,8 @@ assert not isinstance(NOT_SET, str)
 assert (NOT_SET or "INVALID") == "INVALID"
 assert isinstance(NOT_SET_DICT, dict)
 assert isinstance(NOT_SET_LIST, list)
-assert isinstance(NOT_SET_DICT, NOT_SET.type)
-assert NOT_SET_DICT is NOT_SET_DICT or NOT_SET_DICT is NOT_SET
+assert isinstance(NOT_SET_DICT, NOT_SET_DICT.type)
+assert isinstance(NOT_SET_DICT, NOT_SET.type) or NOT_SET_DICT is NOT_SET
 
 
 def from_json(string):
@@ -45,6 +45,7 @@ class CustomJSONEncoder(json.JSONEncoder):
     This method is called for objects not natively JSON serializable.
     """
 
+    # pylint: disable=arguments-renamed
     def default(self, obj):
         """
         Custom JSON encoder to handle specific object types.
@@ -132,6 +133,7 @@ def truncate(data, max=72, txt="..."):
     return data
 
 
+# pylint: disable=line-too-long
 # Source: https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-in-python-whilst-preserving-order
 def unique(seq):
     "Remove duplicates from a list while preserving order"

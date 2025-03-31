@@ -50,8 +50,7 @@ Examples:
 """
 
 import os
-import sys
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional
 
 UNSET = None
 RELATIVE = "rel"
@@ -73,6 +72,7 @@ class PathAnchor:
         path_mode: The display mode ('abs' or 'rel')
     """
 
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
         path: Optional[str] = None,
@@ -238,50 +238,17 @@ class PathAnchor:
         mode = mode or self.get_mode()
         if not start:
             start = os.getcwd()
-            # if self.parent:
-            #     start = self.parent.get_dir(mode="abs")
-            #     print("START", start)
-            # else:
         clean = clean if isinstance(clean, bool) else self.clean
 
         # Resolve name
         if os.path.isabs(self.path_source):
             ret = self.path_source
         else:
-
-            # OLD V1 - KEEP ORIGINAL
             parent = parent or self.parent
             if parent:
                 ret = os.path.join(parent.get_path(), self.path_source)
-                # ret = os.path.join(_parent.path_source, self.path_source) # BROKEN AND NOW FIXED
             else:
                 ret = self.path_source
-
-            # parent_req = parent or self.parent
-
-            # parents = self.get_parents()
-            # if parent_req:
-            #     if isinstance(parent_req, str):
-            #         parent_req = [x for x in parents if parent_req == x.name]
-            #         assert len(parent_req) == 1, f"Got {len(parent_req)} parents with name {parent_req}, expected 1"
-            #         parent_req = parent_req[0]
-
-            # # OLD V1
-            # parent = parent_req
-            # if parent:
-            #     ret = os.path.join(parent.get_path(), self.path_source)
-            #     # ret = os.path.join(parent.path_source, self.path_source)
-            # else:
-            #     ret = self.path_source
-
-            # pprint(parents)
-            # pprint([x.name for x in parents if x.name])
-            # _parent = parents[0] if len(parents) > 0 else None
-
-            # if _parent:
-            #     ret = os.path.join(_parent.path_source, self.path_source)
-            # else:
-            #     ret = self.path_source
 
         # Clean
         if clean:
@@ -289,7 +256,6 @@ class PathAnchor:
 
         # Ensure output format
         if mode == REL:
-            # print("YEAHHH", os.path.isabs(ret))
             if os.path.isabs(ret):
                 ret = os.path.relpath(ret, start=start)
         elif mode == ABS:

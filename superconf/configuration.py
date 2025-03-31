@@ -1,13 +1,10 @@
 "Main configuratio  class"
 
 
-import copy
+# import copy
 import inspect
 import logging
 from collections import OrderedDict
-
-# from collections import Mapping, Sequence
-from collections.abc import Mapping, Sequence
 
 # pylint: disable=unused-import
 from pprint import pprint
@@ -29,16 +26,7 @@ from superconf.common import (
 )
 from superconf.nodes import BaseNode, Node
 
-# from .fields2 import Field, FieldConf, BaseFieldContainer
-# from .loaders import Environment
-
-
-# from types import SimpleNamespace
-# from typing import Callable
-
-
 logger = logging.getLogger(__name__)
-
 
 # ====================================
 # Base Fields V2
@@ -111,20 +99,11 @@ class PublicField(GenericField):
 class LeafBaseConfig(GenericField):
     "Represent a configuration leaf"
 
-    # cast = None
-    # instance_class = None
-
-    # @classmethod
-    # def get_keys_cls(cls):
-    #     "Get class item"
-    #     item = cls()
-    #     return list(item.dump().keys())
-
     def get_keys(self):
         "Get class item"
         return list(self.__dict__.keys())
 
-    # pylint: disable=redefined-builtin
+    # pylint: disable=redefined-builtin, too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
         default=NOT_SET,
@@ -188,8 +167,6 @@ def node_cast_value(self, value):
 
         # Otherwise, try to cast the value
         try:
-            # msg = f"Cast value {self.__node_fname__} with {self.__node_cast__}: {value}"
-            # logger.debug(msg)
             value = self.__node_cast__(value)
         except Exception as err:
             raise exceptions.InvalidCastConfiguration(
@@ -226,10 +203,10 @@ class Leaf(Node):
     __node_cast__ = None
     __node_field__ = None
 
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
         value: Any = NOT_SET,
-        # value=UNSET_ARG,
         default=UNSET_ARG,
         key: Optional[Union[str, int]] = None,
         parent: Optional["Node"] = None,
@@ -417,8 +394,6 @@ class _ContainerInstance(Leaf):
     __node_fields__ = {}
     __node_children__ = None
 
-    # meta__children_class = Leaf  # Generic children class
-
     __node_config__ = LeafContainerConfig(
         cast=as_is,
         default=NOT_SET,
@@ -480,14 +455,6 @@ class ConfigurationDict(_ContainerInstance):
         help=None,
         children_class=Leaf,
     )
-
-    # __node_config__ = _ContainerInstance.__node_config__.inherit(
-    #     cls=LeafContainerConfig,
-    #     cast=as_dict,
-    #     default=NOT_SET_DICT,
-    # )
-
-    # assert __node_config__.__dict__ == tmp__node_config2.__dict__
 
     def __node__set_children__(self, value):
         "Set children from dict"
@@ -551,8 +518,8 @@ class ConfigurationDict(_ContainerInstance):
 
         if self.__node_children__ is not NOT_SET:
             ret = {}
-            for key, child in self.__node_children__.items():
-                ret[key] = child.get_value(nodefaults=nodefaults)
+            for _key, child in self.__node_children__.items():
+                ret[_key] = child.get_value(nodefaults=nodefaults)
 
             return ret
 
@@ -565,7 +532,7 @@ class ConfigurationDict(_ContainerInstance):
         "Get value"
 
         if self.__node_children__ is not NOT_SET:
-            noexceptions = True if default != UNSET_ARG else False
+            noexceptions = default != UNSET_ARG
             child = self.get_child(key, noexceptions=noexceptions)
             if child is None and default != UNSET_ARG:
                 return default
@@ -712,9 +679,6 @@ class ConfigurationDict(_ContainerInstance):
         return new_instance
 
 
-##################
-
-
 class DeclarativeValuesMetaclass(type):
     """
     Collect Value objects declared on the base classes
@@ -760,7 +724,7 @@ class DeclarativeValuesMetaclass(type):
         )
 
     @classmethod
-    def __prepare__(mcs, name, bases, **kwds):
+    def __prepare__(mcs, *_):
         # Remember the order that values are defined.
         return OrderedDict()
 
@@ -780,12 +744,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         children_class=Leaf,
         children_classes=NOT_SET_DICT,
     )
-
-    # __node_config__ = ConfigurationDict.__node_config__.inherit(
-    #     cls=LeafObjConfig,
-    #     # children_class=Leaf,
-    #     children_classes=NOT_SET_DICT,
-    # )
 
     def __node_init__(self, **kwargs):
         "Prepare ConfigurationObj instance"
@@ -826,20 +784,12 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         _children_classes = []
         for attr, field in _children_raw_classes.items():
 
-            if inspect.isclass(field):
-                assert False, "BUG NOT SUPPORTED ANYMORE"
-                # if issubclass(field, Leaf):
-                #     field = BaseFieldContainer(field, key=attr)
-                #     assert isinstance(field, GenericField)
-                # else:
-                #     raise exceptions.InvalidField(
-                #         f"Expected a Leaf for {self.__node_fname__}.{attr}, got: {type(field)}={field}"
-                #     )
-
             if isinstance(field, GenericField):
                 field.key = field.key if field.key else attr
                 field.attr = attr
                 _children_classes.append(field)
+            else:
+                assert False, "BUG NOT SUPPORTED ANYMORE"
 
         self.__node_children_classes__ = _children_classes
 
@@ -979,11 +929,6 @@ class ConfigurationList(ConfigurationDict):
         # children_class=None,
         children_class=Leaf,
     )
-    # __node_config__ = _ContainerInstance.__node_config__.inherit(
-    #     cls=LeafContainerConfig,
-    #     cast=as_list,
-    #     default=NOT_SET_LIST,
-    # )
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
@@ -992,7 +937,7 @@ class ConfigurationList(ConfigurationDict):
 
         if self.__node_children__ is not NOT_SET:
             ret = []
-            for key, child in self.__node_children__.items():
+            for child in self.__node_children__.values():
                 ret.append(child.get_value(nodefaults=nodefaults))
 
             return ret

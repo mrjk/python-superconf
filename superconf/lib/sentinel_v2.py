@@ -1,7 +1,38 @@
+"""Sentinel value implementation for representing special states.
+
+This module provides sentinel objects that represent special states like "not set" or
+"unset argument". Sentinels are singleton objects that can be used to indicate
+special conditions in a more explicit way than using None.
+
+Key features:
+- Singleton pattern implementation
+- Type-specific sentinel objects (dict, list, etc.)
+- Boolean evaluation to False
+- Customizable string representation
+- Support for isinstance() checks with appropriate types
+
+Example usage:
+    >>> from superconf.lib.sentinel_v2 import NOT_SET
+    >>> value = NOT_SET
+    >>> if value is NOT_SET:
+    ...     print("Value not set")
+    Value not set
+    
+    >>> # Boolean evaluation
+    >>> bool(NOT_SET)
+    False
+    
+    >>> # String representation
+    >>> str(NOT_SET)
+    '<NOT_SET>'
+"""
+
 import sentinel
 
 
 class Sentinel:
+    "Main sentinal class"
+
     _instance = None
     __name__ = None
 
@@ -140,7 +171,6 @@ FAIL = sentinel.create("FAIL", mro=Sentinel.__mro__, cls_dict=cls_dict)
 DEFAULT = sentinel.create("DEFAULT", mro=Sentinel.__mro__, cls_dict=cls_dict)
 
 
-assert NOT_SET is NOT_SET
 assert not isinstance(NOT_SET, type(None))
 assert isinstance(NOT_SET_DICT, dict)
 assert isinstance(NOT_SET_LIST, list)
@@ -151,5 +181,5 @@ assert len(NOT_SET_LIST) == 0
 assert not NOT_SET_DICT
 assert not NOT_SET_LIST
 
-assert type(NOT_SET_LIST) == type(NOT_SET_LIST)
-assert type(NOT_SET_DICT) == type(NOT_SET_DICT)
+assert isinstance(NOT_SET_LIST, NOT_SET_LIST.type)
+assert isinstance(NOT_SET_DICT, type(NOT_SET_DICT))
