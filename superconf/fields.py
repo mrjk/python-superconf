@@ -53,7 +53,7 @@ class FieldContainer(PublicField):
         ), f"Expected a Leaf for {self}, got: {type(self.instance_class)}={self.instance_class}"
 
         # Fetch node field
-        node_field = self.instance_class.tmp__node_config
+        node_field = self.instance_class.__node_config__
 
         # Validate kwargs and report unknown fields
         overrides = {}
