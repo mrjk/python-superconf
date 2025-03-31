@@ -1,8 +1,6 @@
 "Main configuratio  class"
 
 
-# pylint: disable=unused-argument, too-few-public-methods, too-many-instance-attributes, use-dict-literal, protected-access, too-many-branches
-
 import copy
 import inspect
 import logging
@@ -195,7 +193,8 @@ def node_cast_value(self, value):
             value = self.__node_cast__(value)
         except Exception as err:
             raise exceptions.InvalidCastConfiguration(
-                f"Invalid cast {self.__node_cast__} for {self.__node_fname__} for value: {value}, got error: {type(err).__name__} {err}"
+                f"Invalid cast {self.__node_cast__} for {self.__node_fname__} "
+                f"for value: {value}, got error: {type(err).__name__} {err}"
             )
 
         return value
@@ -255,7 +254,10 @@ class Leaf(Node):
                 if _key.startswith("__"):
                     continue
                 if not hasattr(self.__node_config__, _key):
-                    msg = f"Invalid Meta key '{_key}' for {self.__class__}, please choose one of: {list(self.__node_config__.__dict__.keys())}"
+                    msg = (
+                        f"Invalid Meta key '{_key}' for {self.__class__}, "
+                        f"please choose one of: {list(self.__node_config__.__dict__.keys())}"
+                    )
                     raise exceptions.InvalidField(msg)
 
         # Call node init hook
@@ -384,11 +386,17 @@ class Leaf(Node):
 
         other_val = other.get_value(nodefaults=True)
         if not isinstance(other_val, NOT_SET.type):
-            msg = f"Override Leaf {self.__class__.__name__}({self.__node_fname__}) with {other.__class__.__name__}({other.__node_fname__})"
+            msg = (
+                f"Override Leaf {self.__class__.__name__}({self.__node_fname__}) "
+                f"with {other.__class__.__name__}({other.__node_fname__})"
+            )
             logger.info(msg)
             return other
 
-        msg = f"Keep Leaf {self.__class__.__name__}({self.__node_fname__}) over {other.__class__.__name__}({other.__node_fname__})"
+        msg = (
+            f"Keep Leaf {self.__class__.__name__}({self.__node_fname__}) "
+            f"over {other.__class__.__name__}({other.__node_fname__})"
+        )
         logger.info(msg)
         return self
 
@@ -532,9 +540,8 @@ class ConfigurationDict(_ContainerInstance):
 
         if noexceptions is True:
             return None
-        raise exceptions.UndeclaredField(
-            f"Child {key} not found in {self.__node_fname__}"
-        )
+        msg = f"Child {key} not found in " f"{self.__node_fname__}"
+        raise exceptions.UndeclaredField(msg)
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"
@@ -658,7 +665,10 @@ class ConfigurationDict(_ContainerInstance):
     def merge(self, other):
         "Merge and override object with other"
 
-        msg = f"Merge Container {self.__class__.__name__}({self.__node_fname__}) with {other.__class__.__name__}({other.__node_fname__})"
+        msg = (
+            f"Merge Container {self.__class__.__name__}({self.__node_fname__}) "
+            f"with {other.__class__.__name__}({other.__node_fname__})"
+        )
         logger.info(msg)
 
         if not isinstance(other, Leaf):
@@ -677,7 +687,10 @@ class ConfigurationDict(_ContainerInstance):
             other_child = other.__node_children__.get(key, UNSET_ARG)
 
             if base_child is not UNSET_ARG and other_child is not UNSET_ARG:
-                msg = f"Merge child {key} {base_child.__node_fname__} and {other_child.__node_fname__}"
+                msg = (
+                    f"Merge child {key} {base_child.__node_fname__} "
+                    f"and {other_child.__node_fname__}"
+                )
                 logger.info(msg)
                 tmp = base_child.merge(other_child)
                 out[key] = tmp
@@ -859,7 +872,11 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         # Handle extra fields
         if field is None:
             if extra_fields is not True:
-                msg = f"Key '{child_key}' is not declared in '{self.__class__.__name__}({self.__node_fname__})', use extra_fields=True to allow unknown keys"
+                msg = (
+                    f"Key '{child_key}' is not declared in "
+                    f"'{self.__class__.__name__}({self.__node_fname__})', "
+                    "use extra_fields=True to allow unknown keys"
+                )
                 if extra_fields == "warn":
                     logger.warning(msg)
                 elif extra_fields is False:
@@ -870,9 +887,11 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         # Check field result
         if not isinstance(field, GenericField):
-            raise exceptions.InvalidField(
-                f"Expected a GenericField for {self.__node_fname__}.{child_key}, got: {type(field)}={field}"
+            msg = (
+                f"Expected a GenericField for {self.__node_fname__}.{child_key}, "
+                f"got: {type(field)}={field}"
             )
+            raise exceptions.InvalidField(msg)
 
         return field
 
@@ -914,11 +933,12 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
             child_cls = child_field.instance_class
 
             # Skip if field is not valid class
-            if not child_cls:  # if None of False, then skip
-                continue
-            assert inspect.isclass(
-                child_cls
-            ), f"Expected a class for {self.__node_fname__}.{child_key}, got: {type(child_cls)}={child_cls}"
+            if not inspect.isclass(child_cls):
+                msg = (
+                    f"Expected a class for {self.__node_fname__}.{child_key}, "
+                    f"got: {type(child_cls)}={child_cls}"
+                )
+                assert False, msg
 
             # Build field default and value
             child_default = node_default_dict.get(

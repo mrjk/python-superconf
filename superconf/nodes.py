@@ -26,17 +26,17 @@ safety and validation.
 
 import copy
 import logging
-from pprint import pprint
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union
+
+# from pprint import pprint
+from typing import Any, List, Optional, Type, Union
 
 from superconf import exceptions
 from superconf.common import NOT_SET, UNSET_ARG
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T", bound="Node")
 
-
+# pylint: disable=too-few-public-methods
 class BaseNode:
     """Base class for configuration objects providing core configuration query functionality.
 
@@ -59,6 +59,7 @@ class BaseNode:
     __node_parent__: Optional["Node"] = None
     __node_value__: Any = NOT_SET
 
+    # pylint: disable=too-few-public-methods
     class Meta:
         """Class to store class-level configuration settings."""
 
@@ -120,6 +121,7 @@ class BaseNode:
         return ".".join(out)
 
 
+# pylint: disable=too-few-public-methods
 class Node(BaseNode):
     "Node with config management and inheritance"
 
@@ -207,7 +209,7 @@ class Node(BaseNode):
     #     # assert False, f"Invalid source: {sources}"
     #     return UNSET_ARG
 
-    # def __node_get_self_config__(
+    # pylint: disable=too-many-branches
     def __node_get_self_config__(
         self,
         name: str,

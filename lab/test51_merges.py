@@ -12,7 +12,7 @@ from superconf.configuration import (
     ConfigurationList,
     ConfigurationObj,
 )
-from superconf.fields import (
+from superconf.fields import (  # FieldOption,
     Field,
     FieldBool,
     FieldConf,
@@ -20,7 +20,6 @@ from superconf.fields import (
     FieldFloat,
     FieldInt,
     FieldList,
-    FieldOption,
     FieldString,
     FieldTuple,
 )

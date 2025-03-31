@@ -12,16 +12,14 @@ import logging
 from superconf import exceptions
 
 # from superconf import exceptions
-from superconf.casts import (  # as_string,
+from superconf.casts import (  # as_string,; as_is,; as_option,
     as_boolean,
     as_dict,
     as_int,
-    as_is,
     as_list,
-    as_option,
     as_tuple,
 )
-from superconf.common import FAIL, NOT_SET, UNSET_ARG
+from superconf.common import NOT_SET
 from superconf.configuration import (
     Leaf,
     PublicField,
@@ -156,40 +154,40 @@ class FieldFloat(FieldLeaf):
     cast = float
 
 
-class FieldOption(FieldLeaf):
-    """A field that validates values against a predefined set of options.
+# class FieldOption(FieldLeaf):
+#     """A field that validates values against a predefined set of options.
 
-    This field ensures that values are one of a predefined set of options,
-    optionally providing a default if an invalid option is given.
+#     This field ensures that values are one of a predefined set of options,
+#     optionally providing a default if an invalid option is given.
 
-    Attributes:
-        cast: Set to AsOption for option validation and conversion.
-    """
+#     Attributes:
+#         cast: Set to AsOption for option validation and conversion.
+#     """
 
-    cast = as_option
+#     cast = as_option
 
-    def __init__(
-        self,
-        options,
-        default_option=FAIL,
-        key: str = None,
-        **kwargs,
-    ):
-        """Initialize an option field.
+#     def __init__(
+#         self,
+#         options,
+#         default_option=FAIL,
+#         key: str = None,
+#         **kwargs,
+#     ):
+#         """Initialize an option field.
 
-        Args:
-            options: Dictionary mapping valid input values to their corresponding options.
-            default_option: The option to use when an invalid value is provided.
-                If set to FAIL, raises an error for invalid values.
-            key: Name of the value used in file or environment variable.
-            **kwargs: Additional arguments passed to the parent Field class.
+#         Args:
+#             options: Dictionary mapping valid input values to their corresponding options.
+#             default_option: The option to use when an invalid value is provided.
+#                 If set to FAIL, raises an error for invalid values.
+#             key: Name of the value used in file or environment variable.
+#             **kwargs: Additional arguments passed to the parent Field class.
 
-        Raises:
-            AssertionError: If options is not a dictionary.
-        """
-        assert isinstance(options, dict), f"Expected a dict, got: {options}"
-        self.cast = AsOption(options, default_option=default_option)
-        super().__init__(key, **kwargs)
+#         Raises:
+#             AssertionError: If options is not a dictionary.
+#         """
+#         assert isinstance(options, dict), f"Expected a dict, got: {options}"
+#         self.cast = AsOption(options, default_option=default_option)
+#         super().__init__(key, **kwargs)
 
 
 class FieldDict(FieldLeaf):

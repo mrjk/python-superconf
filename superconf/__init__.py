@@ -8,13 +8,12 @@ various sources.
 __version__ = "0.1.0"
 
 # Import casts
-from superconf.casts import (
+from superconf.casts import (  # as_option,
     as_boolean,
     as_dict,
     as_int,
     as_is,
     as_list,
-    as_option,
     as_tuple,
 )
 
@@ -50,7 +49,7 @@ from superconf.exceptions import (
 )
 
 # Import field types from fields module
-from superconf.fields import (
+from superconf.fields import (  # FieldOption,
     Field,
     FieldBool,
     FieldConf,
@@ -60,7 +59,6 @@ from superconf.fields import (
     FieldInt,
     FieldLeaf,
     FieldList,
-    FieldOption,
     FieldString,
     FieldTuple,
 )

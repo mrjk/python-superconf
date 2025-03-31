@@ -2,16 +2,17 @@
 
 # pylint: disable=too-few-public-methods, too-many-return-statements
 
+import ast
 import logging
+from collections.abc import Mapping, Sequence
+
+from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST
+from superconf.exceptions import InvalidCastConfiguration
+
+# from pprint import pprint
+
 
 logger = logging.getLogger(__name__)
-
-import ast
-from collections.abc import Mapping, Sequence
-from pprint import pprint
-
-from .common import FAIL, NOT_SET, NOT_SET_DICT, NOT_SET_LIST, UNSET_ARG
-from .exceptions import InvalidCastConfiguration
 
 
 class AbstractCast:
@@ -141,7 +142,8 @@ class AsList(AbstractCast):
 
     def _parse(self, value):
 
-        # print("CAST___LIST", NOT_SET_LIST, NOT_SET_LIST.type, issubclass(type(value), NOT_SET_LIST.type), value)
+        # print("CAST___LIST", NOT_SET_LIST, NOT_SET_LIST.type,
+        # issubclass(type(value), NOT_SET_LIST.type), value)
         # pprint(type(value).__mro__)
         # pprint(NOT_SET_LIST.type)
         # print("CAST LIST", value)
@@ -310,56 +312,55 @@ class AsDict(AbstractCast):
             return self.cast(out)
 
         raise InvalidCastConfiguration(f"Error casting value '{value}' to dict")
-        assert False, f"TOFIX: Unsupported type {type(value)}"
 
 
-class AsOption(AbstractCast):
-    """Cast a value by selecting from predefined options.
+# class AsOption(AbstractCast):
+#     """Cast a value by selecting from predefined options.
 
-    Maps input values to predefined options using a dictionary mapping.
-    Optionally supports a default option when the input doesn't match any defined option.
+#     Maps input values to predefined options using a dictionary mapping.
+#     Optionally supports a default option when the input doesn't match any defined option.
 
-    Args:
-        options (dict): A dictionary mapping input values to their corresponding options.
-        default_option (any, optional): The key to use when the input value isn't found.
-            If FAIL (default), raises an exception for invalid inputs.
+#     Args:
+#         options (dict): A dictionary mapping input values to their corresponding options.
+#         default_option (any, optional): The key to use when the input value isn't found.
+#             If FAIL (default), raises an exception for invalid inputs.
 
-    Raises:
-        InvalidCastConfiguration: If the input value is not in options and no valid
-            default_option is provided.
+#     Raises:
+#         InvalidCastConfiguration: If the input value is not in options and no valid
+#             default_option is provided.
 
-    Example:
-        >>> cast = AsOption({'dev': ['debug'], 'prod': ['optimize']}, 'dev')
-        >>> cast('prod')  # Returns: ['optimize']
-        >>> cast('invalid')  # Returns: ['debug'] (default option)
-    """
+#     Example:
+#         >>> cast = AsOption({'dev': ['debug'], 'prod': ['optimize']}, 'dev')
+#         >>> cast('prod')  # Returns: ['optimize']
+#         >>> cast('invalid')  # Returns: ['debug'] (default option)
+#     """
 
-    def __init__(self, options, default_option=FAIL):
-        self.options = options
-        self.default_option = default_option
+#     def __init__(self, options, default_option=FAIL):
+#         self.options = options
+#         self.default_option = default_option
 
-    def __call__(self, value):
-        try:
-            return self.options[value]
-        except KeyError as err:
+#     def __call__(self, value):
+#         try:
+#             return self.options[value]
+#         except KeyError as err:
 
-            # Raise error if no default
-            default_option = self.default_option
-            if default_option is FAIL:
-                raise InvalidCastConfiguration(f"Invalid option {value}") from err
+#             # Raise error if no default
+#             default_option = self.default_option
+#             if default_option is FAIL:
+#                 raise InvalidCastConfiguration(f"Invalid option {value}") from err
 
-            # Look for default
-            if not default_option in self.options:
-                raise InvalidCastConfiguration(
-                    f"Invalid default option {value}: does not exists: {default_option}"
-                ) from err
+#             # Look for default
+#             if not default_option in self.options:
+#                 raise InvalidCastConfiguration(
+#                     f"Invalid default option {value}: does not exists: {default_option}"
+#                 ) from err
 
-            # if isinstance(default, str):
-            return self.options[default_option]
-            # if ret is NOT_SET:
-            #     raise InvalidCastConfiguration("Invalid default option {!r}".format(value))
+#             # if isinstance(default, str):
+#             return self.options[default_option]
+#             # if ret is NOT_SET:
+#             #     raise InvalidCastConfiguration("Invalid default option {!r}".format(value))
 
-            # return ret
+#             # return ret
 
 
 class AsIdentity(AbstractCast):
@@ -454,5 +455,5 @@ as_int = AsInt()
 as_list = AsList()
 as_dict = AsDict()
 as_tuple = AsTuple()
-as_option = AsOption
+# as_option = AsOption()
 as_is = AsIdentity()
