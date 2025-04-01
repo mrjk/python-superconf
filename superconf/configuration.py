@@ -255,10 +255,9 @@ class Leaf(Node):
         # Set default value
         self.set_default(_default)
 
-        # Set value
-        if value is UNSET_ARG or isinstance(value, NOT_SET.type):
-            value = self.get_value()
-        self.set_value(value)
+        # Set value if present
+        if value is not UNSET_ARG and not isinstance(value, NOT_SET.type):
+            self.set_value(value)
 
         # Run post_load hook
         self.post_load()
@@ -423,6 +422,16 @@ class _ContainerInstance(Leaf):
             report=_report,
         )
         self.__node_children_class__ = _children_class
+
+    def set_default(self, *args):
+        "Set default"
+        if len(args) == 1:
+            value = args[0]
+            value = super().set_default(value)
+            self.__node__set_children__(value)
+            return value
+
+        assert False
 
     def set_value(self, *args):
         "Set value"
@@ -696,7 +705,6 @@ class DeclarativeValuesMetaclass(type):
         values_local = {}
         for attr, value in attrs.items():
             if isinstance(value, PublicField):
-                # values.update({attr: value})
                 values_local.update({attr: value})
 
             # Unused ...
@@ -706,13 +714,10 @@ class DeclarativeValuesMetaclass(type):
 
         all_values = {**values, **values_local}
         attrs["__node_fields__"] = all_values
-        # attrs["meta__children_classes"] = all_values
 
         # Clean attributes
-        # for key in list(attrs["__node_fields__"].keys()):
         for key in list(all_values.keys()):
             if key in attrs:
-                # print(f"DELETE {key}")
                 del attrs[key]
 
         # # Clean Meta class

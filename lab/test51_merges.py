@@ -1,5 +1,6 @@
 # pylint: skip-file
 
+import logging
 import sys
 from pprint import pprint
 
@@ -39,15 +40,15 @@ from superconf.fields import (  # FieldOption,
 class AppConfig(ConfigurationObj):
     "Tests types"
 
-    class Meta:
-        # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = False
-        # default = [
-        #     {"key1": "item1"},
-        #     {"key2": "item2"},
-        #     {"key3": "item3"},
-        # ]
-        # children_class = ConfigurationDict
+    # class Meta:
+    # Will fail on undefined casted values if true, alow NOT_SET
+    # strict_cast = False
+    # default = [
+    #     {"key1": "item1"},
+    #     {"key2": "item2"},
+    #     {"key3": "item3"},
+    # ]
+    # children_class = ConfigurationDict
 
     name = FieldString(default="default_toto")
     enabled = FieldBool(default=True)
@@ -58,8 +59,6 @@ class AppDict(ConfigurationDict):
     "Tests types"
 
     class Meta:
-        # Will fail on undefined casted values if true, alow NOT_SET
-        strict_cast = False
         children_class = AppConfig
 
 
@@ -72,27 +71,29 @@ def test_merge_for_configuration():
     app1 = AppConfig(value=app1_val)
     app2 = AppConfig(value=app2_val)
 
-    # pprint(app1.get_values())
-    # pprint(app2.get_values())
+    # pprint(app1.get_value())
+    # pprint(app2.get_value())
 
     # test merge for dicts
     out = app1.merge(app2)
     assert isinstance(out, AppConfig)
 
-    EXPECTED = {"count": 10, "enabled": False, "name": "titi"}
-    # pprint(out.get_values())
-    assert out.get_values() == EXPECTED
+    EXPECTED = {"count": 25, "enabled": False, "name": "titi"}
+    # print("EXPECTED vs Result")
+    # pprint(EXPECTED)
+    # pprint(out.get_value())
+    assert out.get_value() == EXPECTED
 
 
 def test_merge_for_configuration_dict():
     # Test2: Test merge for ConfigurationDict
     app1_val = {
-        "app1": {"name": "toto", "count": 25},
-        # "app2": {"name": "titi", "enabled": False},
+        "app1": {"name": "toto", "count": 64},
+        "app2": {"name": "titi", "enabled": False},
     }
     app2_val = {
         "app1": {"name": "tata"},
-        # "app3": {"name": "tutu", "enabled": True},
+        "app3": {"name": "tutu", "enabled": True},
     }
 
     print("PREPARE THINGS")
@@ -104,17 +105,20 @@ def test_merge_for_configuration_dict():
     assert isinstance(out, AppDict)
 
     print("\n\n\nCHECK RESULT")
-    pprint(out.get_values())
+    # pprint(out.get_value())
     EXPECTED = {
-        "app1": {"count": 25, "enabled": True, "name": "tata"},
-        "app2": {"count": 10, "enabled": False, "name": "titi"},
-        "app3": {"count": 10, "enabled": True, "name": "tutu"},
+        "app1": {"count": 64, "enabled": True, "name": "tata"},
+        "app2": {"count": 999, "enabled": False, "name": "titi"},
+        "app3": {"count": 999, "enabled": True, "name": "tutu"},
     }
 
-    assert out.get_values() == EXPECTED
+    pprint(EXPECTED)
+    pprint(out.get_value())
+
+    assert out.get_value() == EXPECTED
 
 
-# test_merge_for_configuration()
-# test_merge_for_configuration_dict()
+test_merge_for_configuration()
+test_merge_for_configuration_dict()
 
 print("All tests OK")

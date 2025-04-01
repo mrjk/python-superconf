@@ -142,12 +142,6 @@ class AsList(AbstractCast):
 
     def _parse(self, value):
 
-        # print("CAST___LIST", NOT_SET_LIST, NOT_SET_LIST.type,
-        # issubclass(type(value), NOT_SET_LIST.type), value)
-        # pprint(type(value).__mro__)
-        # pprint(NOT_SET_LIST.type)
-        # print("CAST LIST", value)
-
         if isinstance(value, NOT_SET.type):
             assert value is NOT_SET_LIST or value is NOT_SET
             return NOT_SET_LIST
@@ -155,28 +149,16 @@ class AsList(AbstractCast):
         if value is None:
             return NOT_SET_LIST
 
-        # if isinstance(value, str):  # (str, int, float)):
         if isinstance(value, (str, int, float, bool)):
             logger.info("Embed %s value into list: [%s]", type(value), value)
-            return [value]
-
-        # if isinstance(value, str):
-        #     raise InvalidCastConfiguration(f"Error casting invalid type string '{value}' to list")
+            value = [value]
 
         if isinstance(value, Sequence):  # and not isinstance(value, str):
-            # print ("PARSE AS LIST", value)
             return self.cast(value)
         if isinstance(value, Mapping):
             assert False, f"TOFIX: Unsupported type dict, {value}"
 
-        # if not value:
-        #     # Generic fallback
-        #     # print ("PARSE AS EMPTY", value)
-        #     return self.cast([])
-
         raise InvalidCastConfiguration(f"Error casting value '{value}' to list")
-
-        # assert False, f"TOFIX: Unsupported type {type(value)}"
 
     def _parse_string(self, string):
         elements = []
