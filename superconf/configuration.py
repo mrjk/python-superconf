@@ -408,7 +408,7 @@ class _ContainerInstance(Leaf):
         super().__node_init__(**kwargs)
 
         # Configure instance
-        self.__node_children__ = NOT_SET
+        self.__node_children__ = {}
 
         # Fetch node_children_class settings
         _report = []
@@ -449,7 +449,7 @@ class _ContainerInstance(Leaf):
 
         raise SyntaxError("Invalid number of arguments")
 
-    def __node__set_children__(self, value):
+    def __node__set_children__(self, value, mode="undefined"):
         "Set children"
         raise NotImplementedError("Subclass must implement this method")
 
@@ -465,8 +465,10 @@ class ConfigurationDict(_ContainerInstance):
         children_class=Leaf,
     )
 
-    def __node__set_children__(self, value):
+    def __node__set_children__(self, value, mode="update"):
         "Set children from dict"
+
+        assert mode in ["define", "update"]
 
         # Skip if no children requested
         children_class = self.__node_children_class__
@@ -497,13 +499,19 @@ class ConfigurationDict(_ContainerInstance):
             child = children_class(parent=self, key=key, value=val)
             children[key] = child
 
-        self.__node_children__ = children
+        if mode == "define":
+            self.__node_children__ = children
+        elif mode == "update":
+            self.__node_children__.update(children)
+        else:
+            assert False, f"Invalid mode {mode}"
 
     def get_children(self):
         "Get children"
-        if isinstance(self.__node_children__, dict):
-            return self.__node_children__
-        return {}
+        return self.__node_children__
+        # if isinstance(self.__node_children__, dict):
+        #     return self.__node_children__
+        # return {}
 
     def get_child(self, key, noexceptions=False):
         "Get child"
@@ -952,8 +960,10 @@ class ConfigurationList(ConfigurationDict):
 
         return default
 
-    def __node__set_children__(self, value):
+    def __node__set_children__(self, value, mode="define"):
         "Set children from list"
+
+        assert mode in ["define", "append", "replace"]
 
         # Skip if no children requested
         children_class = self.__node_children_class__
@@ -973,17 +983,26 @@ class ConfigurationList(ConfigurationDict):
 
         # Instanciate children
         children = {}
+        offset = 0
+        if mode == "append":
+            offset = len(self.__node_children__)
         for index, val in enumerate(value):
+            real_index = index + offset
             logger.info(
                 "Instanciate ConfigurationList child %s: %s(%s)",
-                index,
+                real_index,
                 children_class.__name__,
                 truncate(val),
             )
-            child = children_class(parent=self, key=index, value=val)
-            children[index] = child
+            child = children_class(parent=self, key=real_index, value=val)
+            children[real_index] = child
 
-        self.__node_children__ = children
+        if mode == "define":
+            self.__node_children__ = children
+        elif mode in ["append", "replace"]:
+            self.__node_children__.update(children)
+        else:
+            assert False, f"Invalid mode {mode}"
 
 
 # Temporary Compat layer
