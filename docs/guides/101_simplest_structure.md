@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.7
+      jupytext_version: 1.19.4
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -363,7 +363,3 @@ Here are some exercises to practice what you've learned:
 3. Create another instance with custom values and print all fields.
 4. Try accessing a non-existent field and see what error you get.
 5. Iterate over all fields and print their values and help text.
-
-```python
-
-```
