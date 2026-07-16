@@ -423,8 +423,9 @@ class _ContainerInstance(Leaf):
         )
         self.__node_children_class__ = _children_class
 
+
     def set_default(self, *args):
-        "Set default"
+        "Set default, accept one argument value"
         if len(args) == 1:
             value = args[0]
             value = super().set_default(value)
@@ -434,7 +435,17 @@ class _ContainerInstance(Leaf):
         assert False
 
     def set_value(self, *args):
-        "Set value"
+        """Set value to object or to sub key.
+
+        Usage:
+          set_value(VALUE)
+          set_value(KEY, VALUE)
+        Args:
+          key: The configuration key identifier
+          value: The configuration value
+        Returns:
+          new_value: The new value
+        """
 
         if len(args) == 1:
             value = args[0]
@@ -507,14 +518,14 @@ class ConfigurationDict(_ContainerInstance):
             assert False, f"Invalid mode {mode}"
 
     def get_children(self):
-        "Get children"
+        "Get children as key/value dict"
         return self.__node_children__
         # if isinstance(self.__node_children__, dict):
         #     return self.__node_children__
         # return {}
 
     def get_child(self, key, noexceptions=False):
-        "Get child"
+        "Get child from key name"
         ret = None
         if self.__node_children__ is not NOT_SET:
             ret = self.__node_children__.get(key, None)
@@ -528,7 +539,7 @@ class ConfigurationDict(_ContainerInstance):
         raise exceptions.UndeclaredField(msg)
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
-        "Get value"
+        "Get value of an key. Lookup children, or fallback on default or UNSET"
 
         if key is not None:
             return self.get_key_value(key, default=default, nodefaults=nodefaults)
@@ -546,7 +557,7 @@ class ConfigurationDict(_ContainerInstance):
         return default
 
     def get_key_value(self, key, default=UNSET_ARG, nodefaults=False):
-        "Get value"
+        "Get parsed value for a given key (ask children first, then defaults or unset)"
 
         if self.__node_children__ is not NOT_SET:
             noexceptions = default != UNSET_ARG
@@ -561,7 +572,7 @@ class ConfigurationDict(_ContainerInstance):
         return default.get(key, UNSET_ARG)
 
     def set_key_value(self, key, value):
-        "Set key value"
+        "Set key with value"
         child = self.get_child(key)
         child.set_value(value)
 
@@ -635,15 +646,15 @@ class ConfigurationDict(_ContainerInstance):
         )
 
     def items(self):
-        "Items"
+        "Iterator to loop over children as kee/value"
         return self.get_children().items()
 
     def values(self):
-        "Values"
+        "Return the value of all children only, no defaults"
         return self.get_children().values()
 
     def keys(self):
-        "Keys"
+        "Return all children keys"
         return self.get_children().keys()
 
     def merge(self, other):
