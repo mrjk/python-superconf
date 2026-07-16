@@ -43,7 +43,8 @@ from superconf import ConfigurationObj
 from superconf.fields import (
     Field,
     FieldBool, FieldString, FieldInt, FieldFloat, 
-    FieldDict, FieldList, FieldTuple, FieldOption
+    FieldDict, FieldList, FieldTuple,
+    # FieldOption
 )
 from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST
 
