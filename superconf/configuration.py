@@ -5,9 +5,6 @@
 import inspect
 import logging
 from collections import OrderedDict
-
-# pylint: disable=unused-import
-from pprint import pprint
 from typing import Any, Dict, List, Optional, Union
 
 from superconf import exceptions
@@ -40,10 +37,11 @@ class GenericField:
     instance_class = None
 
     def __repr__(self):
-        inst_name = (
-            self.instance_class.__class__.__name__ if self.instance_class else "None"
-        )
-        return f"Field({self.__class__.__name__}/{inst_name}): {self.__dict__}"
+        key_list = ",".join(list(self.__dict__.keys()))
+        if hasattr(self, "get_keys"):
+            key_list = self.dump()
+            key_list = f"{key_list}"
+        return f"Field({self.__class__.__name__}) at {hex(id(self))}: {key_list}"
 
     def __bool__(self):
         return True
@@ -284,7 +282,7 @@ class Leaf(Node):
 
     def __repr__(self):
         "Represent the instance"
-        return f"{self.__class__.__name__}({self.__node_key__})"
+        return f"{self.__class__.__name__}({self.__node_key__}) at {hex(id(self))}"
 
     def set_default(self, value):
         "Set default value"
@@ -354,6 +352,16 @@ class Leaf(Node):
         "Post-dump value user hook"
         return value
 
+    @property
+    def __node_help__(self) -> str:
+        "Get leaf help message"
+
+        ret = self.__node_field__.query("help", NOT_SET)
+        if ret != NOT_SET:
+            return ret
+
+        return self.__doc__ or "<NO_HELP>"
+
     def merge(self, other):
         "Merge and override object with other"
 
@@ -376,15 +384,48 @@ class Leaf(Node):
         logger.info(msg)
         return self
 
-    @property
-    def __node_help__(self) -> str:
-        "Get leaf help message"
+    def copy(self):
+        "Copy the instance"
 
-        ret = self.__node_field__.query("help", NOT_SET)
-        if ret != NOT_SET:
-            return ret
+        curr = self.__dict__.copy()
+        curr_default = curr.pop("__node_default__", None)
+        curr_value = curr.pop("__node_value__", None)
+        curr_key = curr.pop("__node_key__", None)
+        curr_parent = curr.pop("__node_parent__", None)
 
-        return self.__doc__ or "<NO_HELP>"
+        # Instanciate copy
+        inst = self.__class__(
+            key=curr_key, default=curr_default, value=curr_value, parent=curr_parent
+        )
+        inst.__dict__.update(curr)
+        return inst
+
+    def deepcopy(self):
+        "Copy the instance"
+
+        # curr = self.__dict__.copy()
+        # curr_default = curr.pop("__node_default__", None)
+        # curr_value = curr.pop("__node_value__", None)
+        # curr_key = curr.pop("__node_key__", None)
+        # curr_parent = curr.pop("__node_parent__", None)
+        # # print("CURRR COPY")
+        # # pprint(curr)
+
+        # # Instanciate copy
+        # inst = self.__class__(key=curr_key, default=curr_default, value=curr_value, parent=curr_parent)
+        # inst.__dict__.update(curr)
+
+        inst = self.copy()
+
+        # Deep copy children
+        if getattr(inst, "__node_children__", None) is not None:
+            children = {}
+            for key, val in inst.__node_children__.items():
+                # print("DEEP COPY", key, val)
+                children[key] = val.deepcopy()
+            inst.__node_children__ = children
+
+        return inst
 
 
 class _ContainerInstance(Leaf):
@@ -422,7 +463,6 @@ class _ContainerInstance(Leaf):
             report=_report,
         )
         self.__node_children_class__ = _children_class
-
 
     def set_default(self, *args):
         "Set default, accept one argument value"
