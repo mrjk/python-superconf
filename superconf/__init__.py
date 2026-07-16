@@ -5,7 +5,7 @@ It allows for hierarchical configuration, type validation, and flexible loading 
 various sources.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.4"
 
 # Import casts
 from superconf.casts import (  # as_option,
