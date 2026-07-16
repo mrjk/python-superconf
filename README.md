@@ -40,131 +40,158 @@
 
 This project is in Beta.
 
-A powerful and flexible configuration management library for Python. SuperConf provides a clean, type-safe, and intuitive way to handle configuration from multiple sources including environment variables, configuration files, and dictionaries.
+SuperConf is a Python library for structured configuration: declare a model with typed fields and nested containers, then load values from dicts (and therefore from JSON/YAML you parse yourself).
 
-Inspired from [Cafram](https://github.com/barbu-it/cafram), forked from [ClassyConf](https://classyconf.readthedocs.io/en/latest/).
+Inspired by [Cafram](https://github.com/barbu-it/cafram), forked from [ClassyConf](https://classyconf.readthedocs.io/en/latest/).
 
 ## Features
 
-- 🔒 Type-safe configuration with built-in validation
-- 🔄 Multiple configuration sources (environment variables, files, dictionaries)
-- 📦 Nested configuration support
-- 🎯 Default values and custom casting
-- 🚀 Easy to use and extend
-- 🔍 Strict type checking mode
-- 📝 Comprehensive field types (Boolean, Integer, String, List, Dict, etc.)
-- 🎨 Support for custom field types
+- Type-aware fields (`FieldBool`, `FieldInt`, `FieldString`, `FieldList`, `FieldDict`, …)
+- Nested models with `FieldConf`
+- Dynamic dict/list containers (`ConfigurationDict`, `ConfigurationList`)
+- Defaults, custom casting, and `Meta` options (`extra_fields`, `default`, `children_class`, …)
+- Clear access rules: attribute / `[]` / call (`obj("key")`)
+- Path helpers (`PathAnchor`, `FileAnchor`)
 
 ## Quickstart
 
 ### Installation
 
-Install using pip:
-
 ```bash
 pip install superconf
 ```
 
-Or install from source:
+Or from source:
 
 ```bash
 git clone https://github.com/mrjk/python-superconf.git
 cd python-superconf
-pip install -e .
+poetry install
 ```
 
-### Basic Usage
-
-Here's a simple example of how to use SuperConf:
+### Basic usage
 
 ```python
-from superconf.configuration import Configuration
-from superconf.fields import FieldString, FieldInt, FieldBool, FieldList
+from superconf import ConfigurationObj, FieldBool, FieldInt, FieldString, FieldList
 
-class AppConfig(Configuration):
-
-    class Meta:
-        loaders = [Environment()]  # Load from environment variables
-    
+class AppConfig(ConfigurationObj):
     debug = FieldBool(default=False, help="Enable debug mode")
     port = FieldInt(default=8080, help="Server port")
     app_name = FieldString(default="myapp", help="Application name")
     plugins = FieldList(default=[], help="Enabled plugins")
 
-# Create and use the configuration
+# Defaults
 config = AppConfig()
-print(config.debug)  # False
-print(config.port)   # 8080
+assert config.debug is False
+assert config.port == 8080
 
-# Use environment variables to override defaults
-# export APP_PORT=9000
-# export APP_DEBUG=true
+# Override from a dict (e.g. parsed YAML/JSON)
+config = AppConfig(value={
+    "debug": "yes",
+    "port": "9000",
+    "plugins": ["auth", "cache"],
+})
+assert config.debug is True
+assert config.port == 9000
+assert config.plugins == ["auth", "cache"]
+
+# Dump as plain data
+print(config.get_value())
 ```
+
+### Nested configuration
+
+```python
+from superconf import ConfigurationObj, FieldConf, FieldInt, FieldString
+
+class ServerConfig(ConfigurationObj):
+    host = FieldString(default="localhost")
+    port = FieldInt(default=8080)
+
+class AppConfig(ConfigurationObj):
+    name = FieldString(default="myapp")
+    server = FieldConf(ServerConfig)
+
+app = AppConfig(value={"server": {"port": 9000}})
+assert app.server.host == "localhost"
+assert app.server.port == 9000
+```
+
+## Documentation
+
+| Section | Path |
+|---|---|
+| Guides (start here) | [docs/guides/](docs/guides/) |
+| How-to | [docs/howto/](docs/howto/) |
+| Implementation notes | [docs/implementation/](docs/implementation/) |
+
+Suggested reading order:
+
+1. [101 — Simplest structure](docs/guides/101_simplest_structure.md)
+2. [102 — Field types and unset values](docs/guides/102_fieldtypes_and_default_values.md)
+3. [103 — Nested structures](docs/guides/103_nested_structures.md)
+4. [104 — Dynamic dict/list fields](docs/guides/104_dynamic_fields.md)
+5. [105 — Meta and casting](docs/guides/105_meta_and_casting.md)
 
 ## Overview
 
 ### Requirements
 
-- Python 3.9 or higher
-- Dependencies:
-  - pyaml >= 24.12.1
+- Python 3.9+
+- Runtime dependencies: `pyaml`, `sentinel`
+
+### Access cheat sheet
+
+| Access | Leaf field | Container field |
+|---|---|---|
+| `obj.key` | value | container node |
+| `obj["key"]` | value | value (dict/list) |
+| `obj("key")` / `obj.get_child("key")` | node (`Leaf`) | node |
 
 ### FAQ
 
-**Q: How is SuperConf different from other configuration libraries?**  
-A: SuperConf combines the best features of existing libraries with strong type safety, nested configurations, and a clean API.
+**How do I load YAML or JSON?**  
+Parse the file yourself (`yaml.safe_load`, `json.load`, or `superconf.common.from_yaml` / `from_json`), then pass the dict as `value=`. See [Load from files](docs/howto/loading_from_files.md).
 
-**Q: Can I use multiple configuration sources?**  
-A: Yes, SuperConf supports multiple loaders that can be prioritized in order.
+**Are environment loaders built in?**  
+Not in the current API. Pass a dict you built from env vars if you need that.
 
-**Q: Is it possible to extend SuperConf with custom field types?**  
-A: Yes, you can create custom field types by extending the `Field` class.
+**Can I allow undeclared keys?**  
+Yes, set `Meta.extra_fields = True` on a `ConfigurationObj`. Extra keys must be provided via `value=` / full `set_value({...})`, not by assigning a new attribute after init.
 
-### Known Issues
+### Known limitations
 
-- String parsing for dictionary fields is not implemented yet
-- Cache settings need refinement
-- Some features are marked as WIP (Work in Progress)
+- No built-in Environment / multi-loader pipeline yet
+- `FieldOption` is not available
+- Views (`superconf.views`) are experimental / lab-only
 
 ## Development
 
-### Setup Development Environment
-
-1. Clone the repository:
+### Setup
 
 ```bash
 git clone https://github.com/mrjk/python-superconf.git
 cd python-superconf
-```
-
-2. Install development dependencies:
-
-```bash
 poetry install
 ```
 
-### Development Commands
+### Commands
 
-SuperConf uses [Taskfile](https://taskfile.dev) for development tasks:
+Uses [Taskfile](https://taskfile.dev):
 
-- Run tests: `task test`
-- Run linting: `task test_lint`
-- Fix linting issues: `task fix_lint`
-- Generate documentation: `task gen_doc_class_graph`
+| Command | Purpose |
+|---|---|
+| `task test` | Lab + report + lint |
+| `task test_pytest` | Pytest suite |
+| `task test_lab` | Run lab scripts |
+| `task test_lint` | Lint checks |
+| `task fix_lint` | Auto-format with black/isort |
 
-### Running Tests
-
-```bash
-task test        # Run all tests
-task test_pytest # Run pytest suite
-task test_recap  # View test coverage report
-```
-
-## Project Information
+## Project information
 
 ### License
 
-This project is licensed under the GPLv3 License.
+GPLv3
 
 ### Author
 
@@ -172,21 +199,11 @@ This project is licensed under the GPLv3 License.
 
 ### Support
 
-For support, please:
-1. Check the [documentation](https://github.com/mrjk/python-superconf/docs)
+1. Read the [docs](docs/)
 2. Open an issue on [GitHub](https://github.com/mrjk/python-superconf/issues)
 
-### Related Projects
+### Related projects
 
 - [ClassyConf](https://classyconf.readthedocs.io/en/latest/)
 - [python-decouple](https://github.com/henriquebastos/python-decouple)
 - [dynaconf](https://www.dynaconf.com/)
-
-### Roadmap
-
-- [ ] Implement string parsing for dictionary fields
-- [ ] Improve caching mechanism
-- [ ] Add more configuration sources
-- [ ] Create comprehensive documentation site
-- [ ] Add more examples and use cases
-- [ ] Implement configuration validation hooks
