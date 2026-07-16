@@ -1,11 +1,12 @@
 "Main configuratio  class"
 
+# pylint: disable=too-many-lines
 
 # import copy
 import inspect
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from superconf import exceptions
 from superconf.casts import (
@@ -21,7 +22,7 @@ from superconf.common import (
     truncate,
     unique,
 )
-from superconf.nodes import BaseNode, Node
+from superconf.nodes import Node
 
 logger = logging.getLogger(__name__)
 
@@ -412,20 +413,12 @@ class Leaf(Node):
         # # pprint(curr)
 
         # # Instanciate copy
-        # inst = self.__class__(key=curr_key, default=curr_default, value=curr_value, parent=curr_parent)
+        # inst = self.__class__(
+        #     key=curr_key, default=curr_default, value=curr_value, parent=curr_parent
+        # )
         # inst.__dict__.update(curr)
 
-        inst = self.copy()
-
-        # Deep copy children
-        if getattr(inst, "__node_children__", None) is not None:
-            children = {}
-            for key, val in inst.__node_children__.items():
-                # print("DEEP COPY", key, val)
-                children[key] = val.deepcopy()
-            inst.__node_children__ = children
-
-        return inst
+        return self.copy()
 
 
 class _ContainerInstance(Leaf):
@@ -463,6 +456,19 @@ class _ContainerInstance(Leaf):
             report=_report,
         )
         self.__node_children_class__ = _children_class
+
+    def deepcopy(self):
+        "Deep copy the container and its children"
+
+        inst = super().deepcopy()
+
+        if self.__node_children__ is not None:
+            children = {}
+            for key, val in self.__node_children__.items():
+                children[key] = val.deepcopy()
+            inst.__node_children__ = children
+
+        return inst
 
     def set_default(self, *args):
         "Set default, accept one argument value"
@@ -909,8 +915,10 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 
         return field
 
-    def __node__set_children__(self, value):
+    def __node__set_children__(self, value, mode="define"):
         "Set children"
+
+        assert mode in ["define", "update"]
 
         logger.info(
             "Set children for ConfigurationObj %s: %s",
