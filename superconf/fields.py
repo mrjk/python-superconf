@@ -38,6 +38,21 @@ class FieldContainer(PublicField):
 
     instance_class = Leaf
 
+
+    def get_keys(self):
+        "Get keys"
+        out = list(self.__field_default__.keys())
+        out.extend(list(self.__field_override__.keys()))
+        return out
+
+    def dump(self):
+        "Dump the field"
+        out = {}
+        out.update(self.__field_default__)
+        out.update(self.__field_override__)
+        return out
+
+
     def __init__(
         self,
         instance_class,
