@@ -20,9 +20,22 @@ from superconf.casts import (  # as_option,
 # Import common utilities and constants
 from superconf.common import (
     FAIL,
+    MERGE_APPEND,
+    MERGE_DICT_DEFAULT,
+    MERGE_KEEP,
+    MERGE_LIST_DEFAULT,
+    MERGE_OTHER_DEFAULT,
+    MERGE_OVERRIDE,
+    MERGE_OVERRIDE_ABSENT,
+    MERGE_OVERRIDE_NON_NULL,
+    MERGE_OVERRIDE_PRESENT,
+    MERGE_PREPEND,
+    MERGE_REPLACE,
     NOT_SET,
     NOT_SET_DICT,
     NOT_SET_LIST,
+    MergeKind,
+    MergeStrategy,
 )
 
 # Import key classes from configuration module

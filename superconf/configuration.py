@@ -15,13 +15,23 @@ from superconf.casts import (
     as_list,
 )
 from superconf.common import (
+    MERGE_DICT_DEFAULT,
+    MERGE_LIST_DEFAULT,
+    MERGE_OTHER_DEFAULT,
     NOT_SET,
     NOT_SET_DICT,
     NOT_SET_LIST,
     UNSET_ARG,
+    infer_merge_kind,
+    is_merge_value_set,
+    merge_data,
+    merge_maps,
+    normalize_merge_strategy,
+    prefer_other_scalar,
     truncate,
     unique,
 )
+from superconf.merge import MergeKind
 from superconf.nodes import Node
 
 logger = logging.getLogger(__name__)
@@ -111,6 +121,7 @@ class LeafBaseConfig(GenericField):
         instance_class=NOT_SET,
         attr=NOT_SET,
         key=NOT_SET,
+        merge=MERGE_OTHER_DEFAULT,
     ):
 
         self.key = key
@@ -119,6 +130,7 @@ class LeafBaseConfig(GenericField):
         self.cast = cast
         self.instance_class = instance_class
         self.attr = attr
+        self.merge = merge
 
 
 # LeafContainerConfig
@@ -128,11 +140,12 @@ class LeafContainerConfig(LeafBaseConfig):
     def __init__(
         self,
         children_class=NOT_SET,
+        merge=MERGE_DICT_DEFAULT,
         **kwargs,
     ):
 
         self.children_class = children_class
-        super().__init__(**kwargs)
+        super().__init__(merge=merge, **kwargs)
 
 
 # LeafObjConfig
@@ -281,6 +294,17 @@ class Leaf(Node):
         )
         self.__node_cast__ = _cast
 
+        # Fetch merge policy (Field override > Meta > config default)
+        _merge = self.__node_get_self_config__(
+            "merge",
+            default=self.__node_config__.query("merge"),
+            overrides=[
+                self.__node_field__.query("merge"),
+            ],
+            report=_report,
+        )
+        self.__node_merge__ = normalize_merge_strategy(_merge)
+
     def __repr__(self):
         "Represent the instance"
         return f"{self.__class__.__name__}({self.__node_key__}) at {hex(id(self))}"
@@ -364,25 +388,46 @@ class Leaf(Node):
         return self.__doc__ or "<NO_HELP>"
 
     def merge(self, other):
-        "Merge and override object with other"
+        "Merge and override object with other according to merge policy"
 
         if not isinstance(other, Leaf):
             raise ValueError("Cannot merge non-Leaf")
 
+        strategy = getattr(self, "__node_merge__", MERGE_OTHER_DEFAULT)
+        self_val = self.get_value(nodefaults=True)
         other_val = other.get_value(nodefaults=True)
-        if not isinstance(other_val, NOT_SET.type):
-            msg = (
-                f"Override Leaf {self.__class__.__name__}({self.__node_fname__}) "
-                f"with {other.__class__.__name__}({other.__node_fname__})"
-            )
-            logger.info(msg)
-            return other
-
-        msg = (
-            f"Keep Leaf {self.__class__.__name__}({self.__node_fname__}) "
-            f"over {other.__class__.__name__}({other.__node_fname__})"
+        kind = infer_merge_kind(
+            strategy,
+            self_val if is_merge_value_set(self_val) else None,
+            other_val if is_merge_value_set(other_val) else None,
         )
-        logger.info(msg)
+
+        logger.info(
+            "Merge Leaf %s(%s) with %s(%s) strategy=%s kind=%s",
+            self.__class__.__name__,
+            self.__node_fname__,
+            other.__class__.__name__,
+            other.__node_fname__,
+            strategy,
+            kind,
+        )
+
+        if kind in (MergeKind.LIST, MergeKind.DICT):
+            empty = [] if kind == MergeKind.LIST else {}
+            base = self_val if is_merge_value_set(self_val) else empty
+            right = other_val if is_merge_value_set(other_val) else empty
+            expected = list if kind == MergeKind.LIST else dict
+            if not isinstance(base, expected) or not isinstance(right, expected):
+                raise ValueError(
+                    f"{kind.value} merge on {self.__node_fname__} requires "
+                    f"{expected.__name__} values, got: {type(base)} and {type(right)}"
+                )
+            inst = self.copy()
+            inst.set_value(merge_data(base, right, strategy, kind))
+            return inst
+
+        if prefer_other_scalar(self_val, other_val, strategy):
+            return other
         return self
 
     def copy(self):
@@ -704,53 +749,29 @@ class ConfigurationDict(_ContainerInstance):
         return self.get_children().keys()
 
     def merge(self, other):
-        "Merge and override object with other"
-
-        msg = (
-            f"Merge Container {self.__class__.__name__}({self.__node_fname__}) "
-            f"with {other.__class__.__name__}({other.__node_fname__})"
-        )
-        logger.info(msg)
+        "Merge container with other according to dict merge policy"
 
         if not isinstance(other, Leaf):
             raise ValueError("Cannot merge non-Leaf")
 
-        keys = list(self.get_children().keys())
-        keys.extend(list(other.get_children().keys()))
-        keys = unique(keys)
+        strategy = getattr(self, "__node_merge__", MERGE_DICT_DEFAULT)
+        logger.info(
+            "Merge Container %s(%s) with %s(%s) strategy=%s",
+            self.__class__.__name__,
+            self.__node_fname__,
+            other.__class__.__name__,
+            other.__node_fname__,
+            strategy,
+        )
 
-        new_instance = type(self)(key=self.__node_key__)
-
-        out = {}
-        for key in keys:
-
-            base_child = self.__node_children__.get(key, UNSET_ARG)
-            other_child = other.__node_children__.get(key, UNSET_ARG)
-
-            if base_child is not UNSET_ARG and other_child is not UNSET_ARG:
-                msg = (
-                    f"Merge child {key} {base_child.__node_fname__} "
-                    f"and {other_child.__node_fname__}"
-                )
-                logger.info(msg)
-                tmp = base_child.merge(other_child)
-                out[key] = tmp
-
-            elif base_child is UNSET_ARG and other_child is not UNSET_ARG:
-                logger.info("Add child %s %s", key, other_child.__node_fname__)
-                out[key] = other_child
-            elif base_child is not UNSET_ARG and other_child is UNSET_ARG:
-                logger.info("Keep child %s %s", key, base_child.__node_fname__)
-                out[key] = base_child
-            else:
-                assert False, f"Unexpected case: {key} {base_child} and {other_child}"
-
-        for key, child in out.items():
-            child.__node_parent__ = new_instance
-
-        out = {key: child.get_value() for key, child in out.items()}
-        new_instance = type(self)(value=out, key=self.__node_key__)
-        return new_instance
+        merged_children = merge_maps(
+            self.get_children(),
+            other.get_children(),
+            strategy,
+            merge_both=lambda left, right: left.merge(right),
+        )
+        out = {key: child.get_value() for key, child in merged_children.items()}
+        return type(self)(value=out, key=self.__node_key__)
 
 
 class DeclarativeValuesMetaclass(type):
@@ -1000,7 +1021,33 @@ class ConfigurationList(ConfigurationDict):
         help=None,
         # children_class=None,
         children_class=Leaf,
+        merge=MERGE_LIST_DEFAULT,
     )
+
+    def merge(self, other):
+        "Merge list container with other according to list merge policy"
+
+        if not isinstance(other, Leaf):
+            raise ValueError("Cannot merge non-Leaf")
+
+        strategy = getattr(self, "__node_merge__", MERGE_LIST_DEFAULT)
+        logger.info(
+            "Merge List %s(%s) with %s(%s) strategy=%s",
+            self.__class__.__name__,
+            self.__node_fname__,
+            other.__class__.__name__,
+            other.__node_fname__,
+            strategy,
+        )
+
+        self_val = self.get_value()
+        other_val = other.get_value()
+        base = self_val if isinstance(self_val, list) else []
+        right = other_val if isinstance(other_val, list) else []
+        return type(self)(
+            value=merge_data(base, right, strategy, MergeKind.LIST),
+            key=self.__node_key__,
+        )
 
     def get_value(self, key=None, default=UNSET_ARG, nodefaults=False):
         "Get value"

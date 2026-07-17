@@ -7,5 +7,6 @@ Step-by-step tutorials. Read in order:
 3. [103 — Nested structures](103_nested_structures.md)
 4. [104 — Dynamic fields](104_dynamic_fields.md)
 5. [105 — Meta and casting](105_meta_and_casting.md)
+6. [106 — Merge policies](106_merge_policies.md)
 
 Parent index: [../README.md](../README.md)

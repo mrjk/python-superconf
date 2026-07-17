@@ -151,7 +151,9 @@ print(f"\nTotal resources: {resource_count}")
 Note: 
 
   * It is not possible yet to add a single resource, all resources must be created at the same time.
-  * However it is possible to merge objects of the same type between them. We will introduce this feature later.
+  * However it is possible to merge objects of the same type between them. See
+    [106_merge_policies.md](106_merge_policies.md) and
+    [merging_configurations.md](../howto/merging_configurations.md).
 
 
 ## Dynamic List Fields
@@ -268,7 +270,9 @@ print(f"Third server: {app_with_servers.servers(2).host}")
 Note: 
 
   * It is not possible yet to add a single resource, all resources must be created at the same time.
-  * However it is possible to merge objects of the same type between them. We will introduce this feature later.
+  * However it is possible to merge objects of the same type between them. See
+    [106_merge_policies.md](106_merge_policies.md) and
+    [merging_configurations.md](../howto/merging_configurations.md).
 
 
 

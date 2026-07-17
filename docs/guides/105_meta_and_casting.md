@@ -15,7 +15,7 @@ jupyter:
 
 # Behavior Customization with Meta and Casting
 
-Welcome to the fifth and final SuperConf tutorial! In this guide, we'll explore advanced customization options for configuring your SuperConf models using the `Meta` class and custom casting functionality.
+Welcome to the fifth SuperConf tutorial! In this guide, we'll explore advanced customization options for configuring your SuperConf models using the `Meta` class and custom casting functionality.
 
 As your applications grow in complexity, you'll often need to customize how your configuration classes behave. For example, you might want to:
 
@@ -38,6 +38,7 @@ Key `Meta` settings include:
 - `default`: Default values for the entire configuration 
 - `cast`: Custom casting function for the entire configuration
 - `children_class`: Default class for child nodes
+- `merge`: How this node combines with another via `merge()` (see [106_merge_policies.md](106_merge_policies.md))
 
 Let's explore each of these options in detail.
 
@@ -548,6 +549,10 @@ In this guide, we've learned:
 - How to apply these concepts in a practical web application configuration
 
 These advanced features allow you to fine-tune SuperConf's behavior to match your specific requirements, making it a powerful and flexible configuration management solution.
+
+## Next guide
+
+Merge trees with policies: [106_merge_policies.md](106_merge_policies.md).
 
 ## Try It Yourself
 

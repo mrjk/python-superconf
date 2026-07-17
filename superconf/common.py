@@ -140,3 +140,33 @@ def unique(seq):
     seen = set()
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x))]
+
+
+# Re-export merge API (implementation lives in merge.py)
+from superconf.merge import (  # noqa: E402  pylint: disable=wrong-import-position
+    MERGE_APPEND,
+    MERGE_DICT_DEFAULT,
+    MERGE_DICT_STRATEGIES,
+    MERGE_KEEP,
+    MERGE_LIST_DEFAULT,
+    MERGE_LIST_STRATEGIES,
+    MERGE_OTHER_DEFAULT,
+    MERGE_OTHER_STRATEGIES,
+    MERGE_OVERRIDE,
+    MERGE_OVERRIDE_ABSENT,
+    MERGE_OVERRIDE_NON_NULL,
+    MERGE_OVERRIDE_PRESENT,
+    MERGE_PREPEND,
+    MERGE_REPLACE,
+    MergeKind,
+    MergeStrategy,
+    ensure_merge_strategy,
+    infer_merge_kind,
+    is_merge_value_set,
+    merge_data,
+    merge_dict_data,
+    merge_list_data,
+    merge_maps,
+    normalize_merge_strategy,
+    prefer_other_scalar,
+)

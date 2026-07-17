@@ -13,6 +13,7 @@ Learn the library step by step. Each guide introduces a small set of concepts.
 | [103_nested_structures.md](guides/103_nested_structures.md) | `FieldConf`, leaf vs container, dunders |
 | [104_dynamic_fields.md](guides/104_dynamic_fields.md) | `ConfigurationDict` / `ConfigurationList`, short form |
 | [105_meta_and_casting.md](guides/105_meta_and_casting.md) | `Meta`, casting, `children_class` |
+| [106_merge_policies.md](guides/106_merge_policies.md) | `merge()`, `Meta.merge`, per-field policies |
 
 ## How-to
 
@@ -23,6 +24,7 @@ Practical recipes for common tasks.
 | Load YAML / JSON | [howto/loading_from_files.md](howto/loading_from_files.md) |
 | Short `FieldConf` syntax | [howto/short_syntax.md](howto/short_syntax.md) |
 | Path anchors | [howto/path_anchors.md](howto/path_anchors.md) |
+| Merge configurations | [howto/merging_configurations.md](howto/merging_configurations.md) |
 
 ## Implementation
 

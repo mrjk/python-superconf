@@ -19,7 +19,7 @@ from superconf.casts import (  # as_string,; as_is,; as_option,
     as_list,
     as_tuple,
 )
-from superconf.common import NOT_SET
+from superconf.common import MERGE_DICT_DEFAULT, MERGE_LIST_DEFAULT, NOT_SET
 from superconf.configuration import (
     Leaf,
     PublicField,
@@ -211,9 +211,11 @@ class FieldDict(FieldLeaf):
 
     Attributes:
         cast: Set to AsDict() for automatic type conversion.
+        merge: Default dict merge strategy (``override``).
     """
 
     cast = as_dict
+    merge = MERGE_DICT_DEFAULT
 
 
 class FieldList(FieldLeaf):
@@ -226,9 +228,11 @@ class FieldList(FieldLeaf):
 
     Attributes:
         cast: Set to AsList() for automatic type conversion.
+        merge: Default list merge strategy (``append``).
     """
 
     cast = as_list
+    merge = MERGE_LIST_DEFAULT
 
 
 class FieldTuple(FieldLeaf):
