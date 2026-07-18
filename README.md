@@ -154,16 +154,16 @@ Suggested reading order:
 Parse the file yourself (`yaml.safe_load`, `json.load`, or `superconf.common.from_yaml` / `from_json`), then pass the dict as `value=`. See [Load from files](docs/howto/loading_from_files.md).
 
 **Are environment loaders built in?**  
-Not in the current API. Pass a dict you built from env vars if you need that.
+Use ``EnvSource`` + ``View`` (see ``superconf.sources`` / ``superconf.views``).
+Default precedence names: ``cli → env → file → defaults`` (``TWELVE_FACTOR_ORDER``).
 
 **Can I allow undeclared keys?**  
 Yes, set `Meta.extra_fields = True` on a `ConfigurationObj`. Extra keys must be provided via `value=` / full `set_value({...})`, not by assigning a new attribute after init.
 
 ### Known limitations
 
-- No built-in Environment / multi-loader pipeline yet
 - `FieldOption` is not available
-- Views (`superconf.views`) are experimental / lab-only
+- TOML dump needs optional ``tomli-w``; TOML load needs Python 3.11+ or ``tomli``
 
 ## Development
 
