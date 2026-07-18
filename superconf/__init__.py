@@ -85,3 +85,14 @@ from superconf.lib.anchors import (
     FileAnchor,
     PathAnchor,
 )
+
+# Multi-source views / converters (optional API)
+from superconf.sources import (
+    ConfigSource,
+    DictSource,
+    EnvSource,
+    JsonSource,
+    TomlSource,
+    YamlSource,
+)
+from superconf.views import TWELVE_FACTOR_ORDER, View
