@@ -175,9 +175,6 @@ class ConfigurationDict(_ContainerInstance):
     def get_children(self):
         "Get children as key/value dict"
         return self.__node_children__
-        # if isinstance(self.__node_children__, dict):
-        #     return self.__node_children__
-        # return {}
 
     def get_child(self, key, noexceptions=False):
         "Get child from key name"
@@ -357,11 +354,6 @@ class DeclarativeValuesMetaclass(type):
             if isinstance(value, PublicField):
                 values_local.update({attr: value})
 
-            # Unused ...
-            # elif inspect.isclass(value):
-            #     if issubclass(value, Leaf):
-            #         values.update({attr: value})
-
         all_values = {**values, **values_local}
         attrs["__node_fields__"] = all_values
 
@@ -369,10 +361,6 @@ class DeclarativeValuesMetaclass(type):
         for key in list(all_values.keys()):
             if key in attrs:
                 del attrs[key]
-
-        # # Clean Meta class
-        # if "Meta" in attrs:
-        #     attrs["__meta__"] = attrs.pop("Meta")
 
         return super(DeclarativeValuesMetaclass, mcs).__new__(
             mcs, class_name, bases, attrs
@@ -382,9 +370,6 @@ class DeclarativeValuesMetaclass(type):
     def __prepare__(mcs, *_):
         # Remember the order that values are defined.
         return OrderedDict()
-
-
-###################
 
 
 class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
@@ -444,7 +429,9 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                 field.attr = attr
                 _children_classes.append(field)
             else:
-                assert False, "BUG NOT SUPPORTED ANYMORE"
+                raise TypeError(
+                    f"Expected a GenericField for {attr}, got {type(field).__name__}"
+                )
 
         self.__node_children_classes__ = _children_classes
 
@@ -486,7 +473,6 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
                     logger.warning(msg)
                 elif extra_fields is False:
                     raise exceptions.UndeclaredField(msg)
-            # field = BaseFieldLeaf(key=key, attr=attr, instance_class=_children_class)
             child_field_cls = _children_class.__node_config__.__class__
             field = child_field_cls(key=key, attr=attr, instance_class=_children_class)
 
@@ -576,14 +562,11 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
 class ConfigurationList(ConfigurationDict):
     "List container configuration"
 
-    # meta__cast = as_list
-
     # For list
     __node_config__ = LeafContainerConfig(
         cast=as_list,
         default=NOT_SET_LIST,
         help=None,
-        # children_class=None,
         children_class=Leaf,
         merge=MERGE_LIST_DEFAULT,
     )

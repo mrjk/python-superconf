@@ -1,6 +1,5 @@
 """Leaf configuration models."""
 
-# import copy
 import logging
 from typing import Any, Optional, Union
 
@@ -51,40 +50,9 @@ class GenericField:
     def query(self, name, default=NOT_SET):
         "Get a configuration value"
         return getattr(self, name, default)
-        # return self.__dict__.get(key, default)
 
     def __json_dump__(self):
         return self.__dict__
-
-    # def update(self, cfg, skip_unset=True):
-    #     "Update the configuration"
-    #     assert isinstance(cfg, dict)
-    #     for key, val in cfg.items():
-
-    #         if not hasattr(self, key):
-    #             msg = f"Invalid field key '{key}' for {self.__class__.__name__}"
-    #             raise exceptions.InvalidField(msg)
-
-    #         if skip_unset and val is UNSET_ARG:
-    #             continue
-
-    #         setattr(self, key, val)
-
-    # def inherit(self, cls=None, override=None, **kwargs):
-    #     "Inherit the configuration"
-
-    #     cls = cls if cls is not None else self.__class__
-    #     override = override or {}
-
-    #     child_kwargs = {}
-    #     child_kwargs.update(self.dump())
-    #     child_kwargs.update(override)
-    #     child_kwargs.update(kwargs)
-    #     return cls(**child_kwargs)
-
-    # def copy(self):
-    #     "Copy the configuration and return a new instance of object"
-    #     return self.__class__(**self.dump())
 
 
 class PublicField(GenericField):
@@ -242,7 +210,6 @@ class Leaf(Node):
         _report = []
         _default = self.__node_get_self_config__(
             "default",
-            # override=override,
             default=self.__node_config__.default,
             overrides=[
                 default,
@@ -435,19 +402,4 @@ class Leaf(Node):
 
     def deepcopy(self):
         "Copy the instance"
-
-        # curr = self.__dict__.copy()
-        # curr_default = curr.pop("__node_default__", None)
-        # curr_value = curr.pop("__node_value__", None)
-        # curr_key = curr.pop("__node_key__", None)
-        # curr_parent = curr.pop("__node_parent__", None)
-        # # print("CURRR COPY")
-        # # pprint(curr)
-
-        # # Instanciate copy
-        # inst = self.__class__(
-        #     key=curr_key, default=curr_default, value=curr_value, parent=curr_parent
-        # )
-        # inst.__dict__.update(curr)
-
         return self.copy()

@@ -103,7 +103,6 @@ class PathAnchor:
         self.mode = mode
         self.clean = clean
         self.name = name
-        # assert name
 
     def __repr__(self) -> str:
         """Return a string representation of the PathAnchor object.
@@ -371,17 +370,7 @@ class FileAnchor(PathAnchor):
             str: The complete file path (directory + filename)
         """
         dir_path = self.get_dir(**kwargs)
-        # file_name = self.get_file()
         file_name = self.filename
         if not dir_path or dir_path == ".":
             return file_name
         return os.path.join(dir_path, file_name)
-
-    # Actually, this is useless, since we have the filename attribute.
-    # def get_file(self) -> str:
-    #     """Get the filename component of the path.
-
-    #     Returns:
-    #         str: The filename without directory path
-    #     """
-    #     return self.filename

@@ -77,20 +77,6 @@ def to_yaml(obj):
     "Transform obj to YAML"
     return yaml.dump(obj)
 
-    # # Ruamel support
-    # options = {}
-    # string_stream = StringIO()
-
-    # if isinstance(obj, str):
-    #     obj = json.loads(obj)
-
-    # yaml.dump(obj, string_stream, **options)
-    # output_str = string_stream.getvalue()
-    # string_stream.close()
-    # if not headers:
-    #     output_str = output_str.split("\n", 2)[2]
-    # return output_str
-
 
 def read_file(file):
     "Read file content"

@@ -9,9 +9,6 @@ from collections.abc import Mapping, Sequence
 from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST
 from superconf.exceptions import InvalidCastConfiguration
 
-# from pprint import pprint
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -103,8 +100,6 @@ class AsInt(AbstractCast):
         try:
             return int(value)
         except (ValueError, TypeError) as err:
-            # TOFIX: Raise or report unset ?
-            # return NOT_SET
             raise InvalidCastConfiguration(
                 f"Error casting value {value} to int"
             ) from err
@@ -156,7 +151,9 @@ class AsList(AbstractCast):
         if isinstance(value, Sequence):  # and not isinstance(value, str):
             return self.cast(value)
         if isinstance(value, Mapping):
-            assert False, f"TOFIX: Unsupported type dict, {value}"
+            raise InvalidCastConfiguration(
+                f"Cannot cast mapping value '{value}' to list"
+            )
 
         raise InvalidCastConfiguration(f"Error casting value '{value}' to list")
 
@@ -246,32 +243,16 @@ class AsDict(AbstractCast):
         if value is None:
             return NOT_SET_DICT
 
-        # if not value:
-        #     # print ("PARSE AS EMPTY", value)
-        #     return self.cast({})
-
-        # Not a good idea, let the user implement this itself
-        # if isinstance(value, str):
         if isinstance(value, (str, int, float, bool)):
-
-            #     logger.info("Embed %s value into list: [%s]", type(value), value)
-            #     return [value]
             raise InvalidCastConfiguration(
                 f"Error casting invalid type string '{value}' to dict"
             )
 
-        #     assert False, "String  parsing is not implemeted yet"
-        # print ("PARSE AS STRING", value)
-        # return self._parse_string(value)
-
         if isinstance(value, Mapping):
-            # print ("PARSE AS LIST", value)
             return self.cast(value)
 
         if isinstance(value, Sequence):
             # Support for dict defined as list of single key/value
-            # print("DEBUG SEQUENCE", type(value), value)
-
             out = {}
             for val in value:
                 if isinstance(val, str):
@@ -284,12 +265,9 @@ class AsDict(AbstractCast):
                     key = list(val.keys())[0]
                     out[key] = val[key]
                 else:
-                    assert False, "BUG"
-                    out[val] = val
-
-            # pprint(out)
-            # pprint(self.cast(out))
-            # assert False, f"TOFIX: Unsupported type list, {type(value)}: {value}"
+                    raise InvalidCastConfiguration(
+                        f"Cannot cast sequence item '{val}' to a dictionary entry"
+                    )
 
             return self.cast(out)
 

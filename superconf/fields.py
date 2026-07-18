@@ -1,18 +1,12 @@
 "Fields management"
 
 # pylint: disable=protected-access
-
-# TOFIX:
 # pylint: disable=invalid-name
 
-
-# from pprint import pprint
 import logging
 
 from superconf import exceptions
-
-# from superconf import exceptions
-from superconf.casts import (  # as_string,; as_is,; as_option,
+from superconf.casts import (
     as_boolean,
     as_dict,
     as_int,
@@ -34,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class FieldContainer(PublicField):
-    "Represent a configuration class WIP/BROKEN"
+    "Represent a configuration container field."
 
     instance_class = Leaf
 
