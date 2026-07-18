@@ -246,15 +246,17 @@ def merge_data(
         base_dict = dict(base) if base is not None else {}
         other_dict = dict(other) if other is not None else {}
         if strategy == MergeStrategy.REPLACE:
-            return dict(other_dict)
-        if strategy == MergeStrategy.KEEP:
-            return dict(base_dict)
-        return merge_maps(
-            base_dict,
-            other_dict,
-            strategy,
-            merge_both=_deep_merge_dict_values,
-        )
+            merged = dict(other_dict)
+        elif strategy == MergeStrategy.KEEP:
+            merged = dict(base_dict)
+        else:
+            merged = merge_maps(
+                base_dict,
+                other_dict,
+                strategy,
+                merge_both=_deep_merge_dict_values,
+            )
+        return merged
 
     raise ValueError(f"merge_data does not support kind {kind!r}")
 

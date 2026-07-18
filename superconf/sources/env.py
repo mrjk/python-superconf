@@ -21,8 +21,7 @@ class EnvSource(BaseSource):
         help: Optional description.
     """
 
-    # pylint: disable=redefined-builtin
-    def __init__(
+    def __init__(  # pylint: disable=redefined-builtin,too-many-arguments
         self,
         name: str,
         prefix: str,

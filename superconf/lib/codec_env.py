@@ -159,7 +159,7 @@ def _compact_lists(node: Any) -> Any:
     return node
 
 
-def _apply_env_path(
+def _apply_env_path(  # pylint: disable=too-many-arguments
     root: dict[str, Any],
     segments: list[str],
     value: str,

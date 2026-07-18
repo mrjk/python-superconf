@@ -316,12 +316,15 @@ class ConfigurationDict(_ContainerInstance):
             raise ValueError("Cannot merge non-Leaf")
 
         strategy = getattr(self, "__node_merge__", MERGE_DICT_DEFAULT)
-        logger.info(
-            "Merge Container %s(%s) with %s(%s) strategy=%s",
+        node_names = (
             self.__class__.__name__,
             self.__node_fname__,
             other.__class__.__name__,
             other.__node_fname__,
+        )
+        logger.info(
+            "Merge Container %s(%s) with %s(%s) strategy=%s",
+            *node_names,
             strategy,
         )
 
@@ -578,12 +581,13 @@ class ConfigurationList(ConfigurationDict):
             raise ValueError("Cannot merge non-Leaf")
 
         strategy = getattr(self, "__node_merge__", MERGE_LIST_DEFAULT)
+        node_names = (
+            f"{self.__class__.__name__}({self.__node_fname__})",
+            f"{other.__class__.__name__}({other.__node_fname__})",
+        )
         logger.info(
-            "Merge List %s(%s) with %s(%s) strategy=%s",
-            self.__class__.__name__,
-            self.__node_fname__,
-            other.__class__.__name__,
-            other.__node_fname__,
+            "Merge List %s with %s strategy=%s",
+            *node_names,
             strategy,
         )
 

@@ -34,7 +34,6 @@ from superconf.common import NOT_SET, UNSET_ARG
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-few-public-methods
 class BaseNode:
     """Base class for configuration objects providing core configuration query functionality.
 
@@ -81,6 +80,10 @@ class BaseNode:
     def __bool__(self) -> bool:
         "Always return True"
         return True
+
+    def get_value(self) -> Any:
+        """Return the node's stored value."""
+        return self.__node_value__
 
     @property
     def __node_name__(self) -> str:
