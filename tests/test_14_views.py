@@ -10,14 +10,15 @@ from superconf.views import (
     ViewOrderError,
 )
 
-
 pytestmark = pytest.mark.unit
 
 
 def test_view_first_wins_and_materialize():
     """Higher-priority sources win; nested dicts merge deeply."""
     view = View(order=TWELVE_FACTOR_ORDER)
-    view.add(DictSource("defaults", {"name": "base", "db": {"host": "local", "port": 1}}))
+    view.add(
+        DictSource("defaults", {"name": "base", "db": {"host": "local", "port": 1}})
+    )
     view.add(DictSource("file", {"db": {"port": 2}, "tags": ["a"]}))
     view.add(EnvSource("env", prefix="APP", environ={"APP__DB__HOST": "remote"}))
     view.add(DictSource("cli", {"tags": ["cli"]}))

@@ -29,7 +29,6 @@ from superconf.merge import (
     prefer_other_scalar,
 )
 
-
 # ---------------------------------------------------------------------------
 # merge_data / helpers (unit)
 # ---------------------------------------------------------------------------
@@ -361,6 +360,6 @@ def test_enum_and_string_merge_meta_are_equivalent():
 
     assert left_enum.__node_merge__ is MergeStrategy.REPLACE
     assert left_str.__node_merge__ is MergeStrategy.REPLACE
-    assert left_enum.merge(right_enum).get_value() == left_str.merge(
-        right_str
-    ).get_value()
+    assert (
+        left_enum.merge(right_enum).get_value() == left_str.merge(right_str).get_value()
+    )

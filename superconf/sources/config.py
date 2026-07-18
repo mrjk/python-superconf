@@ -5,7 +5,12 @@ from __future__ import annotations
 from typing import Any, Mapping, Optional
 
 from superconf.common import NOT_SET
-from superconf.sources.base import BaseSource, DataDict, SourceDumpError, SourceLoadError
+from superconf.sources.base import (
+    BaseSource,
+    DataDict,
+    SourceDumpError,
+    SourceLoadError,
+)
 
 
 def _strip_unset(node: Any) -> Any:

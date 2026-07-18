@@ -18,7 +18,6 @@ from superconf.common import (
     truncate,
     unique,
 )
-from superconf.merge import MergeKind
 from superconf.leaf import (
     GenericField,
     Leaf,
@@ -26,6 +25,7 @@ from superconf.leaf import (
     LeafObjConfig,
     PublicField,
 )
+from superconf.merge import MergeKind
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,6 @@ from superconf.lib.codec_env import (
     to_dotenv,
 )
 
-
 pytestmark = pytest.mark.unit
 
 

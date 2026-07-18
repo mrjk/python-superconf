@@ -14,7 +14,6 @@ from superconf.sources import (
     YamlSource,
 )
 
-
 pytestmark = pytest.mark.unit
 
 

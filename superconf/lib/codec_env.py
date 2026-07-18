@@ -367,7 +367,7 @@ def _dotenv_quote(value: str) -> str:
     """
     if value == "":
         return '""'
-    needs_quote = any(char in value for char in ' \t\n\r#"\'\\')
+    needs_quote = any(char in value for char in " \t\n\r#\"'\\")
     if not needs_quote:
         return value
     escaped = (

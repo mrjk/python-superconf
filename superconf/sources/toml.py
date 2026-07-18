@@ -6,7 +6,12 @@ from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
 from superconf.common import read_file
-from superconf.sources.base import BaseSource, DataDict, SourceDumpError, SourceLoadError
+from superconf.sources.base import (
+    BaseSource,
+    DataDict,
+    SourceDumpError,
+    SourceLoadError,
+)
 
 
 def _load_toml_module() -> Any:
@@ -99,9 +104,7 @@ class TomlSource(BaseSource):
         try:
             import tomli_w  # pylint: disable=import-outside-toplevel
         except ModuleNotFoundError as err:
-            raise SourceDumpError(
-                "TOML dump requires the 'tomli-w' package"
-            ) from err
+            raise SourceDumpError("TOML dump requires the 'tomli-w' package") from err
         return tomli_w.dumps(dict(data))
 
     def _read_raw(self) -> str:

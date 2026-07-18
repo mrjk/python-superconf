@@ -12,7 +12,6 @@ from typing import Any, List, Mapping, Optional, Sequence
 from superconf.common import NOT_SET, UNSET_ARG
 from superconf.sources.base import BaseSource, DataDict
 
-
 # Highest priority first (12-factor friendly default names).
 TWELVE_FACTOR_ORDER: List[str] = ["cli", "env", "file", "defaults"]
 
@@ -164,11 +163,7 @@ class View:
             Sources that appear in ``order`` and are registered. Names in
             order without a source are skipped.
         """
-        return [
-            self._sources[name]
-            for name in self._order
-            if name in self._sources
-        ]
+        return [self._sources[name] for name in self._order if name in self._sources]
 
     def load_layers(self) -> List[tuple[str, DataDict]]:
         """Load all sources in precedence order.
@@ -229,7 +224,9 @@ class View:
         self._query_first(key, report=report)
         return report
 
-    def query(self, key: str, mode: Optional[str] = None, report: Optional[List[str]] = None) -> Any:
+    def query(
+        self, key: str, mode: Optional[str] = None, report: Optional[List[str]] = None
+    ) -> Any:
         """Query a key across sources.
 
         Args:
