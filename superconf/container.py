@@ -66,6 +66,18 @@ class _ContainerInstance(Leaf):
         )
         self.__node_children_class__ = _children_class
 
+    def _resolve_children_class(self):
+        """Return children class when it is a real class, else None.
+
+        Returns:
+            The configured children class, or None when children are disabled.
+        """
+        children_class = self.__node_children_class__
+        if not inspect.isclass(children_class):
+            logger.info("No children class defined for %s, skipping", self)
+            return None
+        return children_class
+
     def deepcopy(self):
         "Deep copy the container and its children"
 
@@ -136,10 +148,8 @@ class ConfigurationDict(_ContainerInstance):
 
         assert mode in ["define", "update"]
 
-        # Skip if no children requested
-        children_class = self.__node_children_class__
-        if not inspect.isclass(children_class):
-            logger.info("No children class defined for %s, skipping", self)
+        children_class = self._resolve_children_class()
+        if children_class is None:
             return
 
         logger.info(
@@ -312,10 +322,7 @@ class ConfigurationDict(_ContainerInstance):
     def merge(self, other):
         "Merge container with other according to dict merge policy"
 
-        if not isinstance(other, Leaf):
-            raise ValueError("Cannot merge non-Leaf")
-
-        strategy = getattr(self, "__node_merge__", MERGE_DICT_DEFAULT)
+        strategy = self._merge_strategy_for(other, MERGE_DICT_DEFAULT)
         node_names = (
             self.__class__.__name__,
             self.__node_fname__,
@@ -577,10 +584,7 @@ class ConfigurationList(ConfigurationDict):
     def merge(self, other):
         "Merge list container with other according to list merge policy"
 
-        if not isinstance(other, Leaf):
-            raise ValueError("Cannot merge non-Leaf")
-
-        strategy = getattr(self, "__node_merge__", MERGE_LIST_DEFAULT)
+        strategy = self._merge_strategy_for(other, MERGE_LIST_DEFAULT)
         node_names = (
             f"{self.__class__.__name__}({self.__node_fname__})",
             f"{other.__class__.__name__}({other.__node_fname__})",
@@ -622,10 +626,8 @@ class ConfigurationList(ConfigurationDict):
 
         assert mode in ["define", "append", "replace"]
 
-        # Skip if no children requested
-        children_class = self.__node_children_class__
-        if not inspect.isclass(children_class):
-            logger.info("No children class defined for %s, skipping", self)
+        children_class = self._resolve_children_class()
+        if children_class is None:
             return
 
         logger.info(

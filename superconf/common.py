@@ -15,6 +15,7 @@ from superconf.lib.sentinel_v2 import (
     NOT_SET_DICT,
     NOT_SET_LIST,
     UNSET_ARG,
+    is_not_set,
 )
 
 log = logging.getLogger(__name__)

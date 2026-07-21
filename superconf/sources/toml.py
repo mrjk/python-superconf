@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Mapping
 
-from superconf.common import read_file
 from superconf.sources.base import (
-    BaseSource,
     DataDict,
     SourceDumpError,
     SourceLoadError,
+    TextFileSource,
 )
 
 
@@ -38,7 +36,7 @@ def _load_toml_module() -> Any:
             ) from err
 
 
-class TomlSource(BaseSource):
+class TomlSource(TextFileSource):
     """Source that loads/dumps TOML text or files.
 
     Loading uses ``tomllib`` (Python 3.11+) or the ``tomli`` package.
@@ -50,19 +48,6 @@ class TomlSource(BaseSource):
         path: Optional path (alternative to ``data`` when loading a file).
         help: Optional description.
     """
-
-    # pylint: disable=redefined-builtin
-    def __init__(
-        self,
-        name: str,
-        data: Union[str, Path, None] = None,
-        *,
-        path: Union[str, Path, None] = None,
-        help: Optional[str] = None,
-    ) -> None:
-        super().__init__(name, help=help)
-        self._data = data
-        self._path = path
 
     def load(self) -> DataDict:
         """Parse TOML from string or file into a nested dict.
@@ -81,13 +66,7 @@ class TomlSource(BaseSource):
             parsed = tomllib.loads(raw)
         except TypeError:
             parsed = tomllib.loads(raw.encode("utf-8"))
-        if parsed is None:
-            return {}
-        if not isinstance(parsed, dict):
-            raise SourceLoadError(
-                f"TOML root must be a table/dict, got {type(parsed).__name__}"
-            )
-        return parsed
+        return self._as_root_dict(parsed, "TOML")
 
     def dump(self, data: Mapping[str, Any]) -> str:
         """Serialize a nested dict to TOML text via ``tomli-w``.
@@ -106,23 +85,3 @@ class TomlSource(BaseSource):
         except ModuleNotFoundError as err:
             raise SourceDumpError("TOML dump requires the 'tomli-w' package") from err
         return tomli_w.dumps(dict(data))
-
-    def _read_raw(self) -> str:
-        """Return TOML text from ``data`` or ``path``.
-
-        Returns:
-            Raw TOML string.
-
-        Raises:
-            SourceLoadError: If neither input is set.
-        """
-        if self._path is not None:
-            return read_file(str(self._path))
-        if self._data is None:
-            raise SourceLoadError(
-                f"TomlSource {self.name!r} has no data or path to load"
-            )
-        path_candidate = Path(str(self._data))
-        if path_candidate.is_file():
-            return read_file(str(path_candidate))
-        return str(self._data)

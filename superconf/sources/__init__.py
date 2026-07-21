@@ -11,6 +11,7 @@ from superconf.sources.base import (
     SourceDumpError,
     SourceError,
     SourceLoadError,
+    TextFileSource,
     resolve_mapping,
 )
 from superconf.sources.config import ConfigSource
@@ -31,6 +32,7 @@ __all__ = [
     "SourceDumpError",
     "SourceError",
     "SourceLoadError",
+    "TextFileSource",
     "TomlSource",
     "YamlSource",
     "resolve_mapping",

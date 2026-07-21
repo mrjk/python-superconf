@@ -29,9 +29,29 @@ import logging
 from typing import Any, List, Optional, Type, Union
 
 from superconf import exceptions
-from superconf.common import NOT_SET, UNSET_ARG
+from superconf.common import NOT_SET, UNSET_ARG, is_not_set
 
 logger = logging.getLogger(__name__)
+
+
+def _maybe_cast_config(out: Any, cast: Optional[Type], context: Any) -> Any:
+    """Optionally cast a config query result and assert its type.
+
+    Args:
+        out: Value returned by a config query.
+        cast: Optional type to coerce empty values to and assert against.
+        context: Object or name used in assertion error messages.
+
+    Returns:
+        ``out``, or ``cast()`` when ``out`` is empty and cast is set.
+    """
+    if cast is not None:
+        if not out:
+            out = cast()
+        assert isinstance(
+            out, cast
+        ), f"Wrong type for config {context}, expected {cast}, got: {type(out)} {out}"
+    return out
 
 
 class BaseNode:
@@ -177,7 +197,7 @@ class Node(BaseNode):
         def is_set(val):
             if val is UNSET_ARG:
                 return False
-            if isinstance(val, NOT_SET.type):
+            if is_not_set(val):
                 return False
             return True
 
@@ -282,14 +302,7 @@ class Node(BaseNode):
         if isinstance(out, (dict, list)):
             out = copy.copy(out)
 
-        if cast is not None:
-            # Try to cast if asked
-            if not out:
-                out = cast()
-            assert isinstance(
-                out, cast
-            ), f"Wrong type for config {self}, expected {cast}, got: {type(out)} {out}"
-        return out
+        return _maybe_cast_config(out, cast, self)
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __node_get_hier_config__(
@@ -371,13 +384,7 @@ class Node(BaseNode):
         if out is NOT_SET:
             _report.append(f"NotFound '{name}' in parent: {parent}")
 
-        if cast is not None:
-            # Try to cast if asked
-            if not out:
-                out = cast()
-            assert isinstance(
-                out, cast
-            ), f"Wrong type for config {name}, expected {cast}, got: {type(out)} {out}"
+        out = _maybe_cast_config(out, cast, name)
 
         if out is NOT_SET and default is UNSET_ARG:
             msg = (

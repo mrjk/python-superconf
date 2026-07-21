@@ -3,16 +3,10 @@
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
-from superconf.lib.sentinel_v2 import NOT_SET
+from superconf.common import unique
+from superconf.lib.sentinel_v2 import is_not_set
 
 _MISSING = object()
-
-
-def _unique(seq):
-    """Remove duplicates from a list while preserving order."""
-    seen = set()
-    seen_add = seen.add
-    return [x for x in seq if not (x in seen or seen_add(x))]
 
 
 class MergeKind(str, Enum):
@@ -146,7 +140,7 @@ def ensure_merge_strategy(strategy: Any, kind: MergeKind) -> MergeStrategy:
 
 def is_merge_value_set(value: Any) -> bool:
     """Return True when value is a concrete merge source (not NOT_SET)."""
-    return not isinstance(value, NOT_SET.type)
+    return not is_not_set(value)
 
 
 def infer_merge_kind(
@@ -306,7 +300,7 @@ def merge_maps(
     if strategy == MergeStrategy.OVERRIDE_PRESENT:
         keys: Iterable = base.keys()
     else:
-        keys = _unique(list(base.keys()) + list(other.keys()))
+        keys = unique(list(base.keys()) + list(other.keys()))
 
     for key in keys:
         left = base[key] if key in base else missing

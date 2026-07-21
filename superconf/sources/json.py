@@ -5,11 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
-from superconf.common import from_json, read_file, to_json
-from superconf.sources.base import BaseSource, DataDict, SourceLoadError
+from superconf.common import from_json, to_json
+from superconf.sources.base import DataDict, TextFileSource
 
 
-class JsonSource(BaseSource):
+class JsonSource(TextFileSource):
     """Source that loads/dumps JSON text or files.
 
     Args:
@@ -29,9 +29,7 @@ class JsonSource(BaseSource):
         nice: bool = True,
         help: Optional[str] = None,
     ) -> None:
-        super().__init__(name, help=help)
-        self._data = data
-        self._path = path
+        super().__init__(name, data, path=path, help=help)
         self.nice = nice
 
     def load(self) -> DataDict:
@@ -43,15 +41,7 @@ class JsonSource(BaseSource):
         Raises:
             SourceLoadError: If no input is configured or JSON is not a dict.
         """
-        raw = self._read_raw()
-        parsed = from_json(raw)
-        if parsed is None:
-            return {}
-        if not isinstance(parsed, dict):
-            raise SourceLoadError(
-                f"JSON root must be an object/dict, got {type(parsed).__name__}"
-            )
-        return parsed
+        return self._as_root_dict(from_json(self._read_raw()), "JSON")
 
     def dump(self, data: Mapping[str, Any]) -> str:
         """Serialize a nested dict to a JSON string.
@@ -63,23 +53,3 @@ class JsonSource(BaseSource):
             JSON text.
         """
         return to_json(dict(data), nice=self.nice)
-
-    def _read_raw(self) -> str:
-        """Return JSON text from ``data`` or ``path``.
-
-        Returns:
-            Raw JSON string.
-
-        Raises:
-            SourceLoadError: If neither input is set.
-        """
-        if self._path is not None:
-            return read_file(str(self._path))
-        if self._data is None:
-            raise SourceLoadError(
-                f"JsonSource {self.name!r} has no data or path to load"
-            )
-        path_candidate = Path(str(self._data))
-        if path_candidate.is_file():
-            return read_file(str(path_candidate))
-        return str(self._data)

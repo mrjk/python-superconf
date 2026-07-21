@@ -13,6 +13,7 @@ from superconf.common import (
     UNSET_ARG,
     infer_merge_kind,
     is_merge_value_set,
+    is_not_set,
     merge_data,
     normalize_merge_strategy,
     prefer_other_scalar,
@@ -222,7 +223,7 @@ class Leaf(Node):
         self.set_default(_default)
 
         # Set value if present
-        if value is not UNSET_ARG and not isinstance(value, NOT_SET.type):
+        if value is not UNSET_ARG and not is_not_set(value):
             self.set_value(value)
 
         # Run post_load hook
@@ -263,31 +264,35 @@ class Leaf(Node):
         "Represent the instance"
         return f"{self.__class__.__name__}({self.__node_key__}) at {hex(id(self))}"
 
-    def set_default(self, value):
-        "Set default value"
+    def _apply_casted(self, value, attr_name: str, debug_label: str):
+        """Pre-load, cast, store on ``attr_name``, and log.
 
+        Args:
+            value: Raw value to store.
+            attr_name: Instance attribute that holds the casted value.
+            debug_label: Short label for the debug log message.
+
+        Returns:
+            The casted value that was stored.
+        """
         value = self.pre_load(value)
         value = node_cast_value(self, value)
-        self.__node_default__ = value
-
+        setattr(self, attr_name, value)
         logger.debug(
-            "Set default for %s: %s", self.__node_fname__, self.__node_default__
+            "Set %s for %s: %s",
+            debug_label,
+            self.__node_fname__,
+            getattr(self, attr_name),
         )
-        return self.__node_default__
+        return getattr(self, attr_name)
+
+    def set_default(self, value):
+        "Set default value"
+        return self._apply_casted(value, "__node_default__", "default")
 
     def set_value(self, value):
         "Set value"
-        value = self.pre_load(value)
-        value = node_cast_value(self, value)
-        self.__node_value__ = value
-
-        logger.debug(
-            "Set value for %s: %s (VS %s)",
-            self.__node_fname__,
-            self.__node_value__,
-            value,
-        )
-        return self.__node_value__
+        return self._apply_casted(value, "__node_value__", "value")
 
     def get_default(self):
         "Get default value"
@@ -341,13 +346,27 @@ class Leaf(Node):
 
         return self.__doc__ or "<NO_HELP>"
 
+    def _merge_strategy_for(self, other, default_strategy):
+        """Validate merge peer and return this node's merge strategy.
+
+        Args:
+            other: Peer node to merge with.
+            default_strategy: Fallback when ``__node_merge__`` is unset.
+
+        Returns:
+            Resolved merge strategy.
+
+        Raises:
+            ValueError: If ``other`` is not a Leaf.
+        """
+        if not isinstance(other, Leaf):
+            raise ValueError("Cannot merge non-Leaf")
+        return getattr(self, "__node_merge__", default_strategy)
+
     def merge(self, other):
         "Merge and override object with other according to merge policy"
 
-        if not isinstance(other, Leaf):
-            raise ValueError("Cannot merge non-Leaf")
-
-        strategy = getattr(self, "__node_merge__", MERGE_OTHER_DEFAULT)
+        strategy = self._merge_strategy_for(other, MERGE_OTHER_DEFAULT)
         self_val = self.get_value(nodefaults=True)
         other_val = other.get_value(nodefaults=True)
         kind = infer_merge_kind(

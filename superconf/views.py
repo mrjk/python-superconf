@@ -9,7 +9,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, List, Mapping, Optional, Sequence
 
-from superconf.common import NOT_SET, UNSET_ARG
+from superconf.common import UNSET_ARG, is_not_set
 from superconf.sources.base import BaseSource, DataDict
 
 # Highest priority first (12-factor friendly default names).
@@ -28,11 +28,6 @@ class NoResults(ViewError):
     """Raised when a key is not found in any source."""
 
 
-def _is_unset(value: Any) -> bool:
-    """Return True if value is a NOT_SET sentinel."""
-    return isinstance(value, NOT_SET.type)
-
-
 def _deep_overlay(base: Any, overlay: Any) -> Any:
     """Merge overlay onto base; overlay wins on conflicts.
 
@@ -47,16 +42,16 @@ def _deep_overlay(base: Any, overlay: Any) -> Any:
     Returns:
         Merged value.
     """
-    if _is_unset(overlay):
+    if is_not_set(overlay):
         return deepcopy(base)
 
-    if _is_unset(base):
+    if is_not_set(base):
         return deepcopy(overlay)
 
     if isinstance(base, Mapping) and isinstance(overlay, Mapping):
         result: DataDict = deepcopy(dict(base))
         for key, val in overlay.items():
-            if _is_unset(val):
+            if is_not_set(val):
                 continue
             if key in result:
                 result[key] = _deep_overlay(result[key], val)
@@ -81,14 +76,14 @@ def _lookup_path(data: Mapping[str, Any], key: str) -> Any:
         if key not in data:
             return UNSET_ARG
         value = data[key]
-        return UNSET_ARG if _is_unset(value) else value
+        return UNSET_ARG if is_not_set(value) else value
 
     current: Any = data
     for part in key.split("."):
         if not isinstance(current, Mapping) or part not in current:
             return UNSET_ARG
         current = current[part]
-        if _is_unset(current):
+        if is_not_set(current):
             return UNSET_ARG
     return current
 
@@ -259,8 +254,16 @@ class View:
 
         raise ViewError(f"Unknown query mode {mode!r}; use 'first' or 'all'")
 
-    def _query_first(self, key: str, report: List[str]) -> Any:
-        """Walk sources high-to-low; return first set value or UNSET_ARG."""
+    def _iter_source_hits(self, key: str, report: List[str]):
+        """Yield set values found while walking sources high-to-low.
+
+        Args:
+            key: Top-level or dotted path to look up.
+            report: Mutable list collecting query trace messages.
+
+        Yields:
+            Each concrete value found in a source (skips missing/unset).
+        """
         for source in self.get_ordered_sources():
             report.append(f"Querying '{key}' from {source.name}")
             data = source.load()
@@ -269,19 +272,14 @@ class View:
                 report.append(f"  Not found '{key}' from {source.name}")
                 continue
             report.append(f"  Found '{key}' from {source.name}")
+            yield value
+
+    def _query_first(self, key: str, report: List[str]) -> Any:
+        """Walk sources high-to-low; return first set value or UNSET_ARG."""
+        for value in self._iter_source_hits(key, report):
             return value
         return UNSET_ARG
 
     def _query_all(self, key: str, report: List[str]) -> List[Any]:
         """Walk sources high-to-low; collect all set values."""
-        values: List[Any] = []
-        for source in self.get_ordered_sources():
-            report.append(f"Querying '{key}' from {source.name}")
-            data = source.load()
-            value = _lookup_path(data, key)
-            if value is UNSET_ARG:
-                report.append(f"  Not found '{key}' from {source.name}")
-                continue
-            report.append(f"  Found '{key}' from {source.name}")
-            values.append(value)
-        return values
+        return list(self._iter_source_hits(key, report))
