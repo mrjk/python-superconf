@@ -40,7 +40,7 @@
 
 This project is in Beta.
 
-SuperConf is a Python library for structured configuration: declare a model with typed fields and nested containers, then load values from dicts (and therefore from JSON/YAML you parse yourself).
+SuperConf is a Python library for structured configuration: declare a model with typed fields and nested containers, then load values from dicts, files (`YamlSource` / `JsonSource` / `TomlSource`), environment (`EnvSource`), or layered `View`s.
 
 Inspired by [Cafram](https://github.com/barbu-it/cafram), forked from [ClassyConf](https://classyconf.readthedocs.io/en/latest/).
 
@@ -51,6 +51,8 @@ Inspired by [Cafram](https://github.com/barbu-it/cafram), forked from [ClassyCon
 - Dynamic dict/list containers (`ConfigurationDict`, `ConfigurationList`)
 - Defaults, custom casting, and `Meta` options (`extra_fields`, `default`, `children_class`, …)
 - Clear access rules: attribute / `[]` / call (`obj("key")`)
+- File / env / dict sources and multi-source `View` precedence
+- Merge policies (`merge()`, `MergeStrategy`)
 - Path helpers (`PathAnchor`, `FileAnchor`)
 
 ## Quickstart
@@ -132,6 +134,7 @@ Suggested reading order:
 3. [103 — Nested structures](docs/guides/103_nested_structures.md)
 4. [104 — Dynamic dict/list fields](docs/guides/104_dynamic_fields.md)
 5. [105 — Meta and casting](docs/guides/105_meta_and_casting.md)
+6. [106 — Merge policies](docs/guides/106_merge_policies.md)
 
 ## Overview
 
@@ -151,7 +154,7 @@ Suggested reading order:
 ### FAQ
 
 **How do I load YAML or JSON?**  
-Parse the file yourself (`yaml.safe_load`, `json.load`, or `superconf.common.from_yaml` / `from_json`), then pass the dict as `value=`. See [Load from files](docs/howto/loading_from_files.md).
+Use `YamlSource` / `JsonSource` / `TomlSource` (see `superconf.sources`), or parse yourself (`yaml.safe_load`, `from_yaml`, …) and pass `value=`. See [Load from files](docs/howto/loading_from_files.md).
 
 **Are environment loaders built in?**  
 Use ``EnvSource`` + ``View`` (see ``superconf.sources`` / ``superconf.views``).

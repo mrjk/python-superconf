@@ -110,8 +110,9 @@ assert app.app_name == "MyApp"
 assert app.timeout == 60
 assert app.custom_setting == "Custom value"
 
-# Add another extra field dynamically
-app.another_setting = "Added later"
+# Extra keys must be supplied as data, not via new attributes:
+app.set_value({**app.get_value(), "another_setting": "Added later"})
+assert "another_setting" in app
 print(f"another_setting: {app.another_setting}")
 
 # Try to list all fields
@@ -390,8 +391,8 @@ print(f"app_name: {app.app_name}")
 
 # Print the feature flags
 print("\nFeature flags:")
-for name, enabled in app.features.items():
-    print(f"  {name}: {enabled}")
+for name, node in app.features.items():
+    print(f"  {name}: {node.get_value()}")
 
 # Verify feature flags
 assert app.features.dark_mode is True
@@ -543,7 +544,8 @@ In this guide, we've learned:
 - How to allow extra fields in a configuration
 - How to define default values at the class level
 - How to create and use custom cast functions
-- How to set global casts for all fields
+- How `Meta.cast` casts the container’s own payload (must match dict/list)
+- How per-field `cast=` customizes leaf conversion
 - How to define default child classes for containers
 - How to combine multiple Meta settings for sophisticated behavior
 - How to apply these concepts in a practical web application configuration

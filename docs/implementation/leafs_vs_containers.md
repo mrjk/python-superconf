@@ -41,4 +41,5 @@ Variadic containers use `Meta.children_class` (or short-form `FieldConf(Configur
 ## Related
 
 - Guides [103](../guides/103_nested_structures.md) and [104](../guides/104_dynamic_fields.md)
-- Source: `superconf/configuration.py`
+- Source: `superconf/leaf.py`, `superconf/container.py`
+  (`superconf/configuration.py` re-exports for compatibility)

@@ -30,7 +30,6 @@ SuperConf provides several specialized field types to handle different kinds of 
 - `FieldDict` - For dictionary values
 - `FieldList` - For list values
 - `FieldTuple` - For tuple values
-- `FieldOption` - For values restricted to a set of options (TODO)
 
 Let's see how to use these field types in practice.
 
@@ -44,7 +43,6 @@ from superconf.fields import (
     Field,
     FieldBool, FieldString, FieldInt, FieldFloat, 
     FieldDict, FieldList, FieldTuple,
-    # FieldOption
 )
 from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST
 
@@ -70,8 +68,8 @@ class AppConfig(ConfigurationObj):
     dimensions = FieldTuple(default=(800, 600))
     
     # Fields with NOT_SET defaults
-    unset = Field() # Equivalent of FieldString(default=NOT_SET)
-    unset_string = FieldString() # Equivalent of FieldString(default=NOT_SET)
+    unset = Field()              # default NOT_SET (identity cast)
+    unset_string = FieldString() # surfaces as str(NOT_SET) == "<NOT_SET>"
     unset_dict = FieldDict()     # Equivalent of FieldDict(default=NOT_SET_DICT)
     unset_list = FieldList()     # Equivalent of FieldList(default=NOT_SET_LIST)
     
@@ -355,6 +353,6 @@ Here are some exercises to practice what you've learned:
 
 1. Create a configuration model for a database connection with appropriate field types for host, port, username, password, and connection timeout.
 2. Experiment with `FieldBool` by creating a configuration with boolean fields and initializing them with various string values.
-3. Create a configuration with a `FieldOption` that restricts a value to a set of valid options.
+3. Create a field with a custom `cast=` callable that validates or normalizes input.
 4. Try to set an invalid value to a field with a specific type and observe the error.
 5. Create a configuration with `NOT_SET` values and check how they behave when accessed before and after setting a value. 

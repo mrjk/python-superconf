@@ -1,8 +1,40 @@
 # Load configuration from YAML or JSON
 
-SuperConf does not ship a file loader class. Parse the file into a dict, then pass it as `value=`.
+Two approaches:
 
-## Helpers
+1. **Sources (recommended for files):** `YamlSource` / `JsonSource` / `TomlSource`
+2. **Manual parse:** `from_yaml` / `from_json` (or stdlib), then pass a dict as `value=`
+
+## Using sources
+
+```python
+from pathlib import Path
+
+from superconf import ConfigurationObj, FieldBool, FieldConf, FieldInt, FieldString
+from superconf import YamlSource, JsonSource, View
+
+class ServerConfig(ConfigurationObj):
+    host = FieldString(default="localhost")
+    port = FieldInt(default=8080)
+
+class AppConfig(ConfigurationObj):
+    app_name = FieldString(default="app")
+    debug = FieldBool(default=False)
+    server = FieldConf(ServerConfig)
+
+# Load a single file
+file_src = YamlSource("file", path="config.yml")
+config = AppConfig(value=file_src.load())
+
+# Or materialize layered sources (file + env + defaults, etc.)
+view = View(order=["file"])
+view.add(file_src)
+config = AppConfig(value=view.materialize())
+```
+
+`JsonSource` and `TomlSource` work the same way (`path=` or inline `data=`).
+
+## Helpers (manual parse)
 
 ```python
 from pathlib import Path

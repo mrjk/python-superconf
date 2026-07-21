@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Optional
 
-from superconf.common import NOT_SET
+from superconf.common import is_not_set
 from superconf.sources.base import (
     BaseSource,
     DataDict,
@@ -22,13 +22,13 @@ def _strip_unset(node: Any) -> Any:
     Returns:
         Cleaned structure, or ``None`` if the node itself is unset.
     """
-    if isinstance(node, NOT_SET.type):
+    if is_not_set(node):
         return None
     if isinstance(node, Mapping):
         out: DataDict = {}
         for key, val in node.items():
             cleaned = _strip_unset(val)
-            if cleaned is None and isinstance(val, NOT_SET.type):
+            if cleaned is None and is_not_set(val):
                 continue
             out[key] = cleaned
         return out
@@ -71,7 +71,7 @@ class ConfigSource(BaseSource):
             Nested dict with NOT_SET entries stripped.
         """
         raw = self._config.get_value(nodefaults=self.nodefaults)
-        if raw is None or isinstance(raw, NOT_SET.type):
+        if raw is None or is_not_set(raw):
             return {}
         if not isinstance(raw, Mapping):
             raise SourceLoadError(

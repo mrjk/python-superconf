@@ -4,17 +4,17 @@ Casting converts raw input into the type expected by a field or container.
 
 ## Where it runs
 
-Values are cast when defaults and overrides are applied (`node_cast_value` in `configuration.py`), typically during construction and `set_value`.
+Values are cast when defaults and overrides are applied (`node_cast_value` in `superconf/leaf.py`), typically during construction and `set_value`.
 
 ## Built-in field casts
 
 | Field | Default cast |
 |---|---|
 | `FieldBool` | `as_boolean` |
-| `FieldString` | `str` (via string cast) |
+| `FieldString` | `str` |
 | `FieldInt` | `as_int` |
 | `FieldFloat` | `float` |
-| `FieldList` | `as_list` |
+| `FieldList` | `as_list` (`AsList`: wraps scalars/`str` in a 1-element list; does **not** split delimited strings) |
 | `FieldTuple` | `as_tuple` |
 | `FieldDict` | `as_dict` |
 | `Field` | identity (`as_is` / none) |
@@ -35,7 +35,9 @@ Container-level `Meta.cast` must match the container payload type (dict/list). A
 
 Unset typed fields still go through their cast. Example: `FieldString()` surfaces as the string `"<NOT_SET>"` rather than the `NOT_SET` sentinel. Untyped `Field()` keeps `NOT_SET`. Dict/list fields use `NOT_SET_DICT` / `NOT_SET_LIST`.
 
+Use `is_not_set(value)` from `superconf.common` to test for `NOT_SET`-family sentinels **before** a string cast turns them into `"<NOT_SET>"`.
+
 ## Related
 
 - Guide [105](../guides/105_meta_and_casting.md)
-- Source: `superconf/casts.py`, `superconf/fields.py`
+- Source: `superconf/casts.py`, `superconf/fields.py`, `superconf/leaf.py`

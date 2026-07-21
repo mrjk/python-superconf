@@ -284,7 +284,7 @@ for field_obj in app:
     name = field_obj.__node_key__
     value = field_obj.get_value()
     default = field_obj.get_default()
-    help_text = getattr(field_obj, 'help', 'No help available')
+    help_text = field_obj.__node_help__
     print(f"Field '{name}':")
     print(f"  - Value: {value}")
     print(f"  - Default: {default}")
@@ -327,11 +327,14 @@ pprint(app.get_value())
 
 ```
 
-You can also set values using the dictionary syntax or the `set_value()` method:
+You can also set values using attribute assignment, dictionary syntax, or the `set_value()` method:
 
 ```python
-# Dictionary syntax
+# Attribute assignment
 app.field3 = 100
+
+# Dictionary-style
+app["field3"] = 100
 
 # set_value() method
 app.set_value("field4", {"new": "dictionary"})

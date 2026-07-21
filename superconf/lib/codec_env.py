@@ -52,6 +52,17 @@ def _is_index(segment: str) -> bool:
     return bool(segment) and segment.isdigit()
 
 
+def _ensure_list_index(parent: list, key: int) -> None:
+    """Pad a list with ``None`` until ``key`` is a valid index.
+
+    Args:
+        parent: List to extend in place.
+        key: Target index that must become addressable.
+    """
+    while len(parent) <= key:
+        parent.append(None)
+
+
 def _ensure_container(
     parent: NestedData,
     key: Union[str, int],
@@ -82,8 +93,7 @@ def _ensure_container(
     else:
         assert isinstance(parent, list)
         assert isinstance(key, int)
-        while len(parent) <= key:
-            parent.append(None)
+        _ensure_list_index(parent, key)
         child = parent[key]
         if child is None:
             parent[key] = [] if child_is_index else {}
@@ -133,8 +143,7 @@ def _set_leaf(
 
     assert isinstance(parent, list)
     assert isinstance(key, int)
-    while len(parent) <= key:
-        parent.append(None)
+    _ensure_list_index(parent, key)
     existing = parent[key]
     if isinstance(existing, (dict, list)):
         raise CodecEnvConflictError(

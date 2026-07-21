@@ -148,10 +148,13 @@ resource_count = len(app_with_resources.resources)
 print(f"\nTotal resources: {resource_count}")
 ```
 
-Note: 
+Note:
 
-  * It is not possible yet to add a single resource, all resources must be created at the same time.
-  * However it is possible to merge objects of the same type between them. See
+  * You cannot create a new dict key with attribute assignment
+    (`obj.new_key = ...` sets a plain Python attribute).
+  * You *can* add keys later with `obj.set_value({"new_key": {...}})` or `merge()`.
+  * For lists, `set_value([...])` replaces the whole list; use `merge()` /
+    list policies to combine. See
     [106_merge_policies.md](106_merge_policies.md) and
     [merging_configurations.md](../howto/merging_configurations.md).
 
@@ -210,7 +213,7 @@ for i, server in enumerate(app.servers):
 # Access servers by index
 print("\nAccessing servers by index:")
 print(f"First server host: {app.servers(0).host}  (access with callable)")
-print(f"Second server role: {app.servers[1]['role']}  (access via attribute)")
+print(f"Second server role: {app.servers[1]['role']}  # [] → value dict")
 ```
 
 Notes:
@@ -267,10 +270,11 @@ print(f"Second server: {app_with_servers.servers(1).host}")
 print(f"Third server: {app_with_servers.servers(2).host}")
 ```
 
-Note: 
+Note:
 
-  * It is not possible yet to add a single resource, all resources must be created at the same time.
-  * However it is possible to merge objects of the same type between them. See
+  * You cannot create a new list item with attribute assignment.
+  * `set_value([...])` replaces the whole list; use `merge()` /
+    list policies to combine. See
     [106_merge_policies.md](106_merge_policies.md) and
     [merging_configurations.md](../howto/merging_configurations.md).
 
@@ -441,13 +445,15 @@ for name, endpoint in api_config.endpoints.items():
     print(f"  Retry: {endpoint.retry}")
     print(f"  Max Retries: {endpoint.max_retries}")
 
-# Add a new endpoint
-api_config.endpoints.orders = {
-    "url": "https://api.example.com/orders",
-    "timeout": 15,
-    "retry": True,
-    "max_retries": 5
-}
+# Add a new endpoint via set_value (attribute assignment would not create a child)
+api_config.endpoints.set_value({
+    "orders": {
+        "url": "https://api.example.com/orders",
+        "timeout": 15,
+        "retry": True,
+        "max_retries": 5,
+    }
+})
 
 # Print the updated endpoints
 print("\nUpdated Endpoints:")

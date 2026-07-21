@@ -6,7 +6,7 @@ import ast
 import logging
 from collections.abc import Mapping, Sequence
 
-from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST
+from superconf.common import NOT_SET, NOT_SET_DICT, NOT_SET_LIST, is_not_set
 from superconf.exceptions import InvalidCastConfiguration
 
 logger = logging.getLogger(__name__)
@@ -106,21 +106,20 @@ class AsInt(AbstractCast):
 
 
 class AsList(AbstractCast):
-    """Cast a value to a list with support for delimited strings.
+    """Cast a value to a list.
 
     Converts various input types to a list:
-    - Empty values become empty lists
-    - Strings are split by delimiter, with support for quoted elements
-    - Sequences are converted directly to lists
+    - ``None`` / ``NOT_SET`` become ``NOT_SET_LIST``
+    - Scalars (``str``, ``int``, ``float``, ``bool``) are wrapped in a one-element list
+    - Sequences are converted with ``list(...)``
 
     Args:
-        delimiter (str, optional): The character used to split strings. Defaults to ','.
-        quotes (str, optional): String containing valid quote characters. Defaults to '"\''.
+        delimiter (str, optional): Reserved for callers/subclasses. Defaults to ','.
+        quotes (str, optional): Reserved for callers/subclasses. Defaults to '"\''.
 
     Examples:
         >>> cast = AsList()
-        >>> cast('a,b,c')  # Returns: ['a', 'b', 'c']
-        >>> cast('"a,b",c')  # Returns: ['a,b', 'c']
+        >>> cast('a,b,c')  # Returns: ['a,b,c']
         >>> cast(['a', 'b'])  # Returns: ['a', 'b']
     """
 
@@ -137,7 +136,7 @@ class AsList(AbstractCast):
 
     def _parse(self, value):
 
-        if isinstance(value, NOT_SET.type):
+        if is_not_set(value):
             assert value is NOT_SET_LIST or value is NOT_SET
             return NOT_SET_LIST
 
@@ -157,40 +156,6 @@ class AsList(AbstractCast):
 
         raise InvalidCastConfiguration(f"Error casting value '{value}' to list")
 
-    def _parse_string(self, string):
-        elements = []
-        element = []
-        quote = ""
-        for char in string:
-            # open quote
-            if char in self.quotes and not quote:
-                quote = char
-                element.append(char)
-                continue
-
-            # close quote
-            if char in self.quotes and char == quote:
-                quote = ""
-                element.append(char)
-                continue
-
-            if quote:
-                element.append(char)
-                continue
-
-            if char == self.delimiter:
-                elements.append("".join(element))
-                element = []
-                continue
-
-            element.append(char)
-
-        # remaining element
-        if element:
-            elements.append("".join(element))
-
-        return self.cast(e.strip() for e in elements)
-
 
 class AsTuple(AsList):
     """Cast a value to a tuple.
@@ -199,8 +164,8 @@ class AsTuple(AsList):
     Accepts the same arguments and follows the same parsing rules as AsList.
 
     Args:
-        delimiter (str, optional): The character used to split strings. Defaults to ','.
-        quotes (str, optional): String containing valid quote characters. Defaults to '"\''.
+        delimiter (str, optional): Reserved for callers/subclasses. Defaults to ','.
+        quotes (str, optional): Reserved for callers/subclasses. Defaults to '"\''.
     """
 
     def cast(self, sequence):
@@ -236,7 +201,7 @@ class AsDict(AbstractCast):
     def _parse(self, value):
         "Internal helper to parse values"
 
-        if isinstance(value, NOT_SET.type):
+        if is_not_set(value):
             assert value is NOT_SET_DICT or value is NOT_SET
             return NOT_SET_DICT
 
