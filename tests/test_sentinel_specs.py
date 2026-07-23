@@ -2,7 +2,7 @@
 
 import pytest
 
-from superconf.lib.sentinel import (  # DEFAULT,; FAIL,; NOT_SET,; NOT_SET_LIST,; UNSET_ARG,
+from superconf.lib.sentinels import (  # DEFAULT,; FAIL,; NOT_SET,; NOT_SET_LIST,; UNSET_ARG,
     NOT_SET_DICT,
 )
 

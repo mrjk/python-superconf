@@ -12,7 +12,7 @@ Key features:
 - Support for isinstance() checks with appropriate types
 
 Example usage:
-    >>> from superconf.lib.sentinel import NOT_SET
+    >>> from superconf.lib.sentinels import NOT_SET
     >>> value = NOT_SET
     >>> if value is NOT_SET:
     ...     print("Value not set")
