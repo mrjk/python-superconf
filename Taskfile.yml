@@ -79,19 +79,13 @@ tasks:
       # - task: test_pytest
       # - task: test_regressions
       - task: test_report
-      - task: test_lab
-      #- task: test_examples
+      - task: test_examples
       - task: test_lint
 
   test_pytest:
     desc: Test with pytest
     cmds:
       - "{{.PY}} pytest tests"
-
-  test_lab:
-    desc: Test lab
-    cmds:
-      - bash ./scripts/run_python_scripts.sh lab 'test[0-9]*'
 
   test_examples:
     desc: Test examples
