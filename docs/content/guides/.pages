@@ -1,0 +1,9 @@
+title: Guides
+nav:
+  - Simplest structure: 101_simplest_structure.md
+  - Field types and defaults: 102_fieldtypes_and_default_values.md
+  - Nested structures: 103_nested_structures.md
+  - Dynamic fields: 104_dynamic_fields.md
+  - Meta and casting: 105_meta_and_casting.md
+  - Merge policies: 106_merge_policies.md
+  - ...

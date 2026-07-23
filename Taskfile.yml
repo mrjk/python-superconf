@@ -1,13 +1,22 @@
 ---
 # https://taskfile.dev
+#
+# Python tools live in the Poetry env. Always invoke them via `poetry run`
+# so `task …` works without activating .venv (and without relying on Task
+# PATH templating, which varies by Task version).
 
 version: '3'
 
+vars:
+  # Prefix for project Python tooling (black, pytest, isort, …)
+  PY: poetry run
 
-#includes:
-#  docs:
-#    taskfile: ./docs/Taskfile.yml
-#    dir: ./docs
+includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+    vars:
+      PY: '{{.PY}}'
 
 tasks:
 
@@ -42,23 +51,23 @@ tasks:
   fix_lint:
     desc: fix all what can be fixed
     cmds:
-      - isort --profile black --overwrite-in-place $(git ls-files | grep '\.py$')
-      - black $(git ls-files | grep '\.py$')
-      #- pymarkdownlnt fix $( git ls-files | grep '\.md$' )
+      - "{{.PY}} isort --profile black --overwrite-in-place $(git ls-files | grep '\\.py$')"
+      - "{{.PY}} black $(git ls-files | grep '\\.py$')"
+      #- "{{.PY}} pymarkdownlnt fix $( git ls-files | grep '\\.md$' )"
 
   test_lint:
     desc: show what can be improved
     cmds:
-      - isort --profile black $(git ls-files | grep '\.py$')
-      - black --check $(git ls-files | grep '\.py$')
-      - pylint $(git ls-files | grep superconf | grep '\.py$')
+      - "{{.PY}} isort --check-only --profile black $(git ls-files | grep '\\.py$')"
+      - "{{.PY}} black --check $(git ls-files | grep '\\.py$')"
+      - "{{.PY}} pylint $(git ls-files | grep superconf | grep '\\.py$')"
 
   test_lint_full:
     desc: run all linting tests
     cmds:
       - task: test_lint
-      - yamllint $( git ls-files | grep '\.yml$' )
-      - pymarkdownlnt scan $( git ls-files | grep '\.md$' )
+      - "{{.PY}} yamllint $( git ls-files | grep '\\.yml$' )"
+      - "{{.PY}} pymarkdownlnt scan $( git ls-files | grep '\\.md$' )"
       - shellcheck $( git ls-files | grep '\.sh$' )
 
   # Tests
@@ -70,37 +79,28 @@ tasks:
       # - task: test_pytest
       # - task: test_regressions
       - task: test_report
-      - task: test_lab
-      #- task: test_examples
+      - task: test_examples
       - task: test_lint
 
   test_pytest:
     desc: Test with pytest
     cmds:
-      - pytest tests
-
-  test_lab:
-    dest: Test lab
-    cmds:
-      - bash ./scripts/run_python_scripts.sh lab 'test[0-9]*'
+      - "{{.PY}} pytest tests"
 
   test_examples:
-    dest: Test examples
+    desc: Test examples
     cmds:
       - bash ./scripts/run_python_scripts.sh examples 'example[0-9]*'
 
   test_regressions:
     desc: Test for regressions
     cmds:
-      - pytest tests/test_50_*
+      - "{{.PY}} pytest tests/test_50_*"
 
   test_report:
     desc: Report tests
     cmds:
-      # - pytest tests --tb no -vv -q
-      # - pytest --cov=superconf --cov-report term-missing  tests/
       - >
-        pytest tests/
+        {{.PY}} pytest tests/
         --tb no -vv -q
         --cov=superconf --cov-report term-missing
-

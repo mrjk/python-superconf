@@ -1,0 +1,44 @@
+---
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  PY: '{{.PY | default "poetry run"}}'
+
+tasks:
+
+  list:
+    desc: "Show available commands"
+    aliases:
+      - default
+    silent: true
+    cmds:
+      - task --list-all
+
+  test:
+    desc: "Run tests on documentation"
+    cmds:
+      - task: test_mkdocs
+      # Content lint is optional until markdown is cleaned up:
+      # - task: test_lint
+
+  test_lint:
+    desc: "Check markdown linting"
+    cmds:
+      - "{{.PY}} pymarkdownlnt scan $(git ls-files . | grep '\\.md$' )"
+
+  test_mkdocs:
+    desc: "Check mkdocs build"
+    cmds:
+      - "{{.PY}} mkdocs build --strict"
+
+  serve:
+    desc: serve mkdocs website locally
+    cmds:
+      - "{{.PY}} mkdocs serve"
+
+  publish:
+    desc: update gh-pages branch with new documentation
+    cmds:
+      - "{{.PY}} mkdocs gh-deploy --force"

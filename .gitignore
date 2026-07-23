@@ -4,3 +4,10 @@ dist/*
 .vscode/*
 
 **/.ipynb_checkpoints/**
+
+# Local secrets / direnv overrides (never commit tokens)
+.envrc.local
+
+# Poetry / matrix virtualenvs
+.venv/
+.venvs/

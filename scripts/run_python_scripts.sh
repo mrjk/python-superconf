@@ -1,8 +1,20 @@
 #!/bin/bash
-# Run all python files in a specific directory
+# Run all python files in a specific directory.
+# Uses Poetry's venv by default so project deps (pytest, package) resolve.
+# Override with: PYTHON='python3.11' bash ./scripts/run_python_scripts.sh …
 
 
 set -eu -o pipefail
+
+# Default: poetry run python (matches Taskfile PY). Single binary via PYTHON=.
+run_one ()
+{
+  if [[ -n "${PYTHON:-}" ]]; then
+    "$PYTHON" "$1"
+  else
+    poetry run python "$1"
+  fi
+}
 
 run_python_files ()
 {
@@ -16,7 +28,7 @@ run_python_files ()
   for i in "$src_dir"/$pattern; do
     echo -e "\n=========================="
     echo -e "Run $i"
-    if python "$i" ; then
+    if run_one "$i" ; then
       echo "OK: Passed $i"
     else
       echo "KO: Failed $i"

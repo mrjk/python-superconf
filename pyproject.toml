@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "superconf"
-version = "0.1.4"
+version = "0.2.0b0"
 description = "Super config for python"
 authors = ["mrjk <mrjk.78@gmail.com>"]
 license = "GPLv3"
@@ -37,6 +37,7 @@ sentinel = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
+isort = "^6.0.1"
 pytest = "^8.3.4"
 pytest-cov = "^6.0.0"
 jupyterlab = "^4.3.4"
@@ -50,6 +51,7 @@ pytest-benchmark = "^5.1.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.49"
+mkdocs-awesome-pages-plugin = "^2.10.1"
 mkdocstrings = {extras = ["python"], version = "^0.27.0"}
 pylint = "^3.3.3"
 
