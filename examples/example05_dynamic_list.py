@@ -2,7 +2,13 @@
 
 from pprint import pprint
 
-from superconf import ConfigurationList, ConfigurationObj, FieldConf, FieldInt, FieldString
+from superconf import (
+    ConfigurationList,
+    ConfigurationObj,
+    FieldConf,
+    FieldInt,
+    FieldString,
+)
 
 
 class ServerConfig(ConfigurationObj):

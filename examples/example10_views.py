@@ -4,8 +4,8 @@ from pprint import pprint
 
 from superconf import (
     TWELVE_FACTOR_ORDER,
-    ConfigurationObj,
     ConfigSource,
+    ConfigurationObj,
     DictSource,
     EnvSource,
     FieldBool,

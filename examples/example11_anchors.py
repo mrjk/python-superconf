@@ -4,7 +4,6 @@ from pprint import pprint
 
 from superconf import FileAnchor, PathAnchor
 
-
 project = PathAnchor("/fake/prj")
 inventory = PathAnchor("inventory/", parent=project)
 config_dir = PathAnchor("../../common_conf", parent=project)
