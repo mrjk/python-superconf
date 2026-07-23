@@ -28,7 +28,7 @@ deep-merges.
 | `merge_maps` | Merge keyed maps with `merge_both` callback |
 | `prefer_other_scalar` | Scalar left/right choice |
 
-Implementation module: [`superconf/merge.py`](../../superconf/merge.py)
+Implementation module: `superconf/merge.py`
 (re-exported from `superconf.common` / package root for common symbols).
 
 ### Strategies by kind

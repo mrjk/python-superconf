@@ -139,7 +139,7 @@ poetry install --with dev
 poetry run task test
 ```
 
-See [`.github/workflows/test_project.yml`](../../.github/workflows/test_project.yml) (single Python 3.11; matrix later).
+See `.github/workflows/test_project.yml` (single Python 3.11; matrix later).
 
 ## Releases
 

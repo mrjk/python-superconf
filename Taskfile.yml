@@ -11,12 +11,12 @@ vars:
   # Prefix for project Python tooling (black, pytest, isort, …)
   PY: poetry run
 
-#includes:
-#  docs:
-#    taskfile: ./docs/Taskfile.yml
-#    dir: ./docs
-#    vars:
-#      PY: '{{.PY}}'
+includes:
+  docs:
+    taskfile: ./docs/Taskfile.yml
+    dir: ./docs
+    vars:
+      PY: '{{.PY}}'
 
 tasks:
 

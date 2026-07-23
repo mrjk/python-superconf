@@ -123,18 +123,18 @@ assert app.server.port == 9000
 
 | Section | Path |
 |---|---|
-| Guides (start here) | [docs/guides/](docs/guides/) |
-| How-to | [docs/howto/](docs/howto/) |
-| Implementation notes | [docs/implementation/](docs/implementation/) |
+| Guides (start here) | [docs/content/guides/](docs/content/guides/) |
+| How-to | [docs/content/howto/](docs/content/howto/) |
+| Implementation notes | [docs/content/implementation/](docs/content/implementation/) |
 
 Suggested reading order:
 
-1. [101 — Simplest structure](docs/guides/101_simplest_structure.md)
-2. [102 — Field types and unset values](docs/guides/102_fieldtypes_and_default_values.md)
-3. [103 — Nested structures](docs/guides/103_nested_structures.md)
-4. [104 — Dynamic dict/list fields](docs/guides/104_dynamic_fields.md)
-5. [105 — Meta and casting](docs/guides/105_meta_and_casting.md)
-6. [106 — Merge policies](docs/guides/106_merge_policies.md)
+1. [101 — Simplest structure](docs/content/guides/101_simplest_structure.md)
+2. [102 — Field types and unset values](docs/content/guides/102_fieldtypes_and_default_values.md)
+3. [103 — Nested structures](docs/content/guides/103_nested_structures.md)
+4. [104 — Dynamic dict/list fields](docs/content/guides/104_dynamic_fields.md)
+5. [105 — Meta and casting](docs/content/guides/105_meta_and_casting.md)
+6. [106 — Merge policies](docs/content/guides/106_merge_policies.md)
 
 ## Overview
 
@@ -154,13 +154,13 @@ Suggested reading order:
 ### FAQ
 
 **How do I load YAML or JSON?**  
-Use `YamlSource` / `JsonSource` / `TomlSource` (see `superconf.sources`), or parse yourself (`yaml.safe_load`, `from_yaml`, …) and pass `value=`. See [Load from files](docs/howto/loading_from_files.md).
+Use `YamlSource` / `JsonSource` / `TomlSource` (see `superconf.sources`), or parse yourself (`yaml.safe_load`, `from_yaml`, …) and pass `value=`. See [Load from files](docs/content/howto/loading_from_files.md).
 
 **Are environment loaders built in?**  
 Yes, as helpers: ``from_12factor(AppConfig, file="config.yml", cli={...})``
 (or ``Meta.env_prefix``). Mapping is Gitea-style ``PREFIX__PATH``.
 Precedence: ``cli → env → file → defaults`` (``TWELVE_FACTOR_ORDER``).
-See [Environment variables](docs/howto/environment_variables.md).
+See [Environment variables](docs/content/howto/environment_variables.md).
 Lower-level: ``EnvSource`` + ``View``.
 
 **Can I allow undeclared keys?**  
@@ -173,8 +173,18 @@ Yes, set `Meta.extra_fields = True` on a `ConfigurationObj`. Extra keys must be 
 
 ## Development
 
-Full maintainer guide: [docs/project/setup.md](docs/project/setup.md).
-Release / PyPI: [docs/project/release.md](docs/project/release.md).
+Full maintainer guide: [docs/content/project/setup.md](docs/content/project/setup.md).
+Release / PyPI: [docs/content/project/release.md](docs/content/project/release.md).
+
+### Documentation site
+
+```bash
+task docs:serve    # http://127.0.0.1:8000
+task docs:test     # mkdocs --strict
+task docs:publish  # gh-pages deploy
+```
+
+Markdown lives under [`docs/content/`](docs/content/); MkDocs config is [`docs/mkdocs.yml`](docs/mkdocs.yml).
 
 ### Setup
 

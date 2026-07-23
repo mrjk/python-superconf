@@ -1,0 +1,89 @@
+---
+site_name: SuperConf
+site_description: Structured configuration for Python
+site_url: https://mrjk.github.io/python-superconf/
+repo_url: https://github.com/mrjk/python-superconf
+repo_name: mrjk/python-superconf
+
+docs_dir: content/
+
+hooks:
+  - hooks.py
+
+# README is inlined on the home page; its GitHub-relative paths are not site paths.
+validation:
+  links:
+    not_found: ignore
+    unrecognized_links: ignore
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - navigation.tabs
+    - content.code.annotate
+
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: amber
+      accent: red
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: amber
+      accent: red
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - abbr
+  - attr_list
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+      auto_title: false
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path:
+        - ".."
+        - "content"
+      check_paths: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - footnotes
+  - sane_lists
+  - toc
+
+plugins:
+  - search
+  - awesome-pages
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [..]
+          options:
+            show_source: true
+            show_root_heading: true
+
+nav:
+  - Home: index.md
+  - ...

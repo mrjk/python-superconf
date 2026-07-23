@@ -1,0 +1,8 @@
+title: How-to
+nav:
+  - Load from files: loading_from_files.md
+  - Environment variables: environment_variables.md
+  - Short syntax: short_syntax.md
+  - Path anchors: path_anchors.md
+  - Merge configurations: merging_configurations.md
+  - ...

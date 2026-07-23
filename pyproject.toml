@@ -51,6 +51,7 @@ pytest-benchmark = "^5.1.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.49"
+mkdocs-awesome-pages-plugin = "^2.10.1"
 mkdocstrings = {extras = ["python"], version = "^0.27.0"}
 pylint = "^3.3.3"
 
