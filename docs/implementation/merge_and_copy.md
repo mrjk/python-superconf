@@ -119,4 +119,4 @@ Use these when you need an independent tree without mutating the original.
 - Guide: [106_merge_policies.md](../guides/106_merge_policies.md)
 - Source: `Leaf.merge`, `ConfigurationDict.merge`, `ConfigurationList.merge`
 - Tests: `tests/test_42_parametrized_merge.py`
-- Lab: `lab/test51_merges.py`
+- Example: `examples/example09_merge.py`

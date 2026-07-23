@@ -197,10 +197,10 @@ Uses [Taskfile](https://taskfile.dev):
 
 | Command | Purpose |
 |---|---|
-| `task test` | Report + lab + lint |
+| `task test` | Report + examples + lint |
 | `task test_report` | Pytest + coverage |
 | `task test_pytest` | Pytest suite |
-| `task test_lab` | Run lab scripts |
+| `task test_examples` | Run example scripts |
 | `task test_lint` | Lint checks (isort `--check-only`, black, pylint) |
 | `task fix_lint` | Auto-format with black/isort |
 | `task publish_pypi` | Publish to PyPI |

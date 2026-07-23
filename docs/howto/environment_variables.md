@@ -85,7 +85,7 @@ print(view.materialize())
 
 ## Advanced: raw sources
 
-For custom order or extra sources, use `EnvSource` + `View` directly (see [loading_from_files.md](loading_from_files.md) and `lab/test53_views.py`):
+For custom order or extra sources, use `EnvSource` + `View` directly (see [loading_from_files.md](loading_from_files.md) and `examples/example10_views.py`):
 
 ```python
 from superconf import ConfigurationObj, EnvSource, FieldString, TWELVE_FACTOR_ORDER, View
@@ -101,4 +101,4 @@ config = AppConfig(value=view.materialize())
 ## See also
 
 - [Load from files](loading_from_files.md)
-- Lab: `lab/test54_twelve_factor.py`
+- Example: `examples/example06_twelve_factor.py`

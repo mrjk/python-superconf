@@ -33,4 +33,4 @@ config_file.get_dir()   # /fake/prj/subconf
 
 Keep a project root as an absolute anchor, then hang relative config/data paths under it so resolution stays stable when the process cwd changes.
 
-Runnable examples: `lab/test81_anchors.py`.
+Runnable examples: `examples/example11_anchors.py`.

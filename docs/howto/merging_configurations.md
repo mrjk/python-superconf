@@ -137,4 +137,4 @@ merged = left.merge(right)
 - Guide: [106_merge_policies.md](../guides/106_merge_policies.md)
 - Implementation: [merge_and_copy.md](../implementation/merge_and_copy.md)
 - Tests: `tests/test_42_parametrized_merge.py`
-- Lab: `lab/test51_merges.py`
+- Example: `examples/example09_merge.py`

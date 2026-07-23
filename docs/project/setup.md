@@ -13,7 +13,7 @@ How to run SuperConf locally and across supported Python versions.
 | Docs Task / MkDocs CI | Docs are markdown under `docs/` | `docs/Taskfile.yml` + `gh_page` workflow |
 | GitHub Actions | Not yet in this tree | Thin `setup-ci` + `poetry run task test` |
 
-Usable now: `mise install`, `poetry install --with dev`, `task test_report`, `task test_lint` / `fix_lint`, `task test_lab`, `./scripts/release.sh --dry-run`.
+Usable now: `mise install`, `poetry install --with dev`, `task test_report`, `task test_lint` / `fix_lint`, `task test_examples`, `./scripts/release.sh --dry-run`.
 
 Secrets: put PyPI tokens in `poetry config`, your shell env, or gitignored `.envrc.local` — never in committed `.envrc`.
 
@@ -85,8 +85,7 @@ Useful subsets:
 |------|----------------|
 | `task test_report` | Pytest + coverage on `superconf` |
 | `task test_pytest` | Pytest suite |
-| `task test_lab` | Lab scripts via `scripts/run_python_scripts.sh` |
-| `task test_examples` | Example scripts |
+| `task test_examples` | Example scripts via `scripts/run_python_scripts.sh` |
 | `task test_lint` | isort `--check-only`, black `--check`, pylint |
 | `task test_lint_full` | Lint + yamllint + markdown + shellcheck |
 | `task fix_lint` | isort + black (rewrite) |
