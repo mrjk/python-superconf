@@ -10,7 +10,7 @@ How to run SuperConf locally and across supported Python versions.
 | Task + `PY=poetry run` | Works (root `Taskfile.yml`) | CORE + docs Taskfile |
 | mise pins (python, poetry, task, shellcheck) | Works (`mise.toml` + `.envrc`) | Same |
 | `task clean` / `test_matrix` | Not yet | `scripts/clean_workspace.sh`, `run_python_matrix.sh` |
-| Docs Task / MkDocs CI | Docs are markdown under `docs/` | `docs/Taskfile.yml` + `gh_page` workflow |
+| Docs Task / MkDocs CI | `docs/Taskfile.yml` + `gh_page.yml` (`workflow_dispatch`, any branch) | Same |
 | GitHub Actions | `test_project.yml` (single 3.11) | Matrix + thin `setup-ci` later |
 
 Usable now: `mise install`, `poetry install --with dev`, `task test_report`, `task test_lint` / `fix_lint`, `task test_examples`, `./scripts/release.sh --dry-run`.
@@ -140,6 +140,8 @@ poetry run task test
 ```
 
 See `.github/workflows/test_project.yml` (single Python 3.11; matrix later).
+
+Documentation deploy: `.github/workflows/gh_page.yml` — run **gen-documentation** via Actions → Run workflow, and pick any branch.
 
 ## Releases
 
