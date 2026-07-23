@@ -102,3 +102,8 @@ from superconf.common import to_yaml, to_json
 print(to_yaml(config.get_value()))
 print(to_json(config.get_value()))
 ```
+
+## Layered with environment / CLI
+
+For 12-factor apps (`cli → env → file → defaults`), prefer the
+[`from_12factor`](environment_variables.md) helper instead of wiring `View` by hand.

@@ -112,11 +112,13 @@ class LeafObjConfig(LeafContainerConfig):
         self,
         extra_fields=NOT_SET,
         children_classes=NOT_SET_DICT,
+        env_prefix=NOT_SET,
         **kwargs,
     ):
 
         self.extra_fields = extra_fields
         self.children_classes = children_classes
+        self.env_prefix = env_prefix
         super().__init__(**kwargs)
 
 

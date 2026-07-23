@@ -22,6 +22,7 @@ Practical recipes for common tasks.
 | Topic | File |
 |---|---|
 | Load YAML / JSON | [howto/loading_from_files.md](howto/loading_from_files.md) |
+| Environment variables (12-factor) | [howto/environment_variables.md](howto/environment_variables.md) |
 | Short `FieldConf` syntax | [howto/short_syntax.md](howto/short_syntax.md) |
 | Path anchors | [howto/path_anchors.md](howto/path_anchors.md) |
 | Merge configurations | [howto/merging_configurations.md](howto/merging_configurations.md) |

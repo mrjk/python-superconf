@@ -157,8 +157,11 @@ Suggested reading order:
 Use `YamlSource` / `JsonSource` / `TomlSource` (see `superconf.sources`), or parse yourself (`yaml.safe_load`, `from_yaml`, …) and pass `value=`. See [Load from files](docs/howto/loading_from_files.md).
 
 **Are environment loaders built in?**  
-Use ``EnvSource`` + ``View`` (see ``superconf.sources`` / ``superconf.views``).
-Default precedence names: ``cli → env → file → defaults`` (``TWELVE_FACTOR_ORDER``).
+Yes, as helpers: ``from_12factor(AppConfig, file="config.yml", cli={...})``
+(or ``Meta.env_prefix``). Mapping is Gitea-style ``PREFIX__PATH``.
+Precedence: ``cli → env → file → defaults`` (``TWELVE_FACTOR_ORDER``).
+See [Environment variables](docs/howto/environment_variables.md).
+Lower-level: ``EnvSource`` + ``View``.
 
 **Can I allow undeclared keys?**  
 Yes, set `Meta.extra_fields = True` on a `ConfigurationObj`. Extra keys must be provided via `value=` / full `set_value({...})`, not by assigning a new attribute after init.

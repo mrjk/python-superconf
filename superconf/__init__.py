@@ -95,4 +95,10 @@ from superconf.sources import (
     TomlSource,
     YamlSource,
 )
+from superconf.twelve_factor import (
+    TwelveFactorError,
+    build_12factor_view,
+    from_12factor,
+    load_12factor,
+)
 from superconf.views import TWELVE_FACTOR_ORDER, View

@@ -393,6 +393,7 @@ class ConfigurationObj(ConfigurationDict, metaclass=DeclarativeValuesMetaclass):
         extra_fields=False,
         children_class=Leaf,
         children_classes=NOT_SET_DICT,
+        env_prefix=NOT_SET,
     )
 
     def __node_init__(self, **kwargs):
