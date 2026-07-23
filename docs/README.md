@@ -40,3 +40,10 @@ Internal behavior for contributors and advanced users.
 ## Reference
 
 API reference should be generated from code (not hand-written). See package exports in `superconf/__init__.py`.
+
+## Project / maintainers
+
+| Topic | File |
+|---|---|
+| Development setup (mise, `.venv`, Task) | [project/setup.md](project/setup.md) |
+| Release (bump, tag, PyPI) | [project/release.md](project/release.md) |

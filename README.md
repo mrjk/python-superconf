@@ -173,13 +173,23 @@ Yes, set `Meta.extra_fields = True` on a `ConfigurationObj`. Extra keys must be 
 
 ## Development
 
+Full maintainer guide: [docs/project/setup.md](docs/project/setup.md).
+Release / PyPI: [docs/project/release.md](docs/project/release.md).
+
 ### Setup
+
+Always use the project-local **`.venv/`** (see `poetry.toml`). Never install into system Python.
 
 ```bash
 git clone https://github.com/mrjk/python-superconf.git
 cd python-superconf
-poetry install
+eval "$(mise activate bash)"   # or direnv + use mise
+mise install
+poetry env use "$(mise which python)"
+poetry install --with dev
 ```
+
+Python tools run via `poetry run` (`PY` in the Taskfile), so you usually do not need to `source .venv/bin/activate`.
 
 ### Commands
 
@@ -187,11 +197,13 @@ Uses [Taskfile](https://taskfile.dev):
 
 | Command | Purpose |
 |---|---|
-| `task test` | Lab + report + lint |
+| `task test` | Report + lab + lint |
+| `task test_report` | Pytest + coverage |
 | `task test_pytest` | Pytest suite |
 | `task test_lab` | Run lab scripts |
-| `task test_lint` | Lint checks |
+| `task test_lint` | Lint checks (isort `--check-only`, black, pylint) |
 | `task fix_lint` | Auto-format with black/isort |
+| `task publish_pypi` | Publish to PyPI |
 
 ## Project information
 
