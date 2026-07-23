@@ -80,6 +80,8 @@ def _file_source(path: PathLike) -> BaseSource:
     )
 
 
+# Keyword-only public API: layer knobs stay explicit (not a options bag).
+# pylint: disable-next=too-many-arguments
 def build_12factor_view(
     config_cls: type,
     *,
@@ -121,6 +123,7 @@ def build_12factor_view(
     return view
 
 
+# pylint: disable-next=too-many-arguments
 def load_12factor(
     config_cls: Type[ConfigT],
     *,

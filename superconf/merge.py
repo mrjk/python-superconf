@@ -3,10 +3,20 @@
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
-from superconf.common import unique
 from superconf.lib.sentinel_v2 import is_not_set
 
 _MISSING = object()
+
+
+def _unique(seq: Iterable[Any]) -> list:
+    """Remove duplicates from a sequence while preserving order.
+
+    Local copy avoids importing ``superconf.common`` (which re-exports this
+    module and would create a cyclic import).
+    """
+    seen: set = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
 
 
 class MergeKind(str, Enum):
@@ -300,7 +310,7 @@ def merge_maps(
     if strategy == MergeStrategy.OVERRIDE_PRESENT:
         keys: Iterable = base.keys()
     else:
-        keys = unique(list(base.keys()) + list(other.keys()))
+        keys = _unique(list(base.keys()) + list(other.keys()))
 
     for key in keys:
         left = base[key] if key in base else missing

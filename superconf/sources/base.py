@@ -114,6 +114,29 @@ class TextFileSource(BaseSource):
             return read_file(str(path_candidate))
         return str(self._data)
 
+    def load(self) -> DataDict:
+        """Load data as a nested dict.
+
+        Subclasses must implement format-specific parsing.
+
+        Returns:
+            Nested configuration dictionary.
+        """
+        raise NotImplementedError()
+
+    def dump(self, data: Mapping[str, Any]) -> Union[str, DataDict, None]:
+        """Dump a nested dict to this source's format.
+
+        Subclasses must implement format-specific serialization.
+
+        Args:
+            data: Nested configuration dictionary.
+
+        Returns:
+            Format-specific representation (string, dict, or None).
+        """
+        raise NotImplementedError()
+
     def _as_root_dict(self, parsed: Any, root_label: str) -> DataDict:
         """Normalize parsed content to a root dict.
 
