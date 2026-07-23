@@ -8,7 +8,7 @@ import os
 import yaml
 
 # pylint: disable=unused-import
-from superconf.lib.sentinel_v2 import (
+from superconf.lib.sentinel import (
     DEFAULT,
     FAIL,
     NOT_SET,

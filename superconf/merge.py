@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
-from superconf.lib.sentinel_v2 import is_not_set
+from superconf.lib.sentinel import is_not_set
 
 _MISSING = object()
 
